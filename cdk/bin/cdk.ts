@@ -9,7 +9,8 @@ const environmentName = app.node.tryGetContext("environment");
 
 
 new TarjontaPulssiStack(app, 'tarjonta-pulssi', {
-  stackName: `${environmentName}-tarjonta-pulssi`
+  stackName: `${environmentName}-tarjonta-pulssi`,
+  environmentName: environmentName
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */
