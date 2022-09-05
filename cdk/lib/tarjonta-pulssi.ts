@@ -4,13 +4,34 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Runtime, Architecture } from 'aws-cdk-lib/aws-lambda';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
+import { SecurityGroup, Vpc, SubnetType, Port } from "aws-cdk-lib/aws-ec2";
 // import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 // import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 
-export class TarjontaPulssiStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
-    super(scope, id, props);
+interface TarjontaPulssiStackProps extends cdk.StackProps {
+  environmentName: string;
+}
 
+export class TarjontaPulssiStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: TarjontaPulssiStackProps) {
+    super(scope, id, props);
+//    const myvpc = cdk.Fn.importValue(`${props.environmentName}-Vpc`)
+//   const myvpc = Vpc.fromLookup(this, 'MyExistingVPC', {vpcName: `opintopolku-vpc-${props.environmentName}`})
+    const myvpc = Vpc.fromVpcAttributes(this, 'VPC', {
+      vpcId: cdk.Fn.importValue(`${props.environmentName}-Vpc`),
+      availabilityZones: [ 
+        cdk.Fn.importValue(`${props.environmentName}-SubnetAvailabilityZones`),
+      ],
+      privateSubnetIds: [ 
+        cdk.Fn.importValue(`${props.environmentName}-PrivateSubnet1`),
+        cdk.Fn.importValue(`${props.environmentName}-PrivateSubnet2`),
+        cdk.Fn.importValue(`${props.environmentName}-PrivateSubnet3`),
+      ],
+    });
+   
+    const TarjontaPulssiLambdaSecurityGroup = new SecurityGroup(this, "TarjontaPulssiLambdaSG", {
+      vpc: myvpc,
+    });
 
     const tarjontaPulssiLamda = new NodejsFunction(this, "TarjontaPulssiLambda", {
       entry: "lambda/pulssi.ts",
@@ -19,14 +40,27 @@ export class TarjontaPulssiStack extends cdk.Stack {
       logRetention: RetentionDays.ONE_YEAR,
       architecture: Architecture.ARM_64,
       timeout: cdk.Duration.seconds(5),
+      vpc: myvpc,
+      vpcSubnets: {
+        subnetType: SubnetType.PRIVATE_WITH_NAT,
+      },
+      securityGroups: [ SecurityGroup.fromSecurityGroupId(
+        this,
+        "ImmutableSecurityGroup",
+        TarjontaPulssiLambdaSecurityGroup.securityGroupId,
+        { mutable: false }
+      ),
+      ],
       environment: {
-        SLACK_TOKEN_SSM_KEY: "/slack/pilvikehitys/webhook",
+        KOUTA_POSTGRES_RO_USER: `/${props.environmentName}/postgresqls/kouta/readonly-user-name`,
+        KOUTA_POSTGRES_RO_PASSWORD: `/${props.environmentName}/postgresqls/kouta/readonly-user-password`,
       },
       initialPolicy: [
         new PolicyStatement({
           effect: Effect.ALLOW,
           resources: [
-            "arn:aws:ssm:eu-west-1:*:parameter/slack/pilvikehitys/webhook",
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/kouta/readonly-user-name`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/kouta/readonly-user-password`,
           ],
           actions: ["ssm:GetParameter"],
         }),
@@ -38,6 +72,38 @@ export class TarjontaPulssiStack extends cdk.Stack {
     //   schedule: Schedule.expression('cron(*/5 * * * *)'),
     // });
     // eventRule.addTarget(new LambdaFunction(tarjontaPulssiLamda))
+
+
+     /**
+     * Fetch PostgreSQLS SG name and ID
+     */
+
+    [
+      { name: "TarjontaPulssiLambdaSG", value: TarjontaPulssiLambdaSecurityGroup.securityGroupId }
+    ].map(output => {
+      new cdk.CfnOutput(this, `${output.name}-Output`, {
+        exportName: `${props.environmentName}-${output.name}`,
+        value: output.value
+      });
+    });
+
+    const PostgreSQLSGId = cdk.Token.asString(
+      cdk.Fn.importValue(`${props.environmentName}-PostgreSQLSG`)
+    );
+
+    const PostgreSQLSG = SecurityGroup.fromSecurityGroupId(
+      this,
+      "PostgreSqlsSecurityGroup",
+      PostgreSQLSGId
+    );
+
+    // Ingress TarjontapulssiLambda -> PostgreSqls
+    [5432].map((port) => {
+      PostgreSQLSG.addIngressRule(
+        TarjontaPulssiLambdaSecurityGroup,
+        Port.tcp(port)
+      );
+    });
 
   }
 }
