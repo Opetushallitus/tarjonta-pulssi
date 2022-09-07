@@ -74,10 +74,13 @@ if [[ "${deploy}" == "true" ]]; then
     ## Profiles are defined in user's .aws/config
     if [[ "${environment}" =~ ^(sade)$ ]]; then
         aws_profile="oph-prod"
-    elif  [[ "${environment}" =~ ^(sieni|hahtuva|untuva|pallero)$ ]]; then
+        r53_domain="opintopolku.fi"
+    elif  [[ "${environment}" =~ ^(sieni|hahtuva|untuva)$ ]]; then
         aws_profile="oph-dev"
-    elif [[ "${environment}" =~ ^(sumu|utility)$ ]]; then
-        aws_profile="oph-utility"
+        r53_domain="${environment}opintopolku.fi"
+        elif  [[ "${environment}" =~ ^(pallero)$ ]]; then
+        aws_profile="oph-dev"
+        r53_domain="testiopintopolku.fi"
     else 
         echo "Unknown environment: ${environment}"
         exit 1
@@ -88,5 +91,5 @@ if [[ "${deploy}" == "true" ]]; then
    cd "${git_root}/cdk/"
    npm run build
    npx cdk synth
-   npx cdk deploy -c "environment=$environment" --profile "$aws_profile"
+   npx cdk deploy -c "environment=$environment" -c "publichostedzone=$r53_domain" --profile "$aws_profile"
 fi
