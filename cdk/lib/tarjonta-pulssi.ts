@@ -56,8 +56,8 @@ export class TarjontaPulssiStack extends cdk.Stack {
         KOUTA_POSTGRES_RO_USER: `/${props.environmentName}/postgresqls/kouta/readonly-user-name`,
         KOUTA_POSTGRES_RO_PASSWORD: `/${props.environmentName}/postgresqls/kouta/readonly-user-password`,
         PUBLICHOSTEDZONE: `${props.publicHostedZone}`,
-        TARJONTAPULSSI_POSTGRES_APP_USER: `/${props.environmentName}/postgresqls/tarjonta-pulssi/app-user-name`,
-        TARJONTAPULSSI_POSTGRES_APP_PASSWORD: `/${props.environmentName}/postgresqls/tarjonta-pulssi/app-user-password`,
+        TARJONTAPULSSI_POSTGRES_APP_USER: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
+        TARJONTAPULSSI_POSTGRES_APP_PASSWORD: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
       },
       initialPolicy: [
         new PolicyStatement({
@@ -65,8 +65,8 @@ export class TarjontaPulssiStack extends cdk.Stack {
           resources: [
             `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/kouta/readonly-user-name`,
             `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/kouta/readonly-user-password`,
-            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjonta-pulssi/app-user-name`,
-            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjonta-pulssi/app-user-password`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
           ],
           actions: ["ssm:GetParameter"],
         }),
