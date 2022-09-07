@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -xeo pipefail
+set -eo pipefail
 
 if [ $# == 0  ] || [ $# -gt 3 ] 
 then
