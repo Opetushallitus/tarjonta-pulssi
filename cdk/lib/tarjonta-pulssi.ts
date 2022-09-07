@@ -10,6 +10,7 @@ import { SecurityGroup, Vpc, SubnetType, Port } from "aws-cdk-lib/aws-ec2";
 
 interface TarjontaPulssiStackProps extends cdk.StackProps {
   environmentName: string;
+  publicHostedZone: string;
 }
 
 export class TarjontaPulssiStack extends cdk.Stack {
@@ -54,6 +55,7 @@ export class TarjontaPulssiStack extends cdk.Stack {
       environment: {
         KOUTA_POSTGRES_RO_USER: `/${props.environmentName}/postgresqls/kouta/readonly-user-name`,
         KOUTA_POSTGRES_RO_PASSWORD: `/${props.environmentName}/postgresqls/kouta/readonly-user-password`,
+        PUBLICHOSTEDZONE: `${props.publicHostedZone}`,
       },
       initialPolicy: [
         new PolicyStatement({

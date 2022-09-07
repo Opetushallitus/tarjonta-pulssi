@@ -6,11 +6,14 @@ import { TarjontaPulssiStack } from '../lib/tarjonta-pulssi';
 
 const app = new cdk.App();
 const environmentName = app.node.tryGetContext("environment");
+const publicHostedZone = app.node.tryGetContext("publichostedzone");
+
 
 
 new TarjontaPulssiStack(app, 'tarjonta-pulssi', {
   stackName: `${environmentName}-tarjonta-pulssi`,
-  environmentName: environmentName
+  environmentName: environmentName,
+  publicHostedZone: publicHostedZone,
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */
