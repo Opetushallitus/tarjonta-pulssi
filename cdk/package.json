@@ -14,6 +14,7 @@
     "@types/aws-lambda": "^8.10.102",
     "@types/jest": "^27.5.2",
     "@types/node": "10.17.27",
+    "@types/pg": "^8.6.5",
     "@types/prettier": "2.6.0",
     "aws-cdk": "2.39.1",
     "jest": "^27.5.1",
@@ -23,7 +24,9 @@
   },
   "dependencies": {
     "aws-cdk-lib": "2.39.1",
+    "aws-sdk": "^2.1209.0",
     "constructs": "^10.0.0",
+    "pg": "^8.8.0",
     "source-map-support": "^0.5.21"
   }
 }
