@@ -75,7 +75,10 @@ export class TarjontaPulssiStack extends cdk.Stack {
         // pg-native is not available and won't be used. This is letting the
         // bundler (esbuild) know pg-native won't be included in the bundled JS
         // file.
-        externalModules: ['pg-native']
+        externalModules: ['pg-native'],
+        // https://github.com/aws/aws-sdk-js-v3/issues/3023
+        sourcesContent: false,
+        mainFields: ['module', 'main']
       }
     });
 
