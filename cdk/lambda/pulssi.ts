@@ -47,7 +47,7 @@ export const main: Handler = async (event, context, callback) => {
     const client = await pool.connect();
     
     try {
-      await client.query("SELECT NOW()");
+      return await client.query("SELECT count(*) from koulutukset where tila = 'julkaistu'::Julkaisutila");
     } finally {
       // https://github.com/brianc/node-postgres/issues/1180#issuecomment-270589769
       client.release(true);
