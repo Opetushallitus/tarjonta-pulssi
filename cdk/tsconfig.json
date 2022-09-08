@@ -4,7 +4,8 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "lib": [
-      "es2018"
+      "es2018",
+      "dom"
     ],
     "esModuleInterop": true,
     "declaration": true,

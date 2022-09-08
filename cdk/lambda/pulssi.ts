@@ -1,19 +1,18 @@
-import SSM from 'aws-sdk/clients/ssm'
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm'
 import { Handler } from 'aws-lambda';
-
 import { Pool } from 'pg';
 
-const ssm = new SSM()
+const ssmClient = new SSMClient({})
 
 const getSSMParam = async (param?: string) => {
   if (param == null) {
     return undefined;
   }
   try {
-    const result = (await ssm.getParameter( {
+    const result = await ssmClient.send(new GetParameterCommand({
       Name: param,
       WithDecryption: true
-    }).promise())
+    }))
     return result.Parameter?.Value
   } catch (e) {
     console.error(e)
