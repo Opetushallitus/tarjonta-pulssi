@@ -20,10 +20,12 @@ const getSSMParam = async (param?: string) => {
   }
 }
 
-export const main: Handler = async (event, context, callback) => {
+const dbUserPromise = getSSMParam(process.env.KOUTA_POSTGRES_RO_USER)
+const dbPasswordPromise = getSSMParam(process.env.KOUTA_POSTGRES_RO_PASSWORD)
 
-  const DB_USER = await getSSMParam(process.env.KOUTA_POSTGRES_RO_USER)
-  const DB_PASSWORD = await getSSMParam(process.env.KOUTA_POSTGRES_RO_PASSWORD)
+export const main: Handler = async (event, context, callback) => {
+  const DB_USER = await dbUserPromise
+  const DB_PASSWORD = await dbPasswordPromise
   
   const DB_HOST = 'kouta.db.untuvaopintopolku.fi'
   const DB_PORT = 5432
