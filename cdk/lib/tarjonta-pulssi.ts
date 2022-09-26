@@ -5,19 +5,26 @@ import { Runtime, Architecture } from 'aws-cdk-lib/aws-lambda';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
 import { SecurityGroup, Vpc, SubnetType, Port } from "aws-cdk-lib/aws-ec2";
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as cloudfront_origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as targets from 'aws-cdk-lib/aws-route53-targets';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import { PublicHostedZone } from 'aws-cdk-lib/aws-route53';
 // import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 // import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 
 interface TarjontaPulssiStackProps extends cdk.StackProps {
   environmentName: string;
   publicHostedZone: string;
+  publicHostedZoneId: string;
 }
 
 export class TarjontaPulssiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: TarjontaPulssiStackProps) {
     super(scope, id, props);
-//    const myvpc = cdk.Fn.importValue(`${props.environmentName}-Vpc`)
-//   const myvpc = Vpc.fromLookup(this, 'MyExistingVPC', {vpcName: `opintopolku-vpc-${props.environmentName}`})
     const myvpc = Vpc.fromVpcAttributes(this, 'VPC', {
       vpcId: cdk.Fn.importValue(`${props.environmentName}-Vpc`),
       availabilityZones: [ 
@@ -29,7 +36,69 @@ export class TarjontaPulssiStack extends cdk.Stack {
         cdk.Fn.importValue(`${props.environmentName}-PrivateSubnet3`),
       ],
     });
-   
+
+    const zone = route53.HostedZone.fromHostedZoneAttributes(this, "PublicHostedZone", {
+      zoneName: `${props.publicHostedZone}.`,
+      hostedZoneId: `${props.publicHostedZoneId}`      
+    });
+    
+    // Content bucket
+    const staticContentBucket = new s3.Bucket(this, 'SiteBucket', {
+      bucketName: `tarjonta-pulssi.${props.publicHostedZone}`,
+      publicReadAccess: false,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    const cloudfrontOAI = new cloudfront.OriginAccessIdentity(this, 'cloudfront-OAI', {
+      comment: `OAI for tarjonta-pulssi.${PublicHostedZone}`
+    });
+
+    // Grant access to cloudfront
+    staticContentBucket.addToResourcePolicy(new iam.PolicyStatement({
+      actions: ['s3:GetObject'],
+      resources: [staticContentBucket.arnForObjects('*')],
+      principals: [new iam.CanonicalUserPrincipal(cloudfrontOAI.cloudFrontOriginAccessIdentityS3CanonicalUserId)]
+    }));
+
+    // TLS certificate
+    const certificate = new acm.DnsValidatedCertificate(this, 'SiteCertificate', {
+      domainName: `tarjonta-pulssi.${props.publicHostedZone}`,
+      hostedZone: zone,
+      region: 'us-east-1', // Cloudfront only checks this region for certificates.
+    });
+
+
+    // CloudFront distribution
+    const distribution = new cloudfront.Distribution(this, 'SiteDistribution', {
+      certificate: certificate,
+      defaultRootObject: "index.html",
+      domainNames: [`tarjonta-pulssi.${props.publicHostedZone}`],
+      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+      errorResponses:[
+        {
+          httpStatus: 403,
+          responseHttpStatus: 403,
+          responsePagePath: '/error.html',
+          ttl: cdk.Duration.minutes(30),
+        }
+      ],
+      defaultBehavior: {
+        origin: new cloudfront_origins.S3Origin(staticContentBucket, {originAccessIdentity: cloudfrontOAI}),
+        compress: true,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      }
+    })
+
+
+    // Route53 alias record for the CloudFront distribution
+    new route53.ARecord(this, 'SiteAliasRecord', {
+      recordName: `tarjonta-pulssi.${props.publicHostedZone}`,
+      target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
+      zone
+    });
+
     const TarjontaPulssiLambdaSecurityGroup = new SecurityGroup(this, "TarjontaPulssiLambdaSG", {
       vpc: myvpc,
     });
@@ -102,6 +171,25 @@ export class TarjontaPulssiStack extends cdk.Stack {
           ],
           actions: ["ssm:GetParameter"],
         }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          resources: [
+            `${staticContentBucket.bucketArn}`,
+          ],
+          actions: ["s3:ListBucket"],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          resources: [
+            `${staticContentBucket.bucketArn}/*`,
+          ],
+          actions: [
+            "s3:PutObject",
+            "s3:PutObjectAcl",
+            "s3:GetObject",
+            "s3:getObjectAcl"
+        ],
+        }), 
       ],
       bundling: {
         // pg-native is not available and won't be used. This is letting the
