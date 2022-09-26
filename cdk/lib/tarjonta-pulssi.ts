@@ -51,7 +51,7 @@ export class TarjontaPulssiStack extends cdk.Stack {
     });
 
     const cloudfrontOAI = new cloudfront.OriginAccessIdentity(this, 'cloudfront-OAI', {
-      comment: `OAI for tarjonta-pulssi.${PublicHostedZone}`
+      comment: `OAI for tarjonta-pulssi.${props.publicHostedZone}`
     });
 
     // Grant access to cloudfront
