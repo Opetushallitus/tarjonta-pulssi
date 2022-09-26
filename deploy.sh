@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eo pipefail
+set -xeo pipefail
 
 if [ $# == 0  ] || [ $# -gt 3 ] 
 then
@@ -22,9 +22,9 @@ Light weight version of cdk.sh in cloud-base
 positional arguments:
   deploy                builds and deploys the stack to target environment. Environment must be supplied.
   build                 only builds the Lambda & synthesizes CDK (useful when developing)
+  environment           Environment name (e.g. pallero)
 
 optional arguments:
-environment           Environment name (e.g. pallero)
   -h, --help            Show this help message and exit
   -d, --dependencies    Clean and install dependencies before deployment (i.e. run npm ci)
   '''
@@ -62,6 +62,30 @@ if [[ -n "${dependencies}" ]]; then
     cd "${git_root}/cdk/" && npm ci
 fi
 
+environment=${POSITIONAL[-1]}
+## Profiles are defined in user's .aws/config
+if [[ "${environment}" =~ ^(sade)$ ]]; then
+    aws_profile="oph-prod"
+    r53_domain="opintopolku.fi"
+    hosted_zone_id="ZNMCY72OCXY4M"
+elif [[ "${environment}" =~ ^(untuva)$ ]]; then
+    aws_profile="oph-dev"
+    r53_domain="${environment}opintopolku.fi"
+    hosted_zone_id="Z1399RU36FG2N9"
+elif [[ "${environment}" =~ ^(hahtuva)$ ]]; then
+    aws_profile="oph-dev"
+    r53_domain="${environment}opintopolku.fi"
+    hosted_zone_id="Z20VS6J64SGAG9"
+elif [[ "${environment}" =~ ^(pallero)$ ]]; then
+    aws_profile="oph-dev"
+    r53_domain="testiopintopolku.fi"
+    hosted_zone_id="Z175BBXSKVCV3B"
+else 
+    echo "Unknown environment: ${environment}"
+    exit 0
+fi
+
+
 if [[ "${build}" == "true" ]]; then
     echo "Building Lambda code and synthesizing CDK template"
     cd "${git_root}/cdk/"
@@ -70,26 +94,9 @@ if [[ "${build}" == "true" ]]; then
 fi
 
 if [[ "${deploy}" == "true" ]]; then
-    environment=${POSITIONAL[0]}
-    ## Profiles are defined in user's .aws/config
-    if [[ "${environment}" =~ ^(sade)$ ]]; then
-        aws_profile="oph-prod"
-        r53_domain="opintopolku.fi"
-    elif  [[ "${environment}" =~ ^(sieni|hahtuva|untuva)$ ]]; then
-        aws_profile="oph-dev"
-        r53_domain="${environment}opintopolku.fi"
-        elif  [[ "${environment}" =~ ^(pallero)$ ]]; then
-        aws_profile="oph-dev"
-        r53_domain="testiopintopolku.fi"
-    else 
-        echo "Unknown environment: ${environment}"
-        exit 1
-    fi
-
-
    echo "Building Lambda code, synhesizing CDK code and deploying to environment: $environment"
    cd "${git_root}/cdk/"
    npm run build
    npx cdk synth
-   npx cdk deploy -c "environment=$environment" -c "publichostedzone=$r53_domain" --profile "$aws_profile"
+   npx cdk deploy -c "environment=$environment" -c "publichostedzone=$r53_domain" -c "publichostedzoneid=$hosted_zone_id" --profile "$aws_profile"
 fi
