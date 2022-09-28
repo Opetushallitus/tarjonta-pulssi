@@ -61,6 +61,12 @@ export class TarjontaPulssiStack extends cdk.Stack {
       principals: [new iam.CanonicalUserPrincipal(cloudfrontOAI.cloudFrontOriginAccessIdentityS3CanonicalUserId)]
     }));
 
+    staticContentBucket.addToResourcePolicy(new iam.PolicyStatement({
+      actions: ['s3:ListBucket'],
+      resources: [staticContentBucket.bucketArn],
+      principals: [new iam.CanonicalUserPrincipal(cloudfrontOAI.cloudFrontOriginAccessIdentityS3CanonicalUserId)]
+    }));
+
     // TLS certificate
     const certificate = new acm.DnsValidatedCertificate(this, 'SiteCertificate', {
       domainName: `tarjonta-pulssi.${props.publicHostedZone}`,
@@ -69,7 +75,17 @@ export class TarjontaPulssiStack extends cdk.Stack {
     });
 
 
+
     // CloudFront distribution
+    const StaticContentBucketOrigin = new cloudfront_origins.S3Origin(staticContentBucket, {originAccessIdentity: cloudfrontOAI})
+
+    const noCachePolicy = new cloudfront.CachePolicy(this, `noCachePolicy-${props.environmentName}-tarjonta-pulssi`, {
+      cachePolicyName: `noCachePolicy-${props.environmentName}-tarjonta-pulssi`,
+      defaultTtl: cdk.Duration.minutes(0),
+      minTtl: cdk.Duration.minutes(0),
+      maxTtl: cdk.Duration.minutes(0),
+    });
+
     const distribution = new cloudfront.Distribution(this, 'SiteDistribution', {
       certificate: certificate,
       defaultRootObject: "index.html",
@@ -84,13 +100,20 @@ export class TarjontaPulssiStack extends cdk.Stack {
         }
       ],
       defaultBehavior: {
-        origin: new cloudfront_origins.S3Origin(staticContentBucket, {originAccessIdentity: cloudfrontOAI}),
+        origin: StaticContentBucketOrigin,
         compress: true,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      },
+      additionalBehaviors: { 
+        'index.html': {
+          origin: StaticContentBucketOrigin,
+          cachePolicy: noCachePolicy,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        }        
       }
-    })
-
+    });
 
     // Route53 alias record for the CloudFront distribution
     new route53.ARecord(this, 'SiteAliasRecord', {
