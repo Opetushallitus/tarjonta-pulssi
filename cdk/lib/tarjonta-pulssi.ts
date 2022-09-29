@@ -187,15 +187,15 @@ export class TarjontaPulssiStack extends cdk.Stack {
       securityGroups: [ TarjontaPulssiLambdaSecurityGroup ],
       environment: {
         PUBLICHOSTEDZONE: `${props.publicHostedZone}`,
-        TARJONTAPULSSI_POSTGRES_APP_USER: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
-        TARJONTAPULSSI_POSTGRES_APP_PASSWORD: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
+        TARJONTAPULSSI_POSTGRES_RO_USER: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
+        TARJONTAPULSSI_POSTGRES_RO_PASSWORD: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
       },
       initialPolicy: [
         new PolicyStatement({
           effect: Effect.ALLOW,
           resources: [
-            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/readonly-user-name`,
-            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/readonly-user-password`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
           ],
           actions: ["ssm:GetParameter"],
         }),
