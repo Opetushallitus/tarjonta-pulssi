@@ -1,6 +1,7 @@
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm'
 import { Handler } from 'aws-lambda';
 import { Pool, PoolClient } from 'pg';
+import { Client } from '@elastic/elasticsearch'
 
 const ssmClient = new SSMClient({})
 
@@ -60,6 +61,14 @@ const connectPulssiDb = async () => {
   return pool.connect()
 }
 
+const connectElastic = async () => {
+  const ELASTIC_URL_WITH_CREDENTIALS = await getSSMParam(process.env.KOUTA_ELASTIC_URL_WITH_CREDENTIALS)
+
+  return new Client({
+    node: ELASTIC_URL_WITH_CREDENTIALS,
+  })
+}
+
 type TableName = 'toteutukset' | 'koulutukset' | 'hakukohteet' | 'haut'
 
 const getJulkaistut = async (client: PoolClient, tableName: TableName) => {
@@ -74,14 +83,28 @@ export const main: Handler = async (event, context, callback) => {
 
     // https://github.com/brianc/node-postgres/issues/930#issuecomment-230362178
     context.callbackWaitsForEmptyEventLoop = false; // !important to reuse pool
-    const koutaClient = await connectKoutaDb();
-    const pulssiClient = await connectPulssiDb()
+    const koutaClient = await connectKoutaDb()
+    //const pulssiClient = await connectPulssiDb()
+    const elasticClient = await connectElastic()
     
     try {
-      return {
+
+      const pulssiData = {
         julkaistutKoulutukset: await getJulkaistut(koutaClient, 'koulutukset'),
         julkaistutToteutukset: await getJulkaistut(koutaClient, 'toteutukset'),
       }
+
+      return elasticClient.search({
+        index: 'koulutus-kouta',
+        body: {
+          query: {
+            term: {
+              tila: 'julkaistu'
+            }
+          }
+        }
+      })
+
     } finally {
       // https://github.com/brianc/node-postgres/issues/1180#issuecomment-270589769
       koutaClient.release(true);

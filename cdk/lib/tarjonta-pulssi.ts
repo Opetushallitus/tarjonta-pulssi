@@ -144,6 +144,8 @@ export class TarjontaPulssiStack extends cdk.Stack {
         PUBLICHOSTEDZONE: `${props.publicHostedZone}`,
         TARJONTAPULSSI_POSTGRES_APP_USER: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
         TARJONTAPULSSI_POSTGRES_APP_PASSWORD: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
+        KOUTA_ELASTIC_URL_WITH_CREDENTIALS: `/${props.environmentName}/services/kouta-indeksoija/kouta-indeksoija-elastic7-url-with-credentials`,
+
       },
       initialPolicy: [
         new PolicyStatement({
@@ -153,6 +155,7 @@ export class TarjontaPulssiStack extends cdk.Stack {
             `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/kouta/readonly-user-password`,
             `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
             `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/services/kouta-indeksoija/kouta-indeksoija-elastic7-url-with-credentials`,
           ],
           actions: ["ssm:GetParameter"],
         }),
