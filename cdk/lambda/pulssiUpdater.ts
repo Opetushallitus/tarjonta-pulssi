@@ -1,6 +1,6 @@
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm'
 import { Handler } from 'aws-lambda';
-import { Client, Pool, PoolClient } from 'pg';
+import { Pool, PoolClient } from 'pg';
 
 const ssmClient = new SSMClient({})
 
@@ -23,6 +23,28 @@ const getSSMParam = async (param?: string) => {
 const dbUserPromise = getSSMParam(process.env.KOUTA_POSTGRES_RO_USER)
 const dbPasswordPromise = getSSMParam(process.env.KOUTA_POSTGRES_RO_PASSWORD)
 
+const KOUTA_DB_HOST = `kouta.db.${process.env.PUBLICHOSTEDZONE}`
+const KOUTA_DB_PORT = 5432
+
+const connectKoutaDb = async () => {
+  const KOUTA_DB_USER = await dbUserPromise
+  const KOUTA_DB_PASSWORD = await dbPasswordPromise
+
+  const pool = new Pool({
+    max: 1,
+    min: 0,
+    idleTimeoutMillis: 120000,
+    connectionTimeoutMillis: 10000,
+    host: KOUTA_DB_HOST,
+    port: KOUTA_DB_PORT,
+    database: 'kouta',
+    user: KOUTA_DB_USER,
+    password: KOUTA_DB_PASSWORD,
+  });
+
+  return pool.connect()
+}
+
 type TableName = 'toteutukset' | 'koulutukset' | 'hakukohteet' | 'haut'
 
 const getJulkaistut = async (client: PoolClient, tableName: TableName) => {
@@ -34,35 +56,18 @@ const getJulkaistut = async (client: PoolClient, tableName: TableName) => {
 }
 
 export const main: Handler = async (event, context, callback) => {
-  const DB_USER = await dbUserPromise
-  const DB_PASSWORD = await dbPasswordPromise
-  
-  const DB_HOST = `kouta.db.${process.env.PUBLICHOSTEDZONE}`
-  const DB_PORT = 5432
-  
-  const pool = new Pool({
-      max: 1,
-      min: 0,
-      idleTimeoutMillis: 120000,
-      connectionTimeoutMillis: 10000,
-      host: DB_HOST,
-      port: DB_PORT,
-      database: 'kouta',
-      user: DB_USER,
-      password: DB_PASSWORD,
-  });
 
     // https://github.com/brianc/node-postgres/issues/930#issuecomment-230362178
     context.callbackWaitsForEmptyEventLoop = false; // !important to reuse pool
-    const client = await pool.connect();
+    const koutaClient = await connectKoutaDb();
     
     try {
       return {
-        julkaistutKoulutukset: await getJulkaistut(client, 'koulutukset'),
-        julkaistutToteutukset: await getJulkaistut(client, 'toteutukset'),
+        julkaistutKoulutukset: await getJulkaistut(koutaClient, 'koulutukset'),
+        julkaistutToteutukset: await getJulkaistut(koutaClient, 'toteutukset'),
       }
     } finally {
       // https://github.com/brianc/node-postgres/issues/1180#issuecomment-270589769
-      client.release(true);
+      koutaClient.release(true);
     }
   };
