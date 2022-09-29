@@ -1,39 +1,24 @@
 import { Handler } from "aws-lambda";
+import { Pool, PoolClient } from "pg";
 import { Client as ElasticClient } from "@elastic/elasticsearch";
-import { connectToDb, getSSMParam, entityTypes } from "./shared";
+import { getSSMParam, entityTypes, DEFAULT_DB_POOL_PARAMS } from "./shared";
 import type { EntityType } from "./shared";
 
-const connectKoutaDb = async () => {
-  const KOUTA_DB_USER = await getSSMParam(process.env.KOUTA_POSTGRES_RO_USER);
-  const KOUTA_DB_PASSWORD = await getSSMParam(
-    process.env.KOUTA_POSTGRES_RO_PASSWORD
-  );
+const PULSSI_DB_USER = await getSSMParam(
+  process.env.TARJONTAPULSSI_POSTGRES_APP_USER
+);
+const PULSSI_DB_PASSWORD = await getSSMParam(
+  process.env.TARJONTAPULSSI_POSTGRES_APP_PASSWORD
+);
 
-  return connectToDb({
-    host: `kouta.db.${process.env.PUBLICHOSTEDZONE}`,
-    port: 5432,
-    database: "kouta",
-    user: KOUTA_DB_USER,
-    password: KOUTA_DB_PASSWORD,
-  });
-};
-
-const connectPulssiDb = async () => {
-  const PULSSI_DB_USER = await getSSMParam(
-    process.env.TARJONTAPULSSI_POSTGRES_APP_USER
-  );
-  const PULSSI_DB_PASSWORD = await getSSMParam(
-    process.env.TARJONTAPULSSI_POSTGRES_APP_PASSWORD
-  );
-
-  return connectToDb({
-    host: `tarjontapulssi.db.${process.env.PUBLICHOSTEDZONE}`,
-    port: 5432,
-    database: "tarjontapulssi",
-    user: PULSSI_DB_USER,
-    password: PULSSI_DB_PASSWORD,
-  });
-};
+const pulssiDbPool = new Pool({
+  ...DEFAULT_DB_POOL_PARAMS,
+  host: `tarjontapulssi.db.${process.env.PUBLICHOSTEDZONE}`,
+  port: 5432,
+  database: "tarjontapulssi",
+  user: PULSSI_DB_USER,
+  password: PULSSI_DB_PASSWORD,
+});
 
 const connectElastic = async () => {
   const ELASTIC_URL_WITH_CREDENTIALS = await getSSMParam(
@@ -45,7 +30,6 @@ const connectElastic = async () => {
   });
 };
 
-const pulssiClient = await connectPulssiDb();
 const elasticClient = await connectElastic();
 
 const queryCountsFromElastic = async (entity: EntityType) => {
@@ -92,7 +76,10 @@ const queryCountsFromElastic = async (entity: EntityType) => {
   });
 };
 
-const countsFromElasticToDb = async (entity: EntityType) => {
+const countsFromElasticToDb = async (
+  pulssiClient: PoolClient,
+  entity: EntityType
+) => {
   const elasticRes = await queryCountsFromElastic(entity);
 
   const tilaBuckets = elasticRes.body?.aggregations?.by_tila?.buckets ?? [];
@@ -104,7 +91,7 @@ const countsFromElasticToDb = async (entity: EntityType) => {
 
   // TODO: Ajetaan kaikkien entiteettien datan päivitykset yhdessä transaktiossa
   try {
-    await pulssiClient.query("BEGIN;");
+    await pulssiClient.query("BEGIN");
     const rows = (
       await pulssiClient.query(
         `select tila, ${subAggColumn} from ${entity}_amounts group by (tila, ${subAggColumn})`
@@ -160,10 +147,10 @@ const countsFromElasticToDb = async (entity: EntityType) => {
         }
       }
     }
-    await pulssiClient.query("COMMIT;");
+    await pulssiClient.query("COMMIT");
   } catch (e) {
     console.log("ROLLBACK");
-    await pulssiClient.query("ROLLBACK;");
+    await pulssiClient.query("ROLLBACK");
     console.error(e);
   }
 };
@@ -172,13 +159,14 @@ export const main: Handler = async (event, context, callback) => {
   // https://github.com/brianc/node-postgres/issues/930#issuecomment-230362178
   context.callbackWaitsForEmptyEventLoop = false; // !important to use pool
 
+  const pulssiClient = await pulssiDbPool.connect();
+
   try {
     return await Promise.allSettled(
-      entityTypes.map((entity) => countsFromElasticToDb(entity))
+      entityTypes.map((entity) => countsFromElasticToDb(pulssiClient, entity))
     );
   } finally {
     // https://github.com/brianc/node-postgres/issues/1180#issuecomment-270589769
-    //koutaClient.release(true);
-    //pulssiClient.release(true)
+    pulssiClient.release(true);
   }
 };

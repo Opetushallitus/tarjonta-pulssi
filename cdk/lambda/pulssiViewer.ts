@@ -1,12 +1,12 @@
 import { Handler } from "aws-lambda";
-import { connectToDb, getSSMParam } from "./shared";
+import { DEFAULT_DB_POOL_PARAMS, getSSMParam } from "./shared";
 import type { EntityType } from "./shared";
 import render from "preact-render-to-string";
 import { h } from "preact";
 import App from "./app";
-import fs from 'fs'
 
 import type { Julkaisutila } from "./shared";
+import { Pool } from "pg";
 
 const template = `<!DOCTYPE html>
 <html>
@@ -49,22 +49,21 @@ const template = `<!DOCTYPE html>
 </script>
 </html>`;
 
-const connectPulssiDb = async () => {
-  const PULSSI_DB_USER = await getSSMParam(
-    process.env.TARJONTAPULSSI_POSTGRES_RO_USER
-  );
-  const PULSSI_DB_PASSWORD = await getSSMParam(
-    process.env.TARJONTAPULSSI_POSTGRES_RO_PASSWORD
-  );
+const PULSSI_DB_USER = await getSSMParam(
+  process.env.TARJONTAPULSSI_POSTGRES_RO_USER
+);
+const PULSSI_DB_PASSWORD = await getSSMParam(
+  process.env.TARJONTAPULSSI_POSTGRES_RO_PASSWORD
+)
 
-  return connectToDb({
-    host: `tarjontapulssi.db.${process.env.PUBLICHOSTEDZONE}`,
-    port: 5432,
-    database: "tarjontapulssi",
-    user: PULSSI_DB_USER,
-    password: PULSSI_DB_PASSWORD,
-  });
-};
+const pulssiDbPool = new Pool({
+  ...DEFAULT_DB_POOL_PARAMS,
+  host: `tarjontapulssi.db.${process.env.PUBLICHOSTEDZONE}`,
+  port: 5432,
+  database: "tarjontapulssi",
+  user: PULSSI_DB_USER,
+  password: PULSSI_DB_PASSWORD,
+})
 
 const sumBy = (arr: Array<any>, getNum: (x: any) => number) => {
   return arr.reduce((result, value) => result + getNum(value), 0);
@@ -72,10 +71,8 @@ const sumBy = (arr: Array<any>, getNum: (x: any) => number) => {
 
 type DbRowBase = { tila: Julkaisutila; amount: number | string };
 
-const pulssiClient = await connectPulssiDb();
-
 const getCounts = async (entity: EntityType) => {
-  const res = await pulssiClient.query(`SELECT * from ${entity}_amounts`);
+  const res = await pulssiDbPool.query(`SELECT * from ${entity}_amounts`);
   const rows = res.rows;
 
   const countsByTila = rows.reduce(
