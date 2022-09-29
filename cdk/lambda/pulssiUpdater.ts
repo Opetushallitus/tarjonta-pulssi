@@ -1,52 +1,21 @@
 import { Handler } from "aws-lambda";
-import { Pool } from "pg";
 import { Client as ElasticClient } from "@elastic/elasticsearch";
-// Käytetään lambda-ympäristön aws-sdk:a. Ei toimi ESM-importilla, joten täytyy käyttää requirea
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const SSM = require("aws-sdk/clients/ssm");
+import { connectToDb, getSSMParam, entityTypes } from "./shared";
+import type { EntityType } from "./shared";
 
-const ssm = new SSM();
-
-const getSSMParam = async (param?: string) => {
-  if (param == null) {
-    return undefined;
-  }
-  try {
-    const result = await ssm
-      .getParameter({
-        Name: param,
-        WithDecryption: true,
-      })
-      .promise();
-    return result.Parameter?.Value;
-  } catch (e) {
-    console.error(e);
-    return undefined;
-  }
-};
-
-const DEFAULT_DB_POOL_PARAMS = {
-  max: 1,
-  min: 0,
-  idleTimeoutMillis: 120000,
-  connectionTimeoutMillis: 10000,
-};
 const connectKoutaDb = async () => {
   const KOUTA_DB_USER = await getSSMParam(process.env.KOUTA_POSTGRES_RO_USER);
   const KOUTA_DB_PASSWORD = await getSSMParam(
     process.env.KOUTA_POSTGRES_RO_PASSWORD
   );
 
-  const pool = new Pool({
-    ...DEFAULT_DB_POOL_PARAMS,
+  return connectToDb({
     host: `kouta.db.${process.env.PUBLICHOSTEDZONE}`,
     port: 5432,
     database: "kouta",
     user: KOUTA_DB_USER,
     password: KOUTA_DB_PASSWORD,
   });
-
-  return pool.connect();
 };
 
 const connectPulssiDb = async () => {
@@ -57,16 +26,13 @@ const connectPulssiDb = async () => {
     process.env.TARJONTAPULSSI_POSTGRES_APP_PASSWORD
   );
 
-  const pool = new Pool({
-    ...DEFAULT_DB_POOL_PARAMS,
+  return connectToDb({
     host: `tarjontapulssi.db.${process.env.PUBLICHOSTEDZONE}`,
     port: 5432,
     database: "tarjontapulssi",
     user: PULSSI_DB_USER,
     password: PULSSI_DB_PASSWORD,
   });
-
-  return pool.connect();
 };
 
 const connectElastic = async () => {
@@ -81,9 +47,6 @@ const connectElastic = async () => {
 
 const pulssiClient = await connectPulssiDb();
 const elasticClient = await connectElastic();
-
-const entityTypes = ["koulutus", "toteutus", "hakukohde", "haku"] as const;
-type EntityType = typeof entityTypes[number];
 
 const queryCountsFromElastic = async (entity: EntityType) => {
   const aggs = {
@@ -127,55 +90,6 @@ const queryCountsFromElastic = async (entity: EntityType) => {
       aggs,
     },
   });
-};
-
-const getCounts = async (entity: EntityType) => {
-  const res = await queryCountsFromElastic(entity);
-
-  const tilaBuckets = res.body?.aggregations?.by_tila?.buckets ?? [];
-
-  const countsByTila = tilaBuckets.reduce((result: any, tilaAgg: any) => {
-    const subBuckets =
-      tilaAgg?.[entity === "haku" ? "by_hakutapa" : "by_koulutustyyppi_path"]
-        ?.buckets ?? [];
-
-    const countsByTyyppi = subBuckets.reduce((acc: any, node: any) => {
-      const count = node.doc_count;
-
-      if (entity === "haku") {
-        acc[node.key] = {
-          _count: count,
-        };
-      } else {
-        const ktParts = node.key.split("/");
-        const previousPart: string | null = null;
-
-        ktParts.forEach((part: string) => {
-          if (previousPart) {
-            acc[previousPart]._child = part;
-          }
-          if (!acc[part]) {
-            acc[part] = {
-              _count: 0,
-            };
-          }
-          acc[part]._parent = previousPart;
-          acc[part]._count += count;
-        });
-      }
-      return acc;
-    }, {});
-    result[tilaAgg.key] = {
-      _count: tilaAgg.doc_count,
-      ...countsByTyyppi,
-    };
-    return result;
-  }, {});
-
-  return {
-    _count: res?.body?.hits?.total?.value ?? 0,
-    ...countsByTila,
-  };
 };
 
 const countsFromElasticToDb = async (entity: EntityType) => {
