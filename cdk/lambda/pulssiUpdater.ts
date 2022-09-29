@@ -1,6 +1,6 @@
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm'
 import { Handler } from 'aws-lambda';
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 import { Client as ElasticClient } from '@elastic/elasticsearch'
 
 const ssmClient = new SSMClient({})
@@ -144,13 +144,14 @@ const getCounts = async (elasticClient: ElasticClient, entity: EntityType) => {
     }
 }
 
+const koutaClient = await connectKoutaDb()
+const elasticClient = await connectElastic()
+
 export const main: Handler = async (event, context, callback) => {
 
     // https://github.com/brianc/node-postgres/issues/930#issuecomment-230362178
-    context.callbackWaitsForEmptyEventLoop = false; // !important to reuse pool
-    const koutaClient = await connectKoutaDb()
+    context.callbackWaitsForEmptyEventLoop = false; // !important to use pool
     //const pulssiClient = await connectPulssiDb()
-    const elasticClient = await connectElastic()
     
     try {
       return {
@@ -161,7 +162,7 @@ export const main: Handler = async (event, context, callback) => {
       }
     } finally {
       // https://github.com/brianc/node-postgres/issues/1180#issuecomment-270589769
-      koutaClient.release(true);
+      //koutaClient.release(true);
       //pulssiClient.release(true)
     }
   };

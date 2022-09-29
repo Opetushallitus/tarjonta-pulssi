@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Runtime, Architecture } from 'aws-cdk-lib/aws-lambda';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
@@ -167,7 +167,9 @@ export class TarjontaPulssiStack extends cdk.Stack {
         externalModules: ['pg-native'],
         // https://github.com/aws/aws-sdk-js-v3/issues/3023
         sourcesContent: false,
-        mainFields: ['module', 'main']
+        mainFields: ['module', 'main'],
+        format: OutputFormat.ESM,
+        banner: "import {createRequire} from 'module';const require = createRequire(import.meta.url)"
       }
     });
 
@@ -224,7 +226,9 @@ export class TarjontaPulssiStack extends cdk.Stack {
         externalModules: ['pg-native'],
         // https://github.com/aws/aws-sdk-js-v3/issues/3023
         sourcesContent: false,
-        mainFields: ['module', 'main']
+        mainFields: ['module', 'main'],
+        format: OutputFormat.ESM,
+        banner: "import {createRequire} from 'module';const require = createRequire(import.meta.url)"
       }
     });
 
@@ -233,7 +237,6 @@ export class TarjontaPulssiStack extends cdk.Stack {
     //   schedule: Schedule.expression('cron(*/5 * * * *)'),
     // });
     // eventRule.addTarget(new LambdaFunction(tarjontaPulssiLamda))
-
 
      /**
      * Fetch PostgreSQLS SG name and ID
@@ -259,7 +262,7 @@ export class TarjontaPulssiStack extends cdk.Stack {
     );
 
     // Ingress TarjontapulssiLambda -> PostgreSqls
-    [5432].map((port) => {
+    [5432].forEach((port) => {
       PostgreSQLSG.addIngressRule(
         TarjontaPulssiLambdaSecurityGroup,
         Port.tcp(port)
