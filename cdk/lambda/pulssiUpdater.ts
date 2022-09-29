@@ -1,19 +1,21 @@
-import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm'
 import { Handler } from 'aws-lambda';
 import { Pool } from 'pg';
 import { Client as ElasticClient } from '@elastic/elasticsearch'
 
-const ssmClient = new SSMClient({})
+// Käytetään lambda-ympäristön aws-sdk:a. Ei toimi ESM-importilla, joten täytyy käyttää requirea
+const SSM = require('aws-sdk/clients/ssm')
+
+const ssm = new SSM()
 
 const getSSMParam = async (param?: string) => {
   if (param == null) {
     return undefined;
   }
   try {
-    const result = await ssmClient.send(new GetParameterCommand({
+    const result = (await ssm.getParameter( {
       Name: param,
       WithDecryption: true
-    }))
+    }).promise())
     return result.Parameter?.Value
   } catch (e) {
     console.error(e)
