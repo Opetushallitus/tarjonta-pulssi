@@ -79,7 +79,14 @@ const getCounts = async (elasticClient: ElasticClient, entity: EntityType) => {
             "size": 10,
           },
           "aggs": entity === "haku"
-          ? {}
+          ? {
+            "by_hakutapa": {
+              "terms": {
+                "field": "hakutapa.koodiUri.keyword",
+                "size": 100
+              }
+            }
+          }
           : {
             "by_koulutustyyppi_path": {
               "terms": {
@@ -110,25 +117,32 @@ const getCounts = async (elasticClient: ElasticClient, entity: EntityType) => {
 
     const countsByTila = tilaBuckets.reduce((result: any, tilaAgg: any) => {
 
-      const ktBuckets = tilaAgg?.by_koulutustyyppi_path?.buckets ?? []
+      const subBuckets = tilaAgg?.[(entity === 'haku' ? 'by_hakutapa' : 'by_koulutustyyppi_path')]?.buckets ?? []
 
-      const countsByTyyppi = ktBuckets.reduce((acc: any, node: any) => {
-        const ktParts = node.key.split('/')
+      const countsByTyyppi = subBuckets.reduce((acc: any, node: any) => {
         const count = node.doc_count
-        let previousPart: any = null
-  
-        ktParts.forEach((part: string, i: number) => {
-          if (previousPart) {
-            acc[previousPart]._child = part
+
+        if (entity === 'haku') {
+          acc[node.key] = {
+            _count: count
           }
-          if (!acc[part]) {
-            acc[part] = {
-              _count: 0
+        } else {
+          const ktParts = node.key.split('/')
+          let previousPart: any = null
+    
+          ktParts.forEach((part: string, i: number) => {
+            if (previousPart) {
+              acc[previousPart]._child = part
             }
-          }
-          acc._parent = previousPart
-          acc[part]._count += count
-        })
+            if (!acc[part]) {
+              acc[part] = {
+                _count: 0
+              }
+            }
+            acc._parent = previousPart
+            acc[part]._count += count
+          })
+        }
         return acc
       }, {})
       result[tilaAgg.key] = {
