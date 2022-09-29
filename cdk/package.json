@@ -38,6 +38,8 @@
     "aws-sdk": "^2.1217.0",
     "constructs": "^10.0.0",
     "pg": "^8.8.0",
+    "preact": "^10.11.0",
+    "preact-render-to-string": "^5.2.4",
     "source-map-support": "^0.5.21"
   }
 }

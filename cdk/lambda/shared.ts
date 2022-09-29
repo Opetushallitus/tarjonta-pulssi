@@ -47,4 +47,8 @@ export const entityTypes = [
   "hakukohde",
   "haku",
 ] as const;
+
 export type EntityType = typeof entityTypes[number];
+
+export type Julkaisutila = "julkaistu" | "arkistoitu";
+

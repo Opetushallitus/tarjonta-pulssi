@@ -7,6 +7,8 @@
       "es2020",
       "dom"
     ],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
     "esModuleInterop": true,
     "declaration": true,
     "strict": true,

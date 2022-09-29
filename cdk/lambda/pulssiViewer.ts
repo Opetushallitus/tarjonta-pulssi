@@ -1,6 +1,53 @@
 import { Handler } from "aws-lambda";
 import { connectToDb, getSSMParam } from "./shared";
 import type { EntityType } from "./shared";
+import render from "preact-render-to-string";
+import { h } from "preact";
+import App from "./app";
+import fs from 'fs'
+
+import type { Julkaisutila } from "./shared";
+
+const template = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Tarjonta-pulssi</title>
+</head>
+<body>
+    {{body}}
+</body>
+<script>
+    let UPDATE_INTERVAL = 60 * 1000;
+    let timeoutId = null;
+    function loadContent(delay = UPDATE_INTERVAL) {
+        timeoutId = setTimeout(
+            () =>
+                fetch(window.location.href)
+                    .then(response => response.text())
+                    .then(text => {
+                        document.body.innerHTML = text
+                        loadContent();
+                    })
+                    .catch((err) => {
+                        console.log(err)
+                    }),
+            delay
+        )
+    }
+    function onVisibilityChange() {
+        if (document.hidden) {
+            clearTimeout(timeoutId)
+            timeoutId = null;
+        } else if (!timeoutId) {
+            loadContent(0)
+        }
+    }
+    window.onload = () => {
+        window.addEventListener('visibilitychange', onVisibilityChange)
+        loadContent()
+    }
+</script>
+</html>`;
 
 const connectPulssiDb = async () => {
   const PULSSI_DB_USER = await getSSMParam(
@@ -19,15 +66,13 @@ const connectPulssiDb = async () => {
   });
 };
 
-const pulssiClient = await connectPulssiDb();
-
-type Julkaisutila = "julkaistu" | "arkistoitu";
-
 const sumBy = (arr: Array<any>, getNum: (x: any) => number) => {
   return arr.reduce((result, value) => result + getNum(value), 0);
 };
 
-type DbRowBase = {tila: Julkaisutila; amount: number | string; }
+type DbRowBase = { tila: Julkaisutila; amount: number | string };
+
+const pulssiClient = await connectPulssiDb();
 
 const getCounts = async (entity: EntityType) => {
   const res = await pulssiClient.query(`SELECT * from ${entity}_amounts`);
@@ -47,19 +92,17 @@ const getCounts = async (entity: EntityType) => {
         };
       } else {
         const ktParts = primaryColumn.split("/");
-        let previousPart: string | null = null;
+        let previousPartObj: Record<string, any> | null = null;
         ktParts.forEach((part: string) => {
-          if (previousPart) {
-            result[tila][previousPart]._child = part;
-          }
-          if (!result[tila][part]) {
-            result[tila][part] = {
+          const target = previousPartObj ?? result[tila];
+
+          if (!target[part]) {
+            target[part] = {
               _amount: 0,
             };
           }
-          result[tila][part]._parent = previousPart;
-          result[tila][part]._amount += amount;
-          previousPart = part;
+          target[part]._amount += amount;
+          previousPartObj = result[tila][part];
         });
       }
       return result;
@@ -88,10 +131,15 @@ export const main: Handler = async (event, context /*callback*/) => {
   // https://github.com/brianc/node-postgres/issues/930#issuecomment-230362178
   context.callbackWaitsForEmptyEventLoop = false; // !important to reuse pool
 
-  return {
+  const pulssiData = {
     koulutukset: await getCounts("koulutus"),
     toteutukset: await getCounts("toteutus"),
     hakukohteet: await getCounts("hakukohde"),
     haut: await getCounts("haku"),
   };
+
+  return template.replace(
+    "{{body}}",
+    render(h(App, { data: pulssiData as any }), {}, { pretty: true })
+  );
 };
