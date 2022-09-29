@@ -26,12 +26,14 @@ const historyTableInitSql = (name: string, fields: Array<string>) => {
     $$
     begin
       insert into ${name}_history (
-          ${fields.join(",")},
+          ${fields.join(",\n")},
+          transaction_id,
           system_time
           ) values (
-                ${fields.map((f) => `old.${f}`).join(",")},
-                tstzrange(lower(old.system_time), now(), '[)')
-            );
+            ${fields.map((f) => `old.${f}`).join(",\n")},
+            old.transaction_id,
+            tstzrange(lower(old.system_time), now(), '[)')
+          );
       return null;
     end;
     $$ language plpgsql;
@@ -50,7 +52,8 @@ const historyTableInitSql = (name: string, fields: Array<string>) => {
 
 const commonFields = `tila varchar NOT NULL,
 amount bigint NOT NULL,
-transaction_id bigint not null default txid_current(),`;
+transaction_id bigint not null default txid_current(),
+system_time tstzrange not null default tstzrange(now(), null, '[)'),`;
 
 export const up: MigrationFn<ClientBase> = async ({ context: pg }) => {
   await pg.query(`
