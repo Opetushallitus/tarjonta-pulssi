@@ -10,6 +10,7 @@ import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import { useState } from 'react';
 import { Typography } from '@mui/material';
 import { Box } from '@mui/system';
+import { QueryClient, QueryClientProvider, useQuery } from 'react-query';
 
 export const entityTypes = [
   "koulutus",
@@ -134,15 +135,41 @@ const EntityTable = ({data, entity}: {data: any, entity: EntityType}) => {
     </TableContainer>
 }
 
-export function App ({data}: {data: PulssiData}) {
-    return <div class="kouta">
+const queryClient = new QueryClient()
+
+const REFETCH_INTERVAL = 5 * 60 * 1000;
+
+const usePulssiData = () => {
+  return useQuery<PulssiData>("getPulssiData", () => fetch("/pulssi.json").then(response => response.json()), {
+    refetchInterval: REFETCH_INTERVAL,
+    refetchOnMount: 'always',
+    refetchOnReconnect: true,
+    refetchOnWindowFocus: true,
+  })
+}
+
+export function AppContent () {
+  const {data, status} = usePulssiData();
+
+  switch (status) {
+    case "error": 
+      return <div>Error loading data!</div>
+    case "success": 
+      return <div class="kouta">
         <h1>Koulutukset</h1>
-        <EntityTable data={data.koulutukset} entity="koulutus"/>
+        <EntityTable data={data?.koulutukset} entity="koulutus"/>
         <h1>Toteutukset</h1>
-        <EntityTable data={data.toteutukset} entity="toteutus"/>
+        <EntityTable data={data?.toteutukset} entity="toteutus"/>
         <h1>Hakukohteet</h1>
-        <EntityTable data={data.hakukohteet} entity="hakukohde"/>
+        <EntityTable data={data?.hakukohteet} entity="hakukohde"/>
         <h1>Haut</h1>
-        <EntityTable data={data.haut} entity="haku"/>
+        <EntityTable data={data?.haut} entity="haku"/>
     </div>
+    default:
+      return <div></div>
+  }
+}
+
+export function App() {
+  return <QueryClientProvider client={queryClient}><AppContent /></QueryClientProvider>
 }
