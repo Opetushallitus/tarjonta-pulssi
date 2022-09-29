@@ -20,26 +20,41 @@ const getSSMParam = async (param?: string) => {
   }
 }
 
-const dbUserPromise = getSSMParam(process.env.KOUTA_POSTGRES_RO_USER)
-const dbPasswordPromise = getSSMParam(process.env.KOUTA_POSTGRES_RO_PASSWORD)
 
-const KOUTA_DB_HOST = `kouta.db.${process.env.PUBLICHOSTEDZONE}`
-const KOUTA_DB_PORT = 5432
+const DEFAULT_DB_POOL_PARAMS = {
+  max: 1,
+  min: 0,
+  idleTimeoutMillis: 120000,
+  connectionTimeoutMillis: 10000,
 
+}
 const connectKoutaDb = async () => {
-  const KOUTA_DB_USER = await dbUserPromise
-  const KOUTA_DB_PASSWORD = await dbPasswordPromise
+  const KOUTA_DB_USER = await getSSMParam(process.env.KOUTA_POSTGRES_RO_USER)
+  const KOUTA_DB_PASSWORD = await getSSMParam(process.env.KOUTA_POSTGRES_RO_PASSWORD)
 
   const pool = new Pool({
-    max: 1,
-    min: 0,
-    idleTimeoutMillis: 120000,
-    connectionTimeoutMillis: 10000,
-    host: KOUTA_DB_HOST,
-    port: KOUTA_DB_PORT,
+    ...DEFAULT_DB_POOL_PARAMS,
+    host: `kouta.db.${process.env.PUBLICHOSTEDZONE}`,
+    port: 5432,
     database: 'kouta',
     user: KOUTA_DB_USER,
     password: KOUTA_DB_PASSWORD,
+  });
+
+  return pool.connect()
+}
+
+const connectPulssiDb = async () => {
+  const PULSSI_DB_USER = await getSSMParam(process.env.TARJONTAPULSSI_POSTGRES_APP_USER)
+  const PULSSI_DB_PASSWORD = await getSSMParam(process.env.TARJONTAPULSSI_POSTGRES_APP_PASSWORD)
+
+  const pool = new Pool({
+    ...DEFAULT_DB_POOL_PARAMS,
+    host: `tarjontapulssi.db.${process.env.PUBLICHOSTEDZONE}`,
+    port: 5432,
+    database: 'tarjontapulssi',
+    user: PULSSI_DB_USER,
+    password: PULSSI_DB_PASSWORD,
   });
 
   return pool.connect()
@@ -60,6 +75,7 @@ export const main: Handler = async (event, context, callback) => {
     // https://github.com/brianc/node-postgres/issues/930#issuecomment-230362178
     context.callbackWaitsForEmptyEventLoop = false; // !important to reuse pool
     const koutaClient = await connectKoutaDb();
+    const pulssiClient = await connectPulssiDb()
     
     try {
       return {
