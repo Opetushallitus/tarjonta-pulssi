@@ -1,7 +1,7 @@
 import { Handler } from "aws-lambda";
 import { Pool, PoolClient } from "pg";
 import { Client as ElasticClient } from "@elastic/elasticsearch";
-import { getSSMParam, entityTypes, DEFAULT_DB_POOL_PARAMS } from "./shared";
+import { getSSMParam, entityTypes, DEFAULT_DB_POOL_PARAMS, getTilaBuckets } from "./shared";
 
 const PULSSI_DB_USER = await getSSMParam(
   process.env.TARJONTAPULSSI_POSTGRES_APP_USER
@@ -73,6 +73,7 @@ const queryCountsFromElastic = async () =>
     ]),
   });
 
+
 const countsFromElasticToDb = async (pulssiClient: PoolClient) => {
   const msearchRes = await queryCountsFromElastic();
 
@@ -82,34 +83,18 @@ const countsFromElasticToDb = async (pulssiClient: PoolClient) => {
       const entity = entityTypes[index];
       const elasticResBody = msearchRes.body.responses?.[index];
 
-      const tilaBuckets = elasticResBody?.aggregations?.by_tila?.buckets ?? [];
-
       const subAggName =
         entity === "haku" ? "by_hakutapa" : "by_koulutustyyppi_path";
 
       const subAggColumn = entity === "haku" ? "hakutapa" : "tyyppi_path";
 
-      const rows = (
+      const dbSelectRes = (
         await pulssiClient.query(
           `select tila, ${subAggColumn} from ${entity}_amounts group by (tila, ${subAggColumn})`
         )
       )?.rows;
-      // Asetetaan nollaksi aggregaatioiden luvut, jotka löytyy kannasta, mutta ei elasticista.
-      // Bucketteja voi kadota, jos entiteettejä muokataan. Tarvitsee nollata, jotta kantaan ei jää haamu-lukuja sotkemaan.
-      rows.forEach((row) => {
-        const subBuckets = tilaBuckets?.find(
-          (v: { key: string }) => v.key === row.tila
-        )?.buckets;
-        const subBucket = subBuckets?.find(
-          (v: { key: string }) => v.key === row?.[subAggColumn]
-        );
-        if (Array.isArray(subBuckets) && !subBucket) {
-          subBuckets.push({
-            key: row[subAggColumn],
-            doc_count: 0,
-          });
-        }
-      });
+
+      const tilaBuckets = getTilaBuckets(dbSelectRes, elasticResBody, subAggColumn, subAggName);
 
       for (const tilaBucket of tilaBuckets) {
         const tila = tilaBucket.key;
