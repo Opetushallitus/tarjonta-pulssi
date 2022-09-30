@@ -1,6 +1,5 @@
 import { Handler } from "aws-lambda";
 import {
-  createPulssiHTML,
   DEFAULT_DB_POOL_PARAMS,
   getPulssiEntityData,
   getSSMParam,
@@ -53,7 +52,5 @@ export const main: Handler = async (event, context /*, callback*/) => {
     haut: await getCounts("haku"),
   };
 
-  const html = createPulssiHTML(pulssiData as any);
-
-  await putPulssiS3Object({ Key: "index.html", Body: html, ContentType: "text/html; charset=utf-8" });
+  await putPulssiS3Object({ Key: "pulssi.json", Body: pulssiData, ContentType: "application/json; charset=utf-8" });
 };
