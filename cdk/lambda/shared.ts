@@ -198,7 +198,6 @@ export const getPulssiEntityData = (
           }
           target[part].julkaistu_amount += julkaistu_amount;
           target[part].arkistoitu_amount += arkistoitu_amount;
-
           previousPartObj = target[part];
         });
       }
@@ -209,14 +208,8 @@ export const getPulssiEntityData = (
 
   return {
     by_tila: {
-      julkaistu: {
-        _amount: sumBy(rows, (row: DbRowBase) => Number(row.julkaistu_amount)
-        ),
-      },
-      arkistoitu: {
-        _amount: sumBy(rows, (row: DbRowBase) => Number(row.arkistoitu_amount)
-        ),
-      },
+      julkaistu_amount: sumBy(rows, (row: DbRowBase) => Number(row.julkaistu_amount)),
+      arkistoitu_amount: sumBy(rows, (row: DbRowBase) => Number(row.arkistoitu_amount)),
     },
     [dataKeyName]: countsBySubKey,
   };
