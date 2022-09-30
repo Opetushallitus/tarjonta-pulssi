@@ -1,8 +1,5 @@
 import type { PutObjectRequest } from "aws-sdk/clients/s3";
 import { QueryResult } from "pg";
-import render from "preact-render-to-string";
-import { h } from "preact";
-import App from "./app";
 
 // Käytetään lambda-ympäristön aws-sdk:a. Ei toimi ESM-importilla, joten täytyy käyttää requirea
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -108,61 +105,6 @@ const sumBy = (arr: Array<any>, getNum: (x: any) => number) => {
 
 type DbRowBase = { tila: Julkaisutila; julkaistu_amount: number | string, arkistoitu_amount: number | string };
 
-const template = `<!DOCTYPE html>
-<html>
-<head>
-    <title>Tarjonta-pulssi</title>
-</head>
-<body>
-    {{body}}
-</body>
-<script>
-    let UPDATE_INTERVAL = 60 * 1000;
-    let timeoutId = null;
-    function loadContent(delay = UPDATE_INTERVAL) {
-        timeoutId = setTimeout(
-            () =>
-                fetch(window.location.href)
-                    .then(response => response.text())
-                    .then(text => {
-                        document.body.innerHTML = text
-                        loadContent();
-                    })
-                    .catch((err) => {
-                        console.log(err)
-                    }),
-            delay
-        )
-    }
-    function onVisibilityChange() {
-        if (document.hidden) {
-            clearTimeout(timeoutId)
-            timeoutId = null;
-        } else if (!timeoutId) {
-            loadContent(0)
-        }
-    }
-    window.onload = () => {
-        window.addEventListener('visibilitychange', onVisibilityChange)
-        loadContent()
-    }
-</script>
-<style>
-  table {  
-    border-collapse: collapse;
-  }
-  th, td {
-    padding: 6px;
-  }
-  th:first-child {
-    border-right: 1px solid black; 
-  }
-  th:not(:first-child), tr:first-child > th {
-    border-bottom: 1px solid black; 
-  }
-</style>
-</html>`;
-
 export const getPulssiEntityData = (
   res: QueryResult<any>,
   entity: EntityType
@@ -240,11 +182,4 @@ export type PulssiData = {
   toteutukset: EntityDataWithSubKey<"by_tyyppi">;
   hakukohteet: EntityDataWithSubKey<"by_tyyppi">;
   haut: EntityDataWithSubKey<"by_hakutapa">;
-};
-
-export const createPulssiHTML = (pulssiData: PulssiData) => {
-  return template.replace(
-    "{{body}}",
-    render(h(App, { data: pulssiData }), {}, { pretty: true })
-  );
 };
