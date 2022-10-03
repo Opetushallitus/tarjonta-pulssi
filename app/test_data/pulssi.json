@@ -117,14 +117,6 @@
             "arkistoitu_amount": 12
           }
         },
-        "koulutustyyppi_1": {
-          "julkaistu_amount": 1599,
-          "arkistoitu_amount": 383,
-          "koulutustyyppi_26": {
-            "julkaistu_amount": 1800,
-            "arkistoitu_amount": 420
-          }
-        },
         "amm-muu": {
           "julkaistu_amount": 6,
           "arkistoitu_amount": 0
@@ -247,14 +239,6 @@
           "koulutustyyppi_4": {
             "julkaistu_amount": 193,
             "arkistoitu_amount": 36
-          }
-        },
-        "koulutustyyppi_1": {
-          "julkaistu_amount": 2124,
-          "arkistoitu_amount": 416,
-          "koulutustyyppi_26": {
-            "julkaistu_amount": 2382,
-            "arkistoitu_amount": 446
           }
         },
         "amm-osaamisala": {
