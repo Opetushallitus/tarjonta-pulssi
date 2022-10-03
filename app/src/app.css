@@ -1,8 +1,7 @@
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  margin: 2rem;
   text-align: center;
+  color: black;
 }
 
 .logo {
@@ -16,10 +15,71 @@
   filter: drop-shadow(0 0 2em #673ab8aa);
 }
 
-.card {
-  padding: 2em;
+main {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+
 }
 
-.read-the-docs {
-  color: #888;
+.EntitySection {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 1;
+  flex-grow: 1;
+  flex-basis: auto;
+  max-width: 550px;
+  margin: 10px;
+}
+
+table {
+  box-sizing: border-box;
+  border-collapse: collapse;
+  margin: 20px;
+}
+
+th.row {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+th.col {
+  border-right: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+td, th {
+  padding: 8px;
+}
+
+th {
+  font-weight: 500;
+}
+
+td.content {
+  text-align: right;
+}
+
+.EntitySectionHeader {
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  align-items: center;
+  justify-content: center;
+}
+
+h1 {
+  font-size: '1.5rem';
+  font-weight: 500;
+  text-align: left;
+  margin: 0;
+  padding-left: 14px;
+}
+
+.icon {
+  fill: black;
+  width: 28px;
+  height: auto
 }

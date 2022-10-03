@@ -1,16 +1,8 @@
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
-import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import React, { useState } from 'react';
-import { Typography } from '@mui/material';
-import { Box } from '@mui/system';
 import { EntityType, WithAmounts } from './commonTypes';
+import {ReactComponent as ExpandLessOutlinedIcon} from '@material-design-icons/svg/outlined/expand_less.svg'
+import {ReactComponent as ExpandMoreOutlinedIcon} from '@material-design-icons/svg/outlined/expand_more.svg';
+import { useTranslations } from './useTranslations';
 
 const ExpandIcon = ({isExpanded}: {isExpanded: boolean}) => isExpanded ? <ExpandLessOutlinedIcon /> : <ExpandMoreOutlinedIcon />
 
@@ -22,19 +14,19 @@ const ContentRow = React.memo(({title, amounts, subRows = [], indent = false}: R
   const [isExpanded, setIsExpanded] = useState(false);
 
   return <>
-  <TableRow key={title}>
-    <TableCell sx={{ cursor: subRows?.length ? 'pointer' : 'inherit'}} onClick={() => {setIsExpanded(s => !s)}} component="th" scope="row">
-      <Box display="flex" alignItems="center">
-        {indent && <Typography>-&nbsp;</Typography>}
-        <Typography component="span">{title}</Typography>
+  <tr key={title}>
+    <th style={{ cursor: subRows?.length ? 'pointer' : 'inherit'}} className="col" onClick={() => {setIsExpanded(s => !s)}}>
+      <div style={{display: 'flex', alignItems: 'center'}}>
+        {indent && <div>-&nbsp;</div>}
+        <div style={{textAlign: 'left'}}>{title}</div>
         {subRows && subRows?.length > 0 && <ExpandIcon isExpanded={isExpanded} />}
-      </Box>
-    </TableCell>
-    <TableCell align="right">{amounts?.julkaistu_amount}</TableCell>
-    <TableCell align="right">{
+      </div>
+    </th>
+    <td className="content">{amounts?.julkaistu_amount}</td>
+    <td className="content">{
       (amounts.julkaistu_amount) + (amounts.arkistoitu_amount)}
-    </TableCell>
-  </TableRow>
+    </td>
+  </tr>
   {subRows && isExpanded && subRows.map((rowProps:any) => <ContentRow {...rowProps} indent={true} />)}
 </>
 })
@@ -42,24 +34,26 @@ const ContentRow = React.memo(({title, amounts, subRows = [], indent = false}: R
 const SubEntry = ({entry}: any) => {
   const [k, v] = entry;
   const subEntries = Object.entries(v).filter(ss => !ss?.[0]?.endsWith('_amount'))
+  const t = useTranslations()
 
-  return <ContentRow title={k} amounts={v} subRows={subEntries.map(([k, v]) => ({ title: k, amounts: v}))} />
+  return <ContentRow title={t?.[k] || k} amounts={v} subRows={subEntries.map(([k, v]) => ({ title: k, amounts: v}))} />
 }
 
 export const EntityTable = ({data, entity}: {data: any, entity: EntityType}) => {
     const childrenObj = entity === "haku" ? data.by_hakutapa : data.by_tyyppi;
+    const t = useTranslations()
 
-    return <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell component="th" scope="row">{entity === "haku" ? "hakutapa" : "tyyppi"}</TableCell>
-            <TableCell>Julkaistut</TableCell>
-            <TableCell>Kokonaismäärä</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
+    return <table>
+        <thead>
+          <tr>
+            <th className="row col">{entity === "haku" ? t?.hakutapa_otsikko : t?.tyyppi_otsikko}</th>
+            <th className="row">{t?.julkaistut_otsikko}</th>
+            <th className="row">{t?.molemmat_tilat_otsikko}</th>
+          </tr>
+        </thead>
+        <tbody>
         {Object.entries(childrenObj).map((subEntry: any) => <SubEntry entry={subEntry} />)}
-        <ContentRow title="Yhteensä" amounts={data?.by_tila} />
-      </TableBody>
-    </Table>
+      </tbody>
+      <tfoot><ContentRow title={t?.yhteensa_otsikko} amounts={data?.by_tila} /></tfoot>
+    </table>
 }
