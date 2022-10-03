@@ -1,68 +1,153 @@
-import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm'
-import { Handler } from 'aws-lambda';
-import { Client, Pool, PoolClient } from 'pg';
+import { Handler } from "aws-lambda";
+import { Pool, PoolClient } from "pg";
+import { Client as ElasticClient } from "@elastic/elasticsearch";
+import { getSSMParam, entityTypes, DEFAULT_DB_POOL_PARAMS, getTilaBuckets } from "./shared";
 
-const ssmClient = new SSMClient({})
+const PULSSI_DB_USER = await getSSMParam(
+  process.env.TARJONTAPULSSI_POSTGRES_APP_USER
+);
+const PULSSI_DB_PASSWORD = await getSSMParam(
+  process.env.TARJONTAPULSSI_POSTGRES_APP_PASSWORD
+);
 
-const getSSMParam = async (param?: string) => {
-  if (param == null) {
-    return undefined;
-  }
-  try {
-    const result = await ssmClient.send(new GetParameterCommand({
-      Name: param,
-      WithDecryption: true
-    }))
-    return result.Parameter?.Value
-  } catch (e) {
-    console.error(e)
-    return undefined
-  }
-}
+const pulssiDbPool = new Pool({
+  ...DEFAULT_DB_POOL_PARAMS,
+  host: `tarjontapulssi.db.${process.env.PUBLICHOSTEDZONE}`,
+  port: 5432,
+  database: "tarjontapulssi",
+  user: PULSSI_DB_USER,
+  password: PULSSI_DB_PASSWORD,
+});
 
-const dbUserPromise = getSSMParam(process.env.KOUTA_POSTGRES_RO_USER)
-const dbPasswordPromise = getSSMParam(process.env.KOUTA_POSTGRES_RO_PASSWORD)
+const connectElastic = async () => {
+  const ELASTIC_URL_WITH_CREDENTIALS = await getSSMParam(
+    process.env.KOUTA_ELASTIC_URL_WITH_CREDENTIALS
+  );
 
-type TableName = 'toteutukset' | 'koulutukset' | 'hakukohteet' | 'haut'
+  return new ElasticClient({
+    node: ELASTIC_URL_WITH_CREDENTIALS,
+  });
+};
 
-const getJulkaistut = async (client: PoolClient, tableName: TableName) => {
+const elasticClient = await connectElastic();
 
-  // TODO: Ei toimi hauille ja hakukohteille, koska niiden metadatassa ei ole tyyppiä!
- const rows = (await client.query(`SELECT metadata #>> '{tyyppi}' as tyyppi, count(*) as count from ${tableName} where tila = 'julkaistu'::Julkaisutila GROUP BY ROLLUP(metadata #>> '{tyyppi}')` )).rows ?? []
-
- return Object.fromEntries(rows.map(({tyyppi, count}) => [tyyppi ?? '*', count]))
-}
-
-export const main: Handler = async (event, context, callback) => {
-  const DB_USER = await dbUserPromise
-  const DB_PASSWORD = await dbPasswordPromise
-  
-  const DB_HOST = `kouta.db.${process.env.PUBLICHOSTEDZONE}`
-  const DB_PORT = 5432
-  
-  const pool = new Pool({
-      max: 1,
-      min: 0,
-      idleTimeoutMillis: 120000,
-      connectionTimeoutMillis: 10000,
-      host: DB_HOST,
-      port: DB_PORT,
-      database: 'kouta',
-      user: DB_USER,
-      password: DB_PASSWORD,
+const queryCountsFromElastic = async () =>
+  elasticClient.msearch({
+    body: entityTypes.flatMap((entity) => [
+      { index: `${entity}-kouta` },
+      {
+        size: 0, // Ei haluta hakutuloksia, vain aggsit
+        track_total_hits: true, // Halutaan aina tarkka hits-määrä, eikä jotain sinne päin
+        query: {
+          terms: {
+            tila: ["julkaistu", "arkistoitu"],
+          },
+        },
+        aggs: {
+          by_tila: {
+            terms: {
+              field: "tila.keyword",
+              size: 10,
+            },
+            aggs:
+              entity === "haku"
+                ? {
+                    by_hakutapa: {
+                      terms: {
+                        field: "hakutapa.koodiUri.keyword",
+                        size: 100,
+                      },
+                    },
+                  }
+                : {
+                    by_koulutustyyppi_path: {
+                      terms: {
+                        field: "koulutustyyppiPath.keyword",
+                        size: 100,
+                      },
+                    },
+                  },
+          },
+        },
+      },
+    ]),
   });
 
-    // https://github.com/brianc/node-postgres/issues/930#issuecomment-230362178
-    context.callbackWaitsForEmptyEventLoop = false; // !important to reuse pool
-    const client = await pool.connect();
-    
-    try {
-      return {
-        julkaistutKoulutukset: await getJulkaistut(client, 'koulutukset'),
-        julkaistutToteutukset: await getJulkaistut(client, 'toteutukset'),
+
+const countsFromElasticToDb = async (pulssiClient: PoolClient) => {
+  const msearchRes = await queryCountsFromElastic();
+
+  try {
+    await pulssiClient.query("BEGIN");
+    for (let index = 0; index < entityTypes.length; ++index) {
+      const entity = entityTypes[index];
+      const elasticResBody = msearchRes.body.responses?.[index];
+
+      const subAggName =
+        entity === "haku" ? "by_hakutapa" : "by_koulutustyyppi_path";
+
+      const subAggColumn = entity === "haku" ? "hakutapa" : "tyyppi_path";
+
+      const dbSelectRes = (
+        await pulssiClient.query(
+          `select tila, ${subAggColumn} from ${entity}_amounts group by (tila, ${subAggColumn})`
+        )
+      )?.rows;
+
+      const tilaBuckets = getTilaBuckets(dbSelectRes, elasticResBody, subAggColumn, subAggName);
+
+      for (const tilaBucket of tilaBuckets) {
+        const tila = tilaBucket.key;
+        const subBuckets = tilaBucket?.[subAggName]?.buckets ?? [];
+
+        for (const subBucket of subBuckets) {
+          const amount = subBucket.doc_count ?? 0;
+
+          const existingRow = (
+            await pulssiClient.query(
+              `SELECT * from ${entity}_amounts WHERE tila = '${tila}' AND ${subAggColumn} = '${subBucket.key}'`
+            )
+          )?.rows?.[0];
+
+          if (existingRow) {
+            // Ei päivitetä kantaa, jos luku ei ole muuttunut!
+            if (Number(existingRow.amount) !== Number(amount)) {
+              console.log(
+                `Updating changed ${entity} amount: ${tila}, ${subBucket.key} = ${amount}`
+              );
+              await pulssiClient.query(
+                `UPDATE ${entity}_amounts SET amount = ${amount} WHERE tila = '${tila}' AND ${subAggColumn} = '${subBucket.key}'`
+              );
+            }
+          } else {
+            console.log(
+              `Inserting ${entity} amount: ${tila}, ${subBucket.key} = ${amount}`
+            );
+            await pulssiClient.query(
+              `INSERT INTO ${entity}_amounts(${subAggColumn}, tila, amount) values('${subBucket.key}', '${tila}', ${amount})`
+            );
+          }
+        }
       }
-    } finally {
-      // https://github.com/brianc/node-postgres/issues/1180#issuecomment-270589769
-      client.release(true);
     }
-  };
+    await pulssiClient.query("COMMIT");
+  } catch (e) {
+    console.log("ROLLBACK");
+    await pulssiClient.query("ROLLBACK");
+    console.error(e);
+  }
+};
+
+export const main: Handler = async (event, context, callback) => {
+  // https://github.com/brianc/node-postgres/issues/930#issuecomment-230362178
+  context.callbackWaitsForEmptyEventLoop = false; // !important to use pool
+
+  const pulssiClient = await pulssiDbPool.connect();
+
+  try {
+    return await countsFromElasticToDb(pulssiClient);
+  } finally {
+    // https://github.com/brianc/node-postgres/issues/1180#issuecomment-270589769
+    pulssiClient.release(true);
+  }
+};

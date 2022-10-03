@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Runtime, Architecture } from 'aws-cdk-lib/aws-lambda';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
@@ -106,7 +106,7 @@ export class TarjontaPulssiStack extends cdk.Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       additionalBehaviors: { 
-        'index.html': {
+        'pulssi.json': {
           origin: StaticContentBucketOrigin,
           cachePolicy: noCachePolicy,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
@@ -144,6 +144,8 @@ export class TarjontaPulssiStack extends cdk.Stack {
         PUBLICHOSTEDZONE: `${props.publicHostedZone}`,
         TARJONTAPULSSI_POSTGRES_APP_USER: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
         TARJONTAPULSSI_POSTGRES_APP_PASSWORD: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
+        KOUTA_ELASTIC_URL_WITH_CREDENTIALS: `/${props.environmentName}/services/kouta-indeksoija/kouta-indeksoija-elastic7-url-with-credentials`,
+
       },
       initialPolicy: [
         new PolicyStatement({
@@ -153,6 +155,7 @@ export class TarjontaPulssiStack extends cdk.Stack {
             `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/kouta/readonly-user-password`,
             `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
             `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/services/kouta-indeksoija/kouta-indeksoija-elastic7-url-with-credentials`,
           ],
           actions: ["ssm:GetParameter"],
         }),
@@ -161,10 +164,12 @@ export class TarjontaPulssiStack extends cdk.Stack {
         // pg-native is not available and won't be used. This is letting the
         // bundler (esbuild) know pg-native won't be included in the bundled JS
         // file.
-        externalModules: ['pg-native'],
+        externalModules: ['aws-sdk', 'pg-native'],
         // https://github.com/aws/aws-sdk-js-v3/issues/3023
         sourcesContent: false,
-        mainFields: ['module', 'main']
+        mainFields: ['module', 'main'],
+        format: OutputFormat.ESM,
+        banner: "import {createRequire} from 'module';const require = createRequire(import.meta.url)"
       }
     });
 
@@ -182,15 +187,15 @@ export class TarjontaPulssiStack extends cdk.Stack {
       securityGroups: [ TarjontaPulssiLambdaSecurityGroup ],
       environment: {
         PUBLICHOSTEDZONE: `${props.publicHostedZone}`,
-        TARJONTAPULSSI_POSTGRES_APP_USER: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
-        TARJONTAPULSSI_POSTGRES_APP_PASSWORD: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
+        TARJONTAPULSSI_POSTGRES_RO_USER: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
+        TARJONTAPULSSI_POSTGRES_RO_PASSWORD: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
       },
       initialPolicy: [
         new PolicyStatement({
           effect: Effect.ALLOW,
           resources: [
-            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/readonly-user-name`,
-            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/readonly-user-password`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
           ],
           actions: ["ssm:GetParameter"],
         }),
@@ -218,10 +223,12 @@ export class TarjontaPulssiStack extends cdk.Stack {
         // pg-native is not available and won't be used. This is letting the
         // bundler (esbuild) know pg-native won't be included in the bundled JS
         // file.
-        externalModules: ['pg-native'],
+        externalModules: ['aws-sdk', 'pg-native'],
         // https://github.com/aws/aws-sdk-js-v3/issues/3023
         sourcesContent: false,
-        mainFields: ['module', 'main']
+        mainFields: ['module', 'main'],
+        format: OutputFormat.ESM,
+        banner: "import {createRequire} from 'module';const require = createRequire(import.meta.url)"
       }
     });
 
@@ -230,7 +237,6 @@ export class TarjontaPulssiStack extends cdk.Stack {
     //   schedule: Schedule.expression('cron(*/5 * * * *)'),
     // });
     // eventRule.addTarget(new LambdaFunction(tarjontaPulssiLamda))
-
 
      /**
      * Fetch PostgreSQLS SG name and ID
@@ -256,7 +262,7 @@ export class TarjontaPulssiStack extends cdk.Stack {
     );
 
     // Ingress TarjontapulssiLambda -> PostgreSqls
-    [5432].map((port) => {
+    [5432].forEach((port) => {
       PostgreSQLSG.addIngressRule(
         TarjontaPulssiLambdaSecurityGroup,
         Port.tcp(port)

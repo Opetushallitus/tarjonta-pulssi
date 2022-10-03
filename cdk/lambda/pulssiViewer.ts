@@ -1,68 +1,56 @@
-import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm'
-import { Handler } from 'aws-lambda';
-import { Client, Pool, PoolClient } from 'pg';
+import { Handler } from "aws-lambda";
+import {
+  DEFAULT_DB_POOL_PARAMS,
+  getPulssiEntityData,
+  getSSMParam,
+  Julkaisutila,
+  putPulssiS3Object,
+} from "./shared";
+import type { EntityType } from "./shared";
+import { Pool } from "pg";
 
-const ssmClient = new SSMClient({})
+const PULSSI_DB_USER = await getSSMParam(
+  process.env.TARJONTAPULSSI_POSTGRES_RO_USER
+);
+const PULSSI_DB_PASSWORD = await getSSMParam(
+  process.env.TARJONTAPULSSI_POSTGRES_RO_PASSWORD
+);
 
-const getSSMParam = async (param?: string) => {
-  if (param == null) {
-    return undefined;
-  }
-  try {
-    const result = await ssmClient.send(new GetParameterCommand({
-      Name: param,
-      WithDecryption: true
-    }))
-    return result.Parameter?.Value
-  } catch (e) {
-    console.error(e)
-    return undefined
-  }
-}
+const pulssiDbPool = new Pool({
+  ...DEFAULT_DB_POOL_PARAMS,
+  host: `tarjontapulssi.db.${process.env.PUBLICHOSTEDZONE}`,
+  port: 5432,
+  database: "tarjontapulssi",
+  user: PULSSI_DB_USER,
+  password: PULSSI_DB_PASSWORD,
+});
 
-const dbUserPromise = getSSMParam(process.env.KOUTA_POSTGRES_RO_USER)
-const dbPasswordPromise = getSSMParam(process.env.KOUTA_POSTGRES_RO_PASSWORD)
+const createTilaAmountCol = (tila: Julkaisutila) =>
+  `coalesce(sum(amount) filter(where tila = '${tila}'), 0) as ${tila}_amount`;
 
-type TableName = 'toteutukset' | 'koulutukset' | 'hakukohteet' | 'haut'
+const getCounts = async (entity: EntityType) => {
+  const primaryColName = entity === "haku" ? "hakutapa" : "tyyppi_path";
 
-const getJulkaistut = async (client: PoolClient, tableName: TableName) => {
+  const res = await pulssiDbPool.query(
+    `select ${primaryColName}, ${createTilaAmountCol(
+      "julkaistu"
+    )}, ${createTilaAmountCol(
+      "arkistoitu"
+    )} from ${entity}_amounts group by ${primaryColName}`
+  );
+  return getPulssiEntityData(res, entity);
+};
 
-  // TODO: Ei toimi hauille ja hakukohteille, koska niiden metadatassa ei ole tyyppiä!
- const rows = (await client.query(`SELECT metadata #>> '{tyyppi}' as tyyppi, count(*) as count from ${tableName} where tila = 'julkaistu'::Julkaisutila GROUP BY ROLLUP(metadata #>> '{tyyppi}')` )).rows ?? []
+export const main: Handler = async (event, context /*, callback*/) => {
+  // https://github.com/brianc/node-postgres/issues/930#issuecomment-230362178
+  context.callbackWaitsForEmptyEventLoop = false; // !important to reuse pool
 
- return Object.fromEntries(rows.map(({tyyppi, count}) => [tyyppi ?? '*', count]))
-}
-
-export const main: Handler = async (event, context, callback) => {
-  const DB_USER = await dbUserPromise
-  const DB_PASSWORD = await dbPasswordPromise
-  
-  const DB_HOST = `kouta.db.${process.env.PUBLICHOSTEDZONE}`
-  const DB_PORT = 5432
-  
-  const pool = new Pool({
-      max: 1,
-      min: 0,
-      idleTimeoutMillis: 120000,
-      connectionTimeoutMillis: 10000,
-      host: DB_HOST,
-      port: DB_PORT,
-      database: 'kouta',
-      user: DB_USER,
-      password: DB_PASSWORD,
-  });
-
-    // https://github.com/brianc/node-postgres/issues/930#issuecomment-230362178
-    context.callbackWaitsForEmptyEventLoop = false; // !important to reuse pool
-    const client = await pool.connect();
-    
-    try {
-      return {
-        julkaistutKoulutukset: await getJulkaistut(client, 'koulutukset'),
-        julkaistutToteutukset: await getJulkaistut(client, 'toteutukset'),
-      }
-    } finally {
-      // https://github.com/brianc/node-postgres/issues/1180#issuecomment-270589769
-      client.release(true);
-    }
+  const pulssiData = {
+    koulutukset: await getCounts("koulutus"),
+    toteutukset: await getCounts("toteutus"),
+    hakukohteet: await getCounts("hakukohde"),
+    haut: await getCounts("haku"),
   };
+
+  await putPulssiS3Object({ Key: "pulssi.json", Body: pulssiData, ContentType: "application/json; charset=utf-8" });
+};
