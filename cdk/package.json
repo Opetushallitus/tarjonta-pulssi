@@ -37,6 +37,7 @@
     "aws-cdk-lib": "2.39.1",
     "aws-sdk": "^2.1217.0",
     "constructs": "^10.0.0",
+    "node-fetch": "^3.2.10",
     "pg": "^8.8.0",
     "source-map-support": "^0.5.21"
   }
