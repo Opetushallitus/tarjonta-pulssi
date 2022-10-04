@@ -4,22 +4,11 @@
   color: black;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.preact:hover {
-  filter: drop-shadow(0 0 2em #673ab8aa);
-}
-
 main {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-
+  align-items: flex-start;
 }
 
 .EntitySection {
@@ -43,10 +32,12 @@ table {
 
 th.row {
   border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  text-align: right;
 }
 
 th.col {
   border-right: 1px solid rgba(0, 0, 0, 0.15);
+  text-align: left;
 }
 
 td, th {
@@ -59,6 +50,10 @@ th {
 
 td.content {
   text-align: right;
+}
+
+tfoot {
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
 }
 
 .EntitySectionHeader {

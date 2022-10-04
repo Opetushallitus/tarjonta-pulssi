@@ -1,16 +1,176 @@
 {
-    "koulutus_otsikko": { "fi" : "Koulutukset"},
-    "toteutus_otsikko": {"fi": "Toteutukset"},
-    "hakukohde_otsikko": {"fi": "Hakukohteet"},
-    "haku_otsikko": {"fi": "Haut"},
-    "tyyppi_otsikko": {"fi": "Tyyppi"},
-    "julkaistut_otsikko": {"fi": "Julkaistut"},
-    "molemmat_tilat_otsikko": {"fi": "Kokonaismäärä"},
-    "yhteensa_otsikko": {"fi": "Yhteensä"},
-    "hakutapa_otsikko": {"fi": "Hakutapa"},
-    "aikuisten-perusopetus": {"fi": "Aikuisten perusopetus"},
-    "amk": {"fi": "Ammattikorkeakoulutus"},
-    "amm": {"fi": "Ammatillinen koulutus"},
-    "amm-muu": {"fi": "Muu ammatillinen"},
-    "hakutapa_01": {"fi": "yhteishaku"}
+    "hakukohde_otsikko": {
+        "fi": "Hakukohteet"
+    },
+    "haku_otsikko": {
+        "fi": "Haut"
+    },
+    "koulutus_otsikko": {
+        "fi": "Koulutukset"
+    },
+    "sivu_otsikko": {
+        "fi": "Tarjonta-pulssi"
+    },
+    "toteutus_otsikko": {
+        "fi": "Toteutukset"
+    },
+    "tyyppi_otsikko": {
+        "fi": "Koulutustyyppi"
+    },
+    "hakutapa_otsikko": {
+        "fi": "Hakutapa"
+    },
+    "yhteensa_otsikko": {
+        "fi": "Yhteensä"
+    },
+    "julkaistut_otsikko": {
+        "fi": "Julkaistut"
+    },
+    "molemmat_tilat_otsikko": {
+        "fi": "Julkaistut + Arkistoidut"
+    },
+    "koulutustyyppi_10": {
+        "fi": "Vapaan sivistystyön koulutus",
+        "sv": "Fritt bildningsarbete "
+    },
+    "koulutustyyppi_4": {
+        "fi": "Ammatillinen perustutkinto (vaativa erityinen tuki)",
+        "sv": "Yrkesinriktad grundexamen (krävande särskilt stöd)",
+        "en": "Vocational upper secondary qualification as special needs education"
+    },
+    "koulutustyyppi_14": {
+        "fi": "Aikuisten lukiokoulutus",
+        "en": "Aikuisten lukiokoulutus",
+        "sv": "Gymnasieutbildning för vuxna"
+    },
+    "koulutustyyppi_15": {
+        "fi": "Esiopetus",
+        "sv": "Förskoleundervisning"
+    },
+    "koulutustyyppi_3": {
+        "sv": "Högskoleutbildning",
+        "fi": "Korkeakoulutus"
+    },
+    "koulutustyyppi_22": {
+        "sv": "Utbildning som förbereder för grundläggande utbildning",
+        "fi": "Perusopetukseen valmistava opetus"
+    },
+    "koulutustyyppi_2": {
+        "sv": "Gymnasieutbildning",
+        "fi": "Lukiokoulutus"
+    },
+    "koulutustyyppi_24": {
+        "fi": "Pelastusalan koulutus",
+        "sv": "Utbildning inom räddningsbranschen"
+    },
+    "koulutustyyppi_6": {
+        "sv": "Påbyggnadsundervisning efter den grundläggande utbildningen",
+        "fi": "Perusopetuksen lisäopetus"
+    },
+    "koulutustyyppi_35": {
+        "fi": "Vapaan sivistystyön lukutaitokoulutus",
+        "sv": "Utbildning i grundläggande litteracitet inom fritt bildningsarbete"
+    },
+    "koulutustyyppi_17": {
+        "fi": "Aikuisten perusopetus",
+        "en": "Aikuisten perusopetus",
+        "sv": "Grundläggande utbildning för vuxna"
+    },
+    "koulutustyyppi_30": {
+        "fi": "Aikuisten maahanmuuttajien kotoutumiskoulutus",
+        "sv": "Integrationsutbildning för vuxna invandrare"
+    },
+    "koulutustyyppi_23": {
+        "sv": "Utbildning som förbereder för gymnasieutbildning",
+        "fi": "Lukiokoulutukseen valmistava koulutus"
+    },
+    "koulutustyyppi_7": {
+        "fi": "Ammatilliseen peruskoulutukseen ohjaava ja valmistava koulutus",
+        "sv": "Utbildning som orienterar och förbereder för grundläggande yrkesutbildning"
+    },
+    "koulutustyyppi_12": {
+        "sv": "Specialyrkesexamen",
+        "en": "Specialist vocational qualification",
+        "fi": "Erikoisammattitutkinto"
+    },
+    "koulutustyyppi_19": {
+        "sv": "Utbildning som handleder för yrkesutbildning (VALMA) som specialundervisning",
+        "fi": "Ammatilliseen peruskoulutukseen valmentava koulutus (VALMA) erityisopetuksena"
+    },
+    "koulutustyyppi_11": {
+        "en": "Further vocational qualification",
+        "sv": "Yrkesexamen",
+        "fi": "Ammattitutkinto"
+    },
+    "koulutustyyppi_8": {
+        "sv": "Utbildning som förbereder invandrare för yrkesutbildning",
+        "fi": "Maahanmuuttajien ammatilliseen peruskoulutukseen valmistava koulutus"
+    },
+    "koulutustyyppi_9": {
+        "sv": "Förberedande gymnasieutbildning för invandrare och personer med annat modersmål än finska och svenska",
+        "fi": "Maahanmuuttajien ja vieraskielisten lukiokoulutukseen valmistava koulutus"
+    },
+    "koulutustyyppi_26": {
+        "fi": "Ammatillinen perustutkinto",
+        "sv": "Yrkesinriktad grundexamen"
+    },
+    "koulutustyyppi_5": {
+        "sv": "Utbildning som förbereder för arbete och ett självständigt liv (TELMA)",
+        "fi": "Työhön ja itsenäiseen elämään valmentava koulutus (TELMA)"
+    },
+    "koulutustyyppi_41": {
+        "sv": "Utbildning som handleder för examensutbildning (Hux) krävande särskilt stöd",
+        "fi": "Tutkintokoulutukseen valmentava koulutus (TUVA) vaativa erityinen tuki"
+    },
+    "koulutustyyppi_40": {
+        "fi": "Tutkintokoulutukseen valmentava koulutus TUVA)",
+        "sv": "Utbildning som handleder för examensutbildning (Hux)"
+    },
+    "koulutustyyppi_21": {
+        "en": "EB, RP, ISH",
+        "sv": "EB, RP, ISH",
+        "fi": "EB, RP, ISH"
+    },
+    "koulutustyyppi_18": {
+        "sv": "Utbildning som handleder för yrkesutbildning (VALMA)",
+        "fi": "Ammatilliseen peruskoulutukseen valmentava koulutus (VALMA)"
+    },
+    "koulutustyyppi_16": {
+        "fi": "Perusopetus",
+        "sv": "Grundläggande utbildning"
+    },
+    "koulutustyyppi_20": {
+        "sv": "Småbarnspedagogik",
+        "fi": "Varhaiskasvatus"
+    },
+    "hakutapa_01": {
+        "fi": "Yhteishaku",
+        "sv": "Gemensam ansökan",
+        "en": "Joint application"
+    },
+    "hakutapa_04": {
+        "fi": "Joustava haku",
+        "en": "Rolling admission (higher education)",
+        "sv": "Flexibel ansökan"
+    },
+    "hakutapa_05": {
+        "fi": "Siirtohaku",
+        "sv": "Ansökan om överflyttning",
+        "en": "Transfer application"
+    },
+    "hakutapa_02": {
+        "sv": "Separata antagningar",
+        "en": "Separate application",
+        "fi": "Erillishaku"
+    },
+    "hakutapa_03": {
+        "en": "Rolling admission (upper secondary level)",
+        "fi": "Jatkuva haku",
+        "sv": "Kontinuerlig ansökan"
+    },
+    "hakutapa_06": {
+        "fi": "Lisähaku",
+        "sv": "Tilläggsansökan",
+        "en": "Supplementary application"
+    }
 }

@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useQuery } from "react-query"
 import { JSON_PATH } from "./constants";
 
@@ -13,5 +14,13 @@ export const useTranslations = () => {
         staleTime: Infinity,
     })
 
-    return data ? Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v?.[userLanguage]])) : {};
+    const t = useCallback((k: string) => {
+        const translation = data?.[k]?.[userLanguage]
+        if (!translation) {
+            console.warn(`Translation for key "${k}" and language "${userLanguage}" not found!`)
+        }
+        return translation;
+    }, [data])
+
+    return {t};
 }
