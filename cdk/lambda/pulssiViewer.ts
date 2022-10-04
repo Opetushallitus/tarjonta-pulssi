@@ -43,35 +43,31 @@ const getCounts = async (entity: EntityType) => {
 };
 
 const koodistoURI = (koodistoNimi: string) =>
-  `https://${process.env.PUBLICHOSTEDZONE}/koodisto-service/rest/json/${koodistoNimi}/koodi?onlyValidKoodis=true`;
-const localizationsUri = `https://${process.env.PUBLICHOSTEDZONE}/lokalisointi/cxf/rest/v1/localisation?category=tarjonta-pulssi`;
+  `https://virkailija.${process.env.PUBLICHOSTEDZONE}/koodisto-service/rest/json/${koodistoNimi}/koodi?onlyValidKoodis=true`;
+const localizationsUri = `https://virkailija.${process.env.PUBLICHOSTEDZONE}/lokalisointi/cxf/rest/v1/localisation?category=tarjonta-pulssi`;
 
 const getKoodistoTranslations = async (koodistoNimi: string) => {
-  return fetch(koodistoURI(koodistoNimi))
-    .then((res) => res.json())
-    .then((data: any) =>
-      data?.reduce((result: any, hakutapa: any) => {
-        result[hakutapa?.koodiUri] = Object.fromEntries(
-          hakutapa.metadata?.map((tr: any) => [tr.kieli.toLowerCase(), tr.nimi])
-        );
-        return result;
-      }, {})
+  const res = await fetch(koodistoURI(koodistoNimi));
+  const json: any = await res.json();
+  return json?.reduce((result: any, hakutapa: any) => {
+    result[hakutapa?.koodiUri] = Object.fromEntries(
+      hakutapa.metadata?.map((tr: any) => [tr.kieli.toLowerCase(), tr.nimi])
     );
+    return result;
+  }, {});
 };
 
 const getLocalizations = async () => {
-  return fetch(localizationsUri)
-    .then((res) => res.json())
-    .then((data: any) => {
-      const result: Record<string, any> = {};
-      data?.forEach((translation: any) => {
-        if (!result[translation.key]) {
-          result[translation.key] = {};
-        }
-        result[translation.key][translation.locale] = translation.value;
-      });
-      return result;
-    });
+  const res = await fetch(localizationsUri)
+  const json: any = await res.json()
+  const result: Record<string, any> = {};
+  json?.forEach((translation: any) => {
+    if (!result[translation.key]) {
+      result[translation.key] = {};
+    }
+    result[translation.key][translation.locale] = translation.value;
+  });
+  return result;
 };
 
 export const main: Handler = async (event, context /*, callback*/) => {
@@ -86,20 +82,20 @@ export const main: Handler = async (event, context /*, callback*/) => {
   };
 
   const translations = {
-    ...(await getLocalizations()),
-    ...(await getKoodistoTranslations("koulutustyyppi")),
-    ...(await getKoodistoTranslations("hakutapa"))
+    ...await getLocalizations(),
+    ...await getKoodistoTranslations("koulutustyyppi"),
+    ...await getKoodistoTranslations("hakutapa"),
   };
 
   await putPulssiS3Object({
     Key: "pulssi.json",
-    Body: pulssiData,
+    Body: JSON.stringify(pulssiData),
     ContentType: "application/json; charset=utf-8",
   });
 
   await putPulssiS3Object({
     Key: "translations.json",
-    Body: translations,
+    Body: JSON.stringify(translations),
     ContentType: "application/json; charset=utf-8",
   });
 };
