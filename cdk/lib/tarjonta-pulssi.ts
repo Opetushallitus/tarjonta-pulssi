@@ -12,10 +12,11 @@ import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import { PublicHostedZone } from 'aws-cdk-lib/aws-route53';
+
 // import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 // import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
-
 interface TarjontaPulssiStackProps extends cdk.StackProps {
   environmentName: string;
   publicHostedZone: string;
@@ -74,8 +75,6 @@ export class TarjontaPulssiStack extends cdk.Stack {
       region: 'us-east-1', // Cloudfront only checks this region for certificates.
     });
 
-
-
     // CloudFront distribution
     const StaticContentBucketOrigin = new cloudfront_origins.S3Origin(staticContentBucket, {originAccessIdentity: cloudfrontOAI})
 
@@ -126,60 +125,13 @@ export class TarjontaPulssiStack extends cdk.Stack {
       vpc: myvpc,
     });
 
-    const tarjontaPulssiUpdaterLamda = new NodejsFunction(this, "TarjontaPulssiUpdaterLambda", {
-      entry: "lambda/pulssiUpdater.ts",
-      handler: "main",
-      runtime: Runtime.NODEJS_16_X,
-      logRetention: RetentionDays.ONE_YEAR,
-      architecture: Architecture.ARM_64,
-      timeout: cdk.Duration.seconds(5),
-      vpc: myvpc,
-      vpcSubnets: {
-        subnetType: SubnetType.PRIVATE_WITH_NAT,
-      },
-      securityGroups: [ TarjontaPulssiLambdaSecurityGroup ],
-      environment: {
-        KOUTA_POSTGRES_RO_USER: `/${props.environmentName}/postgresqls/kouta/readonly-user-name`,
-        KOUTA_POSTGRES_RO_PASSWORD: `/${props.environmentName}/postgresqls/kouta/readonly-user-password`,
-        PUBLICHOSTEDZONE: `${props.publicHostedZone}`,
-        TARJONTAPULSSI_POSTGRES_APP_USER: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
-        TARJONTAPULSSI_POSTGRES_APP_PASSWORD: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
-        KOUTA_ELASTIC_URL_WITH_CREDENTIALS: `/${props.environmentName}/services/kouta-indeksoija/kouta-indeksoija-elastic7-url-with-credentials`,
-
-      },
-      initialPolicy: [
-        new PolicyStatement({
-          effect: Effect.ALLOW,
-          resources: [
-            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/kouta/readonly-user-name`,
-            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/kouta/readonly-user-password`,
-            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
-            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
-            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/services/kouta-indeksoija/kouta-indeksoija-elastic7-url-with-credentials`,
-          ],
-          actions: ["ssm:GetParameter"],
-        }),
-      ],
-      bundling: {
-        // pg-native is not available and won't be used. This is letting the
-        // bundler (esbuild) know pg-native won't be included in the bundled JS
-        // file.
-        externalModules: ['aws-sdk', 'pg-native'],
-        // https://github.com/aws/aws-sdk-js-v3/issues/3023
-        sourcesContent: false,
-        mainFields: ['module', 'main'],
-        format: OutputFormat.ESM,
-        banner: "import {createRequire} from 'module';const require = createRequire(import.meta.url)"
-      }
-    });
-
-    const tarjontaPulssiViewerLamda = new NodejsFunction(this, "TarjontaPulssiViewerLambda", {
+    const tarjontaPulssiViewerLambda = new NodejsFunction(this, "TarjontaPulssiViewerLambda", {
       entry: "lambda/pulssiViewer.ts",
       handler: "main",
       runtime: Runtime.NODEJS_16_X,
       logRetention: RetentionDays.ONE_YEAR,
       architecture: Architecture.ARM_64,
-      timeout: cdk.Duration.seconds(5),
+      timeout: cdk.Duration.seconds(10),
       vpc: myvpc,
       vpcSubnets: {
         subnetType: SubnetType.PRIVATE_WITH_NAT,
@@ -217,7 +169,64 @@ export class TarjontaPulssiStack extends cdk.Stack {
             "s3:GetObject",
             "s3:getObjectAcl"
         ],
-        }), 
+        }),
+      ],
+      bundling: {
+        // pg-native is not available and won't be used. This is letting the
+        // bundler (esbuild) know pg-native won't be included in the bundled JS
+        // file.
+        externalModules: ['aws-sdk', 'pg-native'],
+        // https://github.com/aws/aws-sdk-js-v3/issues/3023
+        sourcesContent: false,
+        mainFields: ['module', 'main'],
+        format: OutputFormat.ESM,
+        banner: "import {createRequire} from 'module';const require = createRequire(import.meta.url)"
+      }
+    });
+
+    const tarjontaPulssiUpdaterLambda = new NodejsFunction(this, "TarjontaPulssiUpdaterLambda", {
+      entry: "lambda/pulssiUpdater.ts",
+      handler: "main",
+      runtime: Runtime.NODEJS_16_X,
+      logRetention: RetentionDays.ONE_YEAR,
+      architecture: Architecture.ARM_64,
+      timeout: cdk.Duration.seconds(10),
+      vpc: myvpc,
+      vpcSubnets: {
+        subnetType: SubnetType.PRIVATE_WITH_NAT,
+      },
+      securityGroups: [ TarjontaPulssiLambdaSecurityGroup ],
+      environment: {
+        KOUTA_POSTGRES_RO_USER: `/${props.environmentName}/postgresqls/kouta/readonly-user-name`,
+        KOUTA_POSTGRES_RO_PASSWORD: `/${props.environmentName}/postgresqls/kouta/readonly-user-password`,
+        PUBLICHOSTEDZONE: `${props.publicHostedZone}`,
+        TARJONTAPULSSI_POSTGRES_APP_USER: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
+        TARJONTAPULSSI_POSTGRES_APP_PASSWORD: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
+        KOUTA_ELASTIC_URL_WITH_CREDENTIALS: `/${props.environmentName}/services/kouta-indeksoija/kouta-indeksoija-elastic7-url-with-credentials`,
+
+      },
+      initialPolicy: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          resources: [
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/kouta/readonly-user-name`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/kouta/readonly-user-password`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/services/kouta-indeksoija/kouta-indeksoija-elastic7-url-with-credentials`,
+          ],
+          actions: ["ssm:GetParameter"],
+        }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          resources: [
+            tarjontaPulssiViewerLambda.functionArn,
+          ],
+          actions: [
+            "lambda:InvokeFunction",
+            "lambda:InvokeAsync",
+        ],
+        }),
       ],
       bundling: {
         // pg-native is not available and won't be used. This is letting the
