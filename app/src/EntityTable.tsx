@@ -13,7 +13,7 @@ const ContentRow = ({title, amounts, subRows = [], indent = false}: RowProps) =>
 
   return <>
   <tr key={title}>
-    <th style={{ cursor: subRows?.length ? 'pointer' : 'inherit'}} className="col">
+    <th className="col">
       <div style={{display: 'flex', alignItems: 'center'}}>
         {indent && <ArrowRightOutlinedIcon style={{height: 15}} />}
         <div style={{textAlign: 'left'}}>{title}</div>
