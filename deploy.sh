@@ -88,6 +88,8 @@ fi
 
 if [[ "${build}" == "true" ]]; then
     echo "Building Lambda code and synthesizing CDK template"
+    cd "${git_root}/app/"
+    npm run build
     cd "${git_root}/cdk/"
     npm run build
     npx cdk synth
@@ -95,6 +97,8 @@ fi
 
 if [[ "${deploy}" == "true" ]]; then
    echo "Building Lambda code, synhesizing CDK code and deploying to environment: $environment"
+   cd "${git_root}/app/"
+   npm run build
    cd "${git_root}/cdk/"
    npm run build
    npx cdk synth

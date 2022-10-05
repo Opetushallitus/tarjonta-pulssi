@@ -232,6 +232,13 @@ export class TarjontaPulssiStack extends cdk.Stack {
       }
     });
 
+    const deployment = new s3deploy.BucketDeployment(this, 'DeployWithInvalidation', {
+      sources: [s3deploy.Source.asset('../app/dist')],
+      destinationBucket: staticContentBucket,
+      distribution,
+      distributionPaths: ['/index.html', '/assets/*'],
+      prune: false
+    });
 
     // const eventRule = new Rule(this, 'scheduleRule', {
     //   schedule: Schedule.expression('cron(*/5 * * * *)'),
