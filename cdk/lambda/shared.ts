@@ -7,14 +7,24 @@ const AWS = require("aws-sdk");
 
 const s3 = new AWS.S3();
 const ssm = new AWS.SSM();
+const lambda = new AWS.Lambda();
 
-export async function putPulssiS3Object(
+export function putPulssiS3Object(
   params: Omit<PutObjectRequest, "Bucket">
 ) {
-  await s3.putObject({
+  return s3.putObject({
     ...params,
     Bucket: `tarjonta-pulssi.${process.env.PUBLICHOSTEDZONE}`,
   }).promise();
+}
+
+export function invokeViewerLambda() {
+  return lambda.invoke({
+    FunctionName: "TarjontaPulssiViewerLambda",
+    InvocationType: "Event",
+    LogType: "Tail",
+    Payload: null
+  }).promise()
 }
 
 export async function getSSMParam(param?: string) {

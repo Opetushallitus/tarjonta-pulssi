@@ -1,7 +1,7 @@
 import { Handler } from "aws-lambda";
 import { Pool, PoolClient } from "pg";
 import { Client as ElasticClient } from "@elastic/elasticsearch";
-import { getSSMParam, entityTypes, DEFAULT_DB_POOL_PARAMS, getTilaBuckets } from "./shared";
+import { getSSMParam, entityTypes, DEFAULT_DB_POOL_PARAMS, getTilaBuckets, invokeViewerLambda } from "./shared";
 
 const PULSSI_DB_USER = await getSSMParam(
   process.env.TARJONTAPULSSI_POSTGRES_APP_USER
@@ -145,7 +145,8 @@ export const main: Handler = async (event, context, callback) => {
   const pulssiClient = await pulssiDbPool.connect();
 
   try {
-    return await countsFromElasticToDb(pulssiClient);
+    await countsFromElasticToDb(pulssiClient);
+    await invokeViewerLambda();
   } finally {
     // https://github.com/brianc/node-postgres/issues/1180#issuecomment-270589769
     pulssiClient.release(true);
