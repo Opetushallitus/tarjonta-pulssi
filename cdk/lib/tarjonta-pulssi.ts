@@ -106,12 +106,12 @@ export class TarjontaPulssiStack extends cdk.Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       additionalBehaviors: { 
-        'pulssi.json': {
+        '/*.json': {
           origin: StaticContentBucketOrigin,
           cachePolicy: noCachePolicy,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        }        
+        },
       }
     });
 
