@@ -1,7 +1,4 @@
-import React, { useState } from 'react';
 import { EntityType, WithAmounts } from './commonTypes';
-import {ReactComponent as ExpandLessOutlinedIcon} from '@material-design-icons/svg/outlined/expand_less.svg'
-import {ReactComponent as ExpandMoreOutlinedIcon} from '@material-design-icons/svg/outlined/expand_more.svg';
 import {ReactComponent as ArrowRightOutlinedIcon} from '@material-design-icons/svg/outlined/arrow_right.svg';
 import { useTranslations } from './useTranslations';
 
@@ -33,7 +30,7 @@ const SubEntry = ({entry}: any) => {
   const subEntries = Object.entries(v).filter(ss => !ss?.[0]?.endsWith('_amount'))
   const {t} = useTranslations();
 
-  return <ContentRow title={t(k) || k} amounts={v} subRows={subEntries.map(([k, v]) => ({ title: k, amounts: v}))} />
+  return <ContentRow title={t(k) || k} amounts={v} subRows={subEntries.map(([k, v]) => ({ title: t(k) || k, amounts: v}))} />
 }
 
 export const EntityTable = ({data, entity}: {data: any, entity: EntityType}) => {
