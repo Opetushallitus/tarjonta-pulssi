@@ -10,7 +10,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "umzug": "node ./db/umzug/migrate.js",
+    "umzug": "ts-node ./db/umzug/migrate.ts",
     "eslint": "eslint ./*.{js,ts}",
     "prettier": "prettier ./*"
   },
