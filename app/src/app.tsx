@@ -5,20 +5,15 @@ import { ICONS } from './constants';
 import { useTranslations } from './useTranslations';
 import './app.css'
 
-const translations: Record<EntityType, string> = {
-  "koulutus": "Koulutukset",
-  "toteutus": "Toteutukset",
-  "hakukohde": "Hakukohteet",
-  "haku": "Haut"
-}
-
 const EntitySection = ({entity, data}: {entity: EntityType, data: any}) => {
+
+  const {t} = useTranslations()
 
   const IconComponent = ICONS[entity];
   return <div className="EntitySection">
     <div className="EntitySectionHeader">
       <IconComponent className="icon"/>
-      <div><h1>{translations[entity]}</h1></div>
+      <div><h1>{t(`${entity}_otsikko`) ?? entity}</h1></div>
     </div>
     <EntityTable data={data} entity={entity}/>
   </div>
