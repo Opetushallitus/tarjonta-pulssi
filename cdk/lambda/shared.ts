@@ -20,7 +20,7 @@ export function putPulssiS3Object(
 
 export function invokeViewerLambda() {
   return lambda.invoke({
-    FunctionName: "TarjontaPulssiViewerLambda",
+    FunctionName: process.env.VIEWER_LAMBDA_NAME,
     InvocationType: "Event",
     LogType: "Tail",
     Payload: null
