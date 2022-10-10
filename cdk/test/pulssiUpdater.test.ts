@@ -1,17 +1,15 @@
-import { getTilaBuckets } from "../lambda/shared";
+import { getTilaBuckets, RowWithKoulutustyyppiPath } from "../lambda/shared";
 
 test("getTilaBuckets should reset bucket amounts to zero, if they exist in db response, but not in elastic", () => {
-  const dbRes = {
-    rows: [
-      {
-        tila: "julkaistu",
-        tyyppi_path: "tuva/tuva-normal",
-        count: 1,
-      },
-    ],
-  };
+  const rows: Array<RowWithKoulutustyyppiPath> = [
+    {
+      tila: "julkaistu",
+      tyyppi_path: "tuva/tuva-normal",
+      amount: 1
+    },
+  ];
 
-  const elasticRes = {
+  const elasticResBody = {
     aggregations: {
       by_tila: {
         buckets: [
@@ -66,11 +64,6 @@ test("getTilaBuckets should reset bucket amounts to zero, if they exist in db re
   ];
 
   expect(
-    getTilaBuckets(
-      dbRes,
-      elasticRes,
-      "tyyppi_path",
-      "by_koulutustyyppi_path"
-    )
+    getTilaBuckets(rows, elasticResBody, "by_koulutustyyppi_path")
   ).toMatchObject(expectedTilaBuckets);
 });

@@ -88,13 +88,18 @@ const countsFromElasticToDb = async (pulssiClient: PoolClient) => {
 
       const subAggColumn = entity === "haku" ? "hakutapa" : "tyyppi_path";
 
-      const dbSelectRes = (
-        await pulssiClient.query(
-          `select tila, ${subAggColumn} from ${entity}_amounts group by (tila, ${subAggColumn})`
-        )
-      )?.rows;
+      const dbGroupByResRows =
+        (
+          await pulssiClient.query(
+            `select tila, ${subAggColumn} from ${entity}_amounts group by (tila, ${subAggColumn})`
+          )
+        )?.rows ?? [];
 
-      const tilaBuckets = getTilaBuckets(dbSelectRes, elasticResBody, subAggColumn, subAggName);
+      const tilaBuckets = getTilaBuckets(
+        dbGroupByResRows,
+        elasticResBody,
+        subAggName
+      );
 
       for (const tilaBucket of tilaBuckets) {
         const tila = tilaBucket.key;

@@ -64,18 +64,43 @@ export type EntityType = typeof entityTypes[number];
 
 export type Julkaisutila = "julkaistu" | "arkistoitu";
 
+type RowBase = {
+  tila: Julkaisutila,
+  amount: number;
+}
+
+export type HakuRow = {
+  hakutapa: string;
+} & RowBase
+
+export type RowWithKoulutustyyppiPath = {
+  tyyppi_path: string;
+} & RowBase;
+
+export type Row = HakuRow | RowWithKoulutustyyppiPath;
+
+const resetSubBucket = (subBuckets: any, subAggKey: string) => {
+  const subBucket = subBuckets?.find(
+    (v: { key: string }) => v.key === subAggKey
+  );
+  if (Array.isArray(subBuckets) && subBucket == null) {
+    subBuckets.push({
+      key: subAggKey,
+      doc_count: 0,
+    });
+  }
+}
+
 export const getTilaBuckets = (
-  dbSelectRes: any,
+  rows: Array<Row>,
   elasticRes: any,
-  subAggColumn: "hakutapa" | "tyyppi_path",
   subAggName: "by_koulutustyyppi_path" | "by_hakutapa"
 ) => {
-  const rows = dbSelectRes?.rows ?? [];
   const tilaBuckets = elasticRes?.aggregations?.by_tila?.buckets ?? [];
 
   // Asetetaan nollaksi aggregaatioiden luvut, jotka löytyy kannasta, mutta ei elasticista.
   // Bucketteja voi kadota, jos entiteettejä muokataan. Tarvitsee nollata, jotta kantaan ei jää haamu-lukuja sotkemaan.
-  rows.forEach((row: any) => {
+  rows.forEach((row) => {
     let tilaBucket = tilaBuckets?.find(
       (v: { key: string }) => v.key === row.tila
     );
@@ -84,25 +109,19 @@ export const getTilaBuckets = (
       tilaBucket = {
         key: row.tila,
         doc_count: 0,
-        aggregations: {
-          [subAggName]: {
-            buckets: [],
-          },
+        [subAggName]: {
+          buckets: [],
         },
-      };
+    };
       tilaBuckets.push(tilaBucket);
     }
 
-    const subBuckets = tilaBucket?.aggregations?.[subAggName]?.buckets;
+    const subBuckets = tilaBucket?.[subAggName]?.buckets;
 
-    const subBucket = subBuckets?.find(
-      (v: { key: string }) => v.key === row?.[subAggColumn]
-    );
-    if (Array.isArray(subBuckets) && subBucket == null) {
-      subBuckets.push({
-        key: row[subAggColumn],
-        doc_count: 0,
-      });
+    if ("hakutapa" in row) {
+      resetSubBucket(subBuckets, row.hakutapa)
+    } else {
+      resetSubBucket(subBuckets, row.tyyppi_path)
     }
   });
 
