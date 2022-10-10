@@ -1,4 +1,4 @@
-import { ENTITY_TYPES } from "./constants";
+import { ENTITY_TYPES, SUPPORTED_LANGUAGES } from "./constants";
 
 export type EntityType = typeof ENTITY_TYPES[number];
 
@@ -31,4 +31,6 @@ toteutukset: EntityDataWithSubKey<"by_tyyppi">;
 hakukohteet: EntityDataWithSubKey<"by_tyyppi">;
 haut: EntityDataWithSubKey<"by_hakutapa">;
 };
+
+export type LanguageCode = typeof SUPPORTED_LANGUAGES[number]
 

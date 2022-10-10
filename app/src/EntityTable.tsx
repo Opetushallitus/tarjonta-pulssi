@@ -3,34 +3,45 @@ import {ReactComponent as ArrowRightOutlinedIcon} from '@material-design-icons/s
 import { useTranslations } from './useTranslations';
 
 type RowProps = {
-  title: string; amounts: WithAmounts; subRows?: any, indent?: boolean
+  titleKey: string; amounts: WithAmounts; subRows?: any, indent?: boolean
 }
 
-const ContentRow = ({title, amounts, subRows = [], indent = false}: RowProps) => {
+const ContentRow = ({titleKey, amounts, subRows = [], indent = false}: RowProps) => {
+
+  const {t} = useTranslations()
 
   return <>
-  <tr key={title}>
-    <th className="col">
-      <div style={{display: 'flex', alignItems: 'center'}}>
-        {indent && <ArrowRightOutlinedIcon style={{height: 15}} />}
-        <div style={{textAlign: 'left'}}>{title}</div>
-      </div>
-    </th>
-    <td className="content">{amounts?.julkaistu_amount}</td>
-    <td className="content">{
-      (amounts.julkaistu_amount) + (amounts.arkistoitu_amount)}
-    </td>
-  </tr>
-  {subRows && subRows.map((rowProps:any) => <ContentRow {...rowProps} indent={true} />)}
-</>
+    <tr key={titleKey}>
+      <th className="col">
+        <div style={{display: 'flex', alignItems: 'center'}}>
+          {indent && <ArrowRightOutlinedIcon style={{height: "15px"}} />}
+          <div style={{textAlign: 'left'}}>{t(titleKey) || titleKey}</div>
+        </div>
+      </th>
+      <td className="content">{amounts?.julkaistu_amount}</td>
+      <td className="content">{(amounts.julkaistu_amount) + (amounts.arkistoitu_amount)}
+      </td>
+    </tr>
+    {subRows && subRows.map((rowProps:any) => <ContentRow {...rowProps} indent={true} />)}
+  </>
 }
 
-const SubEntry = ({entry}: any) => {
-  const [k, v] = entry;
-  const subEntries = Object.entries(v).filter(ss => !ss?.[0]?.endsWith('_amount'))
+const useDataRows = (v: object) => {
   const {t} = useTranslations();
+  const subEntries = Object.entries(v).filter(ss => !ss?.[0]?.endsWith('_amount'))
+  return subEntries.sort((a, b) => {
+    if (a[0]?.includes("muu")) {
+      return 1;
+    }
+    return a[0] > b[0] ? 1 : -1;
+  }).map(([k, v]) => ({ titleKey: k, amounts: v}))
+}
 
-  return <ContentRow title={t(k) || k} amounts={v} subRows={subEntries.map(([k, v]) => ({ title: t(k) || k, amounts: v}))} />
+const EntryRow = ({entry}: any) => {
+  const [k, v] = entry;
+  const subRows = useDataRows(v)
+
+  return <ContentRow titleKey={k} amounts={v} subRows={subRows} />
 }
 
 export const EntityTable = ({data, entity}: {data: any, entity: EntityType}) => {
@@ -46,8 +57,8 @@ export const EntityTable = ({data, entity}: {data: any, entity: EntityType}) => 
           </tr>
         </thead>
         <tbody>
-        {Object.entries(childrenObj).map((subEntry: any) => <SubEntry entry={subEntry} />)}
+        {Object.entries(childrenObj).map((entry: any) => <EntryRow entry={entry} />)}
       </tbody>
-      <tfoot><ContentRow title={t("yhteensa_otsikko")} amounts={data?.by_tila} /></tfoot>
+      <tfoot><ContentRow titleKey="yhteensa_otsikko" amounts={data?.by_tila} /></tfoot>
     </table>
 }

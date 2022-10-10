@@ -6,12 +6,19 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:dev": "npm run build && cp ./test_data/*.json ./dist/",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.10.4",
+    "@emotion/styled": "^11.10.4",
     "@material-design-icons/svg": "^0.13.0",
+    "@mui/icons-material": "^5.10.6",
+    "@mui/material": "^5.10.8",
     "preact": "^10.10.6",
-    "react-query": "^3.39.2"
+    "react-query": "^3.39.2",
+    "react-use": "^17.4.0",
+    "tss-react": "^4.3.4"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.3.0",

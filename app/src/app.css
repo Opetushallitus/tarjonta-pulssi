@@ -1,7 +1,9 @@
 #app {
-  margin: 2rem;
   text-align: center;
   color: black;
+  max-width: 1280px;
+  width: 100%;
+  background-color: rgb(255, 255, 255)
 }
 
 main {
@@ -21,7 +23,7 @@ main {
   flex-grow: 1;
   flex-basis: auto;
   max-width: 550px;
-  margin: 10px;
+  margin: 15px;
 }
 
 table {
