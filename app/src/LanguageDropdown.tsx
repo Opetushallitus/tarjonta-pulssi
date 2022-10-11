@@ -1,28 +1,21 @@
 import React from "react";
 
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import LanguageIcon from "@mui/icons-material/Language";
 import { Select, MenuItem, InputBase, Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
 import { useLanguageState } from "./useLanguageState";
 import { useTranslations } from "./useTranslations";
-import { SUPPORTED_LANGUAGES, colors } from "./constants";
+import { SUPPORTED_LANGUAGES } from "./constants";
 
-const styles = {
+const CustomInput = styled(InputBase)({
   fontSize: "small",
   color: "white"
-};
-
-const StyledIconComponent = styled(ArrowDropDownIcon)({
-  fill: "white"
 });
-
-const CustomInput = styled(InputBase)(styles);
 
 export const LanguageDropdown = () => {
   const { t } = useTranslations();
-  const {lang, setLang} = useLanguageState();
+  const { lang, setLang } = useLanguageState();
 
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => {
@@ -38,10 +31,15 @@ export const LanguageDropdown = () => {
     <Box display="flex" flexDirection="column" alignItems="center">
       <LanguageIcon
         onClick={open ? handleClose : handleOpen}
-        style={{ cursor: "pointer" }}
+        style={{ paddingRight: "9px", cursor: "pointer" }}
       />
       <Select
-        style={{ textTransform: "uppercase" }}
+        sx={{
+          textTransform: "uppercase",
+          "& .MuiSelect-icon": {
+            fill: "white"
+          }
+        }}
         MenuProps={{
           disableScrollLock: true
         }}
@@ -51,18 +49,9 @@ export const LanguageDropdown = () => {
         onOpen={handleOpen}
         onChange={handleChange}
         input={<CustomInput />}
-        IconComponent={StyledIconComponent}
       >
         {SUPPORTED_LANGUAGES.map((langCode) => (
-          <MenuItem
-            key={langCode}
-            value={langCode}
-            style={{
-              fontSize: "small",
-              color: colors.black,
-              backgroundColor: colors.white
-            }}
-          >
+          <MenuItem key={langCode} value={langCode}>
             {t(`kieli.${langCode}`) ?? langCode}
           </MenuItem>
         ))}
