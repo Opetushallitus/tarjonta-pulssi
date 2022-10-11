@@ -3,7 +3,7 @@
   color: black;
   max-width: 1280px;
   width: 100%;
-  background-color: rgb(255, 255, 255)
+  background-color: rgb(255, 255, 255);
 }
 
 main {
@@ -41,7 +41,8 @@ th.col {
   text-align: left;
 }
 
-td, th {
+td,
+th {
   padding: 8px;
 }
 
@@ -67,7 +68,7 @@ tfoot {
 }
 
 h1 {
-  font-size: '1.5rem';
+  font-size: 1.5rem;
   font-weight: 500;
   text-align: left;
   margin: 0;
@@ -77,5 +78,5 @@ h1 {
 .icon {
   fill: black;
   width: 28px;
-  height: auto
+  height: auto;
 }

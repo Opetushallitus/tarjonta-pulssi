@@ -5,32 +5,31 @@ export type EntityType = typeof ENTITY_TYPES[number];
 export type Julkaisutila = "julkaistu" | "arkistoitu";
 
 export type WithAmounts = {
-julkaistu_amount: number;
-arkistoitu_amount: number;
-}
+  julkaistu_amount: number;
+  arkistoitu_amount: number;
+};
 
 export type KeyValueDataWithAmount = {
-[key in string]?: KeyValueDataWithAmount;
+  [key in string]?: KeyValueDataWithAmount;
 } & WithAmounts;
 
 export type EntitySubKey = "by_tyyppi" | "by_hakutapa";
 
 export type EntityDataWithSubKey<K extends EntitySubKey = EntitySubKey> = {
-by_tila: {
+  by_tila: {
     [key in Julkaisutila]?: {
-    _amount: number;
+      _amount: number;
     };
-};
+  };
 } & {
-[k in K]: KeyValueDataWithAmount;
-}
+  [k in K]: KeyValueDataWithAmount;
+};
 
 export type PulssiData = {
-koulutukset: EntityDataWithSubKey<"by_tyyppi">;
-toteutukset: EntityDataWithSubKey<"by_tyyppi">;
-hakukohteet: EntityDataWithSubKey<"by_tyyppi">;
-haut: EntityDataWithSubKey<"by_hakutapa">;
+  koulutukset: EntityDataWithSubKey<"by_tyyppi">;
+  toteutukset: EntityDataWithSubKey<"by_tyyppi">;
+  hakukohteet: EntityDataWithSubKey<"by_tyyppi">;
+  haut: EntityDataWithSubKey<"by_hakutapa">;
 };
 
-export type LanguageCode = typeof SUPPORTED_LANGUAGES[number]
-
+export type LanguageCode = typeof SUPPORTED_LANGUAGES[number];
