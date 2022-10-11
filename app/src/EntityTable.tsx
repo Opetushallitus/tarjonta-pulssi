@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { EntityDataWithSubKey, EntityType, WithAmounts } from "./commonTypes";
+import { EntityDataWithSubKey, EntityType, SubKeyWithAmounts, WithAmounts } from "./commonTypes";
 import ArrowRightIcon from '@mui/icons-material/ArrowRightOutlined'
 import { useTranslations } from "./useTranslations";
 import { Box } from "@mui/material";
@@ -51,23 +51,26 @@ const ContentRow = ({
   );
 };
 
-const useDataRows = (v: object) => {
+type Entry = [string, SubKeyWithAmounts];
+
+const sortEntries = (entries: Array<Entry>) =>
+  entries.sort((row1, row2) => {
+    if (row1[0].toLowerCase()?.includes("muu ")) {
+      return 1;
+    }
+    return row1[0] > row2[0] ? 1 : -1;
+  });
+
+const useDataRows = (v: SubKeyWithAmounts) => {
   return useMemo(() => {
     const subEntries = Object.entries(v).filter(
       (ss) => !ss?.[0]?.endsWith("_amount")
-    );
-    return subEntries
-      .sort((a, b) => {
-        if (a[0]?.includes("muu")) {
-          return 1;
-        }
-        return a[0] > b[0] ? 1 : -1;
-      })
-      .map(([k, v]) => ({ titleKey: k, amounts: v }));
+    ) as Array<Entry>;
+    return (sortEntries(subEntries).map(([k, v]) => ({ titleKey: k, amounts: v })));
   }, [v]);
 };
 
-const EntryRow = ({ entry }: any) => {
+const EntryRow = ({ entry }: {entry: Entry}) => {
   const [k, v] = entry;
   const subRows = useDataRows(v);
 
@@ -81,7 +84,7 @@ export const EntityTable = ({
   data: EntityDataWithSubKey;
   entity: EntityType;
 }) => {
-  const childrenObj = entity === "haku" ? data.by_hakutapa : data.by_tyyppi;
+  const childEntries = Object.entries(entity === "haku" ? data.by_hakutapa : data.by_tyyppi) as Array<Entry>;
   const { t } = useTranslations();
 
   return (
@@ -102,7 +105,7 @@ export const EntityTable = ({
             </tr>
           </thead>
           <tbody>
-            {Object.entries(childrenObj).map((entry) => (
+            {sortEntries(childEntries).map((entry) => (
               <EntryRow key={entry[0]} entry={entry} />
             ))}
           </tbody>

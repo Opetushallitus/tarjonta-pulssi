@@ -9,21 +9,21 @@ export type WithAmounts = {
   arkistoitu_amount?: number;
 };
 
-export type KeyValueDataWithAmount = {
-  [key in string]?: KeyValueDataWithAmount;
+export type SubKeyWithAmounts = {
+  [key in string]?: SubKeyWithAmounts;
 } & WithAmounts;
 
 export type EntitySubKey = "by_tyyppi" | "by_hakutapa";
 
 export type EntityDataWithSubKey<K extends EntitySubKey = EntitySubKey> = {
-  by_tila: {
-    julkaistu_amount: number;
-    arkistoitu_amount: number;
+  by_tila: WithAmounts & {
     julkaistu_jotpa_amount?: number
     arkistoitu_jotpa_amount?: number
   };
 } & {
-  [k in K]: KeyValueDataWithAmount;
+  [k in K]: {
+    [key in string]?: SubKeyWithAmounts
+  };
 };
 
 export type PulssiData = {
