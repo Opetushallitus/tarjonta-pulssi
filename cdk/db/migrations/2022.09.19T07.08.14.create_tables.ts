@@ -71,6 +71,7 @@ CREATE TABLE koulutus_amounts (
   await pg.query(`
 CREATE TABLE toteutus_amounts (
     tyyppi_path varchar NOT NULL,
+    jotpa_amount bigint default 0,
     ${commonFields}
     PRIMARY KEY (tyyppi_path, tila),
     CHECK (tila IN ('julkaistu', 'arkistoitu'))

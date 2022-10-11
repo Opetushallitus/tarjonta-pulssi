@@ -29,7 +29,6 @@ main {
 table {
   box-sizing: border-box;
   border-collapse: collapse;
-  margin: 20px;
 }
 
 th.row {

@@ -9,22 +9,24 @@ const s3 = new AWS.S3();
 const ssm = new AWS.SSM();
 const lambda = new AWS.Lambda();
 
-export function putPulssiS3Object(
-  params: Omit<PutObjectRequest, "Bucket">
-) {
-  return s3.putObject({
-    ...params,
-    Bucket: `tarjonta-pulssi.${process.env.PUBLICHOSTEDZONE}`,
-  }).promise();
+export function putPulssiS3Object(params: Omit<PutObjectRequest, "Bucket">) {
+  return s3
+    .putObject({
+      ...params,
+      Bucket: `tarjonta-pulssi.${process.env.PUBLICHOSTEDZONE}`,
+    })
+    .promise();
 }
 
 export function invokeViewerLambda() {
-  return lambda.invoke({
-    FunctionName: process.env.VIEWER_LAMBDA_NAME,
-    InvocationType: "Event",
-    LogType: "Tail",
-    Payload: null
-  }).promise()
+  return lambda
+    .invoke({
+      FunctionName: process.env.VIEWER_LAMBDA_NAME,
+      InvocationType: "Event",
+      LogType: "Tail",
+      Payload: null,
+    })
+    .promise();
 }
 
 export async function getSSMParam(param?: string) {
@@ -65,17 +67,21 @@ export type EntityType = typeof entityTypes[number];
 export type Julkaisutila = "julkaistu" | "arkistoitu";
 
 type RowBase = {
-  tila: Julkaisutila,
+  tila: Julkaisutila;
   amount: number;
-}
+};
 
 export type HakuRow = {
   hakutapa: string;
-} & RowBase
+} & RowBase;
 
 export type RowWithKoulutustyyppiPath = {
   tyyppi_path: string;
 } & RowBase;
+
+export type ToteutusRow = RowWithKoulutustyyppiPath & {
+  jotpa_amount: number;
+};
 
 export type Row = HakuRow | RowWithKoulutustyyppiPath;
 
@@ -89,7 +95,7 @@ const resetSubBucket = (subBuckets: any, subAggKey: string) => {
       doc_count: 0,
     });
   }
-}
+};
 
 export const getTilaBuckets = (
   rows: Array<Row>,
@@ -112,16 +118,16 @@ export const getTilaBuckets = (
         [subAggName]: {
           buckets: [],
         },
-    };
+      };
       tilaBuckets.push(tilaBucket);
     }
 
     const subBuckets = tilaBucket?.[subAggName]?.buckets;
 
     if ("hakutapa" in row) {
-      resetSubBucket(subBuckets, row.hakutapa)
+      resetSubBucket(subBuckets, row.hakutapa);
     } else {
-      resetSubBucket(subBuckets, row.tyyppi_path)
+      resetSubBucket(subBuckets, row.tyyppi_path);
     }
   });
 
@@ -132,7 +138,13 @@ const sumBy = (arr: Array<any>, getNum: (x: any) => number) => {
   return arr.reduce((result, value) => result + getNum(value), 0);
 };
 
-type DbRowBase = { tila: Julkaisutila; julkaistu_amount: number | string, arkistoitu_amount: number | string };
+type DbRowBase = {
+  tila: Julkaisutila;
+  julkaistu_amount: number;
+  arkistoitu_amount: number;
+  julkaistu_jotpa_amount?: number;
+  arkistoitu_jotpa_amount?: number;
+};
 
 export const getPulssiEntityData = (
   res: QueryResult<any>,
@@ -143,44 +155,52 @@ export const getPulssiEntityData = (
   const primaryColName = entity === "haku" ? "hakutapa" : "tyyppi_path";
   const dataKeyName = entity === "haku" ? "by_hakutapa" : "by_tyyppi";
 
-  const countsBySubKey = rows.reduce(
-    (result, row) => {
-      const primaryColValue = row?.[primaryColName];
+  const countsBySubKey = rows.reduce((result, row) => {
+    const primaryColValue = row?.[primaryColName];
 
-      const julkaistu_amount = Number(row.julkaistu_amount);
-      const arkistoitu_amount = Number(row.arkistoitu_amount);
+    const julkaistu_amount = Number(row.julkaistu_amount);
+    const arkistoitu_amount = Number(row.arkistoitu_amount);
 
-      if (entity === "haku") {
-        result[primaryColValue] = {
-          julkaistu_amount,
-          arkistoitu_amount,
-        };
-      } else {
-        const ktParts = primaryColValue.split("/");
-        let previousPartObj: Record<string, any> | null = null;
-        ktParts.forEach((part: string) => {
-          const target = previousPartObj ?? result;
+    if (entity === "haku") {
+      result[primaryColValue] = {
+        julkaistu_amount,
+        arkistoitu_amount,
+      };
+    } else {
+      const ktParts = primaryColValue.split("/");
+      let previousPartObj: Record<string, any> | null = null;
+      ktParts.forEach((part: string) => {
+        const target = previousPartObj ?? result;
 
-          if (!target[part]) {
-            target[part] = {
-              julkaistu_amount: 0,
-              arkistoitu_amount: 0,
-            };
-          }
-          target[part].julkaistu_amount += julkaistu_amount;
-          target[part].arkistoitu_amount += arkistoitu_amount;
-          previousPartObj = target[part];
-        });
-      }
-      return result;
-    },
-    {}
-  );
+        if (!target[part]) {
+          target[part] = {
+            julkaistu_amount: 0,
+            arkistoitu_amount: 0,
+          };
+        }
+        target[part].julkaistu_amount += julkaistu_amount;
+        target[part].arkistoitu_amount += arkistoitu_amount;
+        previousPartObj = target[part];
+      });
+    }
+    return result;
+  }, {});
 
   return {
     by_tila: {
-      julkaistu_amount: sumBy(rows, (row: DbRowBase) => Number(row.julkaistu_amount)),
-      arkistoitu_amount: sumBy(rows, (row: DbRowBase) => Number(row.arkistoitu_amount)),
+      julkaistu_amount: sumBy(rows, (row: DbRowBase) =>
+        Number(row.julkaistu_amount)
+      ),
+      arkistoitu_amount: sumBy(rows, (row: DbRowBase) =>
+        Number(row.arkistoitu_amount)
+      ),
+      ...(entity === "toteutus" ? {
+      julkaistu_jotpa_amount: sumBy(rows, (row: DbRowBase) =>
+        Number(row.julkaistu_jotpa_amount ?? 0)
+      ),
+      arkistoitu_jotpa_amount: sumBy(rows, (row: DbRowBase) =>
+        Number(row?.arkistoitu_jotpa_amount ?? 0)
+      )} : {})
     },
     [dataKeyName]: countsBySubKey,
   };

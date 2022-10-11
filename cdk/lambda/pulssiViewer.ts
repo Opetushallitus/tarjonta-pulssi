@@ -26,18 +26,25 @@ const pulssiDbPool = new Pool({
   password: PULSSI_DB_PASSWORD,
 });
 
-const createTilaAmountCol = (tila: Julkaisutila) =>
-  `coalesce(sum(amount) filter(where tila = '${tila}'), 0) as ${tila}_amount`;
+const createTilaAmountCol = (entity: EntityType, tila: Julkaisutila) => {
+  let col = `coalesce(sum(amount) filter(where tila = '${tila}'), 0) as ${tila}_amount`;
+  if (entity === "toteutus") {
+    col += `, coalesce(sum(jotpa_amount) filter(where tila = '${tila}'), 0) as ${tila}_jotpa_amount`
+  }
+  return col
+}
 
 const getCounts = async (entity: EntityType) => {
   const primaryColName = entity === "haku" ? "hakutapa" : "tyyppi_path";
 
   const res = await pulssiDbPool.query(
     `select ${primaryColName}, ${createTilaAmountCol(
+      entity,
       "julkaistu"
     )}, ${createTilaAmountCol(
+      entity,
       "arkistoitu"
-    )} from ${entity}_amounts group by ${primaryColName}`
+    )} from ${entity}_amounts group by ${primaryColName} ${entity === "toteutus" ? ", jotpa_amount" : ""}`
   );
   return getPulssiEntityData(res, entity);
 };

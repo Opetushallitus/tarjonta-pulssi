@@ -1,33 +1,93 @@
 {
+    "aikuisten-perusopetus": {
+        "fi": "Aikuisten perusopetus"
+    },
+    "amk": {
+        "fi": "Ammattikorkeakoulutus"
+    },
+    "amm": {
+        "fi": "Ammatillinen tutkintoon johtava koulutus"
+    },
+    "ammatillinen-perusopetus": {
+        "fi": "Ammatillinen perusopetus"
+    },
+    "ammattitutkinto": {
+        "fi": "Ammattitutkinto"
+    },
+    "amm-muu": {
+        "fi": "Muu ammatillinen tutkintoon johtamaton"
+    },
+    "amm-ope-erityisope-ja-opo": {
+        "fi": "Ammatillinen opettaja- ja erityisopettajakoulutus"
+    },
+    "amm-osaamisala": {
+        "fi": "Osaamisala"
+    },
+    "amm-tutkinnon-osa": {
+        "fi": "Tutkinnon osa"
+    },
+    "amm-tutkintoon-johtamaton": {
+        "fi": "Ammatilliset tutkintoon johtamattomat koulutukset"
+    },
+    "erikoisammattitutkinto": {
+        "fi": "Erikoisammattitutkinto"
+    },
+    "erikoislaakari": {
+        "fi": "Erikoislääkäri"
+    },
     "hakukohde_otsikko": {
         "fi": "Hakukohteet"
     },
     "haku_otsikko": {
         "fi": "Haut"
     },
-    "koulutus_otsikko": {
-        "fi": "Koulutukset"
-    },
-    "sivu_otsikko": {
-        "fi": "Tarjonta-pulssi"
-    },
-    "toteutus_otsikko": {
-        "fi": "Toteutukset"
-    },
-    "tyyppi_otsikko": {
-        "fi": "Koulutustyyppi"
-    },
     "hakutapa_otsikko": {
         "fi": "Hakutapa"
-    },
-    "yhteensa_otsikko": {
-        "fi": "Yhteensä"
     },
     "julkaistut_otsikko": {
         "fi": "Julkaistut"
     },
+    "kk": {
+        "fi": "Korkeakoulututkinnot"
+    },
+    "kk-muu": {
+        "fi": "Korkeakoulujen tutkintoon johtamattomat koulutukset"
+    },
+    "kk-opintojakso": {
+        "fi": "Opintojakso"
+    },
+    "koulutus_otsikko": {
+        "fi": "Koulutukset"
+    },
+    "lk": {
+        "fi": "Lukiokoulutukset"
+    },
     "molemmat_tilat_otsikko": {
         "fi": "Julkaistut + Arkistoidut"
+    },
+    "sivu_otsikko": {
+        "fi": "Tarjonta-pulssi"
+    },
+    "telma": {
+        "fi": "TELMA"
+    },
+    "toteutus_otsikko": {
+        "fi": "Toteutukset"
+    },
+    "tuva": {
+        "fi": "Tutkintokoulutukseen valmentava koulutus (TUVA)"
+    },
+    "tyyppi_otsikko": {
+        "fi": "Koulutustyyppi"
+    },
+    "vapaa-sivistystyo": {
+        "fi": "Vapaa sivistystyö"
+    },
+    "yhteensa_otsikko": {
+        "fi": "Yhteensä"
+    },
+    "yo": {
+        "fi": "Yliopistokoulutus"
     },
     "koulutustyyppi_10": {
         "fi": "Vapaan sivistystyön koulutus",

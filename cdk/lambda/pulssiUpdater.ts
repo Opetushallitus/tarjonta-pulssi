@@ -1,7 +1,16 @@
 import { Handler } from "aws-lambda";
 import { Pool, PoolClient } from "pg";
 import { Client as ElasticClient } from "@elastic/elasticsearch";
-import { getSSMParam, entityTypes, DEFAULT_DB_POOL_PARAMS, getTilaBuckets, invokeViewerLambda } from "./shared";
+import {
+  getSSMParam,
+  entityTypes,
+  DEFAULT_DB_POOL_PARAMS,
+  getTilaBuckets,
+  invokeViewerLambda,
+  EntityType,
+  ToteutusRow,
+  Row,
+} from "./shared";
 
 const PULSSI_DB_USER = await getSSMParam(
   process.env.TARJONTAPULSSI_POSTGRES_APP_USER
@@ -31,13 +40,51 @@ const connectElastic = async () => {
 
 const elasticClient = await connectElastic();
 
+const DEFAULT_AGGS = {
+  by_koulutustyyppi_path: {
+    terms: {
+      field: "koulutustyyppiPath.keyword",
+      size: 100,
+    },
+  },
+};
+
+const AGGS_BY_ENTITY: Record<EntityType, object> = {
+  koulutus: DEFAULT_AGGS,
+  toteutus: {
+    by_koulutustyyppi_path: {
+      terms: {
+        field: "koulutustyyppiPath.keyword",
+        size: 100,
+      },
+      aggs: {
+        has_jotpa: {
+          filter: {
+            term: {
+              "metadata.hasJotpaRahoitus": true,
+            },
+          },
+        },
+      },
+    },
+  },
+  hakukohde: DEFAULT_AGGS,
+  haku: {
+    by_hakutapa: {
+      terms: {
+        field: "hakutapa.koodiUri.keyword",
+        size: 100,
+      },
+    },
+  },
+} as const;
+
 const queryCountsFromElastic = async () =>
   elasticClient.msearch({
     body: entityTypes.flatMap((entity) => [
       { index: `${entity}-kouta` },
       {
         size: 0, // Ei haluta hakutuloksia, vain aggsit
-        track_total_hits: true, // Halutaan aina tarkka hits-määrä, eikä jotain sinne päin
         query: {
           terms: {
             tila: ["julkaistu", "arkistoitu"],
@@ -49,30 +96,39 @@ const queryCountsFromElastic = async () =>
               field: "tila.keyword",
               size: 10,
             },
-            aggs:
-              entity === "haku"
-                ? {
-                    by_hakutapa: {
-                      terms: {
-                        field: "hakutapa.koodiUri.keyword",
-                        size: 100,
-                      },
-                    },
-                  }
-                : {
-                    by_koulutustyyppi_path: {
-                      terms: {
-                        field: "koulutustyyppiPath.keyword",
-                        size: 100,
-                      },
-                    },
-                  },
+            aggs: AGGS_BY_ENTITY[entity],
           },
         },
       },
     ]),
   });
 
+const toteutusRowHasChanged = (row1: ToteutusRow, row2: ToteutusRow) => {
+  return row1.amount !== row2.amount || row1.jotpa_amount !== row2.jotpa_amount
+};
+
+const saveToteutusAmounts = async (
+  pulssiClient: PoolClient,
+  existingRow: ToteutusRow,
+  newRow: ToteutusRow
+) => {
+  if (existingRow) {
+    if (toteutusRowHasChanged(existingRow, newRow)) {
+      console.log(`Updating changed toteutus amounts (${newRow.tila}, ${newRow.tyyppi_path}) = ${newRow.amount} (jotpa = ${newRow.jotpa_amount})`)
+
+      await pulssiClient.query(
+        `UPDATE toteutus_amounts SET amount = ${newRow.amount}, jotpa_amount = ${newRow.jotpa_amount} WHERE tila = '${newRow.tila}' AND tyyppi_path = '${newRow.tyyppi_path}'`
+      );
+    }
+  } else {
+    console.log(
+      `Inserting toteutus amounts (${newRow.tila}, ${newRow.tyyppi_path}) = ${newRow.amount} (jotpa = ${newRow.jotpa_amount})`
+    );
+    await pulssiClient.query(
+      `INSERT INTO toteutus_amounts(tyyppi_path, tila, amount, jotpa_amount) values('${newRow.tyyppi_path}', '${newRow.tila}', ${newRow.amount}, ${newRow.jotpa_amount})`
+    );
+  }
+};
 
 const countsFromElasticToDb = async (pulssiClient: PoolClient) => {
   const msearchRes = await queryCountsFromElastic();
@@ -106,7 +162,7 @@ const countsFromElasticToDb = async (pulssiClient: PoolClient) => {
         const subBuckets = tilaBucket?.[subAggName]?.buckets ?? [];
 
         for (const subBucket of subBuckets) {
-          const amount = subBucket.doc_count ?? 0;
+          const amount = Number(subBucket.doc_count ?? 0);
 
           const existingRow = (
             await pulssiClient.query(
@@ -114,23 +170,34 @@ const countsFromElasticToDb = async (pulssiClient: PoolClient) => {
             )
           )?.rows?.[0];
 
-          if (existingRow) {
-            // Ei päivitetä kantaa, jos luku ei ole muuttunut!
-            if (Number(existingRow.amount) !== Number(amount)) {
+          if (entity === "toteutus") {
+            const jotpaAmount = Number(subBucket?.has_jotpa?.doc_count ?? 0);
+
+            await saveToteutusAmounts(pulssiClient, existingRow, {
+              tyyppi_path: subBucket.key,
+              tila,
+              amount,
+              jotpa_amount: jotpaAmount,
+            });
+          } else {
+            if (existingRow) {
+              // Ei päivitetä kantaa, jos luku ei ole muuttunut!
+              if (existingRow.amount !== amount) {
+                console.log(
+                  `Updating changed ${entity} amount (${tila}, ${subBucket.key}) = ${amount}`
+                );
+                await pulssiClient.query(
+                  `UPDATE ${entity}_amounts SET amount = ${amount} WHERE tila = '${tila}' AND ${subAggColumn} = '${subBucket.key}'`
+                );
+              }
+            } else {
               console.log(
-                `Updating changed ${entity} amount: ${tila}, ${subBucket.key} = ${amount}`
+                `Inserting ${entity} amount (${tila}, ${subBucket.key}) = ${amount}`
               );
               await pulssiClient.query(
-                `UPDATE ${entity}_amounts SET amount = ${amount} WHERE tila = '${tila}' AND ${subAggColumn} = '${subBucket.key}'`
+                `INSERT INTO ${entity}_amounts(${subAggColumn}, tila, amount) values('${subBucket.key}', '${tila}', ${amount})`
               );
             }
-          } else {
-            console.log(
-              `Inserting ${entity} amount: ${tila}, ${subBucket.key} = ${amount}`
-            );
-            await pulssiClient.query(
-              `INSERT INTO ${entity}_amounts(${subAggColumn}, tila, amount) values('${subBucket.key}', '${tila}', ${amount})`
-            );
           }
         }
       }

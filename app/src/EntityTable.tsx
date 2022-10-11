@@ -1,6 +1,7 @@
 import { EntityType, WithAmounts } from './commonTypes';
 import {ReactComponent as ArrowRightOutlinedIcon} from '@material-design-icons/svg/outlined/arrow_right.svg';
 import { useTranslations } from './useTranslations';
+import { Box } from '@mui/material';
 
 type RowProps = {
   titleKey: string; amounts: WithAmounts; subRows?: any, indent?: boolean
@@ -10,6 +11,9 @@ const ContentRow = ({titleKey, amounts, subRows = [], indent = false}: RowProps)
 
   const {t} = useTranslations()
 
+  const julkaistu_amount = Number(amounts?.julkaistu_amount);
+  const total_amount = Number(amounts?.arkistoitu_amount + amounts?.julkaistu_amount);
+
   return <>
     <tr key={titleKey}>
       <th className="col">
@@ -18,9 +22,8 @@ const ContentRow = ({titleKey, amounts, subRows = [], indent = false}: RowProps)
           <div style={{textAlign: 'left'}}>{t(titleKey) || titleKey}</div>
         </div>
       </th>
-      <td className="content">{amounts?.julkaistu_amount}</td>
-      <td className="content">{(amounts.julkaistu_amount) + (amounts.arkistoitu_amount)}
-      </td>
+      <td className="content">{Number.isNaN(julkaistu_amount) ? '?' : julkaistu_amount}</td>
+      <td className="content">{Number.isNaN(total_amount) ? '?' : total_amount}</td>
     </tr>
     {subRows && subRows.map((rowProps:any) => <ContentRow {...rowProps} indent={true} />)}
   </>
@@ -48,7 +51,7 @@ export const EntityTable = ({data, entity}: {data: any, entity: EntityType}) => 
     const childrenObj = entity === "haku" ? data.by_hakutapa : data.by_tyyppi;
     const {t} = useTranslations()
 
-    return <table>
+    return <><Box m={2}><table>
         <thead>
           <tr>
             <th className="row col">{entity === "haku" ? t("hakutapa_otsikko") : t("tyyppi_otsikko")}</th>
@@ -61,4 +64,23 @@ export const EntityTable = ({data, entity}: {data: any, entity: EntityType}) => 
       </tbody>
       <tfoot><ContentRow titleKey="yhteensa_otsikko" amounts={data?.by_tila} /></tfoot>
     </table>
+    </Box>
+    {entity === "toteutus" && <Box sx={{borderTop: '1px solid rgba(0, 0, 0, 0.15)'}}>
+    <Box m={2}>
+    <table style={{width: '100%'}}>
+      <thead>
+          <tr>
+            <th className="row col"></th>
+            <th className="row">{t("julkaistut_otsikko")}</th>
+            <th className="row" style={{maxWidth: "100px"}}>{t("molemmat_tilat_otsikko")}</th>
+          </tr>
+        </thead>
+        <ContentRow titleKey="jotpa_otsikko" amounts={{
+          julkaistu_amount: data?.by_tila?.julkaistu_jotpa_amount,
+          arkistoitu_amount: data?.by_tila?.arkistoitu_jotpa_amount
+        }} />
+      </table>
+      </Box>
+      </Box>}
+      </>
 }
