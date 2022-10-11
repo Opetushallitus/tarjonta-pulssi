@@ -11,19 +11,19 @@ import { SUPPORTED_LANGUAGES, colors } from "./constants";
 
 const styles = {
   fontSize: "small",
-  color: "white",
+  color: "white"
 };
 
 const StyledIconComponent = styled(ArrowDropDownIcon)({
-  fill: "white",
+  fill: "white"
 });
 
 const CustomInput = styled(InputBase)(styles);
 
 export const LanguageDropdown = () => {
   const { t } = useTranslations();
-  // TODO: any pois
-  const [language, setLanguage]: any = useLanguageState();
+  const {lang, setLang} = useLanguageState();
+
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => {
     setOpen(true);
@@ -32,7 +32,7 @@ export const LanguageDropdown = () => {
     setOpen(false);
   };
   const handleChange = (event: any) => {
-    setLanguage(event.target.value as string);
+    setLang(event.target.value as string);
   };
   return (
     <Box display="flex" flexDirection="column" alignItems="center">
@@ -43,9 +43,9 @@ export const LanguageDropdown = () => {
       <Select
         style={{ textTransform: "uppercase" }}
         MenuProps={{
-          disableScrollLock: true,
+          disableScrollLock: true
         }}
-        value={language as string}
+        value={lang}
         open={open}
         onClose={handleClose}
         onOpen={handleOpen}
@@ -60,7 +60,7 @@ export const LanguageDropdown = () => {
             style={{
               fontSize: "small",
               color: colors.black,
-              backgroundColor: colors.white,
+              backgroundColor: colors.white
             }}
           >
             {t(`kieli.${langCode}`) ?? langCode}

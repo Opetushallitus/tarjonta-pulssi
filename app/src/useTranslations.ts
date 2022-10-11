@@ -4,7 +4,7 @@ import { JSON_PATH } from "./constants";
 import { useLanguageState } from "./useLanguageState";
 
 export const useTranslations = () => {
-  const [userLanguage] = useLanguageState();
+  const {lang: userLanguage} = useLanguageState();
 
   const { data } = useQuery<Record<string, any>>(
     "getTranslations",

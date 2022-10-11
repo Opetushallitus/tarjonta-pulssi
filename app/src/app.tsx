@@ -1,11 +1,12 @@
 import { usePulssiJson } from "./usePulssiJson";
 import { EntityTable } from "./EntityTable";
 import { EntityType } from "./commonTypes";
-import { ICONS } from "./constants";
+import { ICONS, SUPPORTED_LANGUAGES } from "./constants";
 import { useTranslations } from "./useTranslations";
 import { Header } from "./Header";
 import { CircularProgress, Paper } from "@mui/material";
 import "./app.css";
+import { useLanguageState } from "./useLanguageState";
 
 const EntitySection = ({ entity, data }: { entity: EntityType; data: any }) => {
   const { t } = useTranslations();
@@ -35,6 +36,17 @@ export function App() {
 
   const { t } = useTranslations();
   useTitle(t("sivu_otsikko"));
+
+  const {lang, setLang} = useLanguageState();
+
+  if (SUPPORTED_LANGUAGES.every((_) => _ !== lang)) {
+    const userLanguage = window.navigator?.language?.split?.("-")?.[0];
+    if (SUPPORTED_LANGUAGES.some((_) => _ === userLanguage)) {
+      setLang(userLanguage);
+    } else {
+      setLang("fi");
+    }
+  }
 
   switch (status) {
     case "error":

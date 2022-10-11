@@ -70,7 +70,7 @@ const VisuallyHidden: React.FC = ({ children }) => (
 export const Header = () => {
   const { t } = useTranslations();
 
-  const [lang] = useLanguageState();
+  const {lang} = useLanguageState();
   const { classes } = useStyles();
 
   const testiLabel = testiLabels?.[window.location.hostname];
