@@ -18,19 +18,6 @@ main {
   align-items: flex-start;
 }
 
-.EntitySection {
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  box-sizing: border-box;
-  background-color: white;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 1;
-  flex-grow: 1;
-  flex-basis: auto;
-  max-width: 550px;
-  margin: 15px;
-}
-
 table {
   box-sizing: border-box;
   border-collapse: collapse;
@@ -63,14 +50,6 @@ tfoot {
   border-top: 1px solid rgba(0, 0, 0, 0.15);
 }
 
-.EntitySectionHeader {
-  display: flex;
-  flex-direction: row;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
-  padding: 20px;
-  align-items: center;
-  justify-content: center;
-}
 
 h1 {
   font-size: 1.5rem;

@@ -4,24 +4,47 @@ import { EntityType } from "./commonTypes";
 import { ICONS, SUPPORTED_LANGUAGES } from "./constants";
 import { useTranslations } from "./useTranslations";
 import { Header } from "./Header";
-import { CircularProgress, Paper } from "@mui/material";
+import { Box, CircularProgress, Paper } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import "./app.css";
 import { useLanguageState } from "./useLanguageState";
+
+const StyledEntitySection = styled(Paper)`
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 1;
+  flex-grow: 1;
+  flex-basis: auto;
+  max-width: 550px;
+  margin: 15px;
+`;
+
+const StyledEntitySectionHeader = styled(Box)`
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  align-items: center;
+  justify-content: center;
+`;
 
 const EntitySection = ({ entity, data }: { entity: EntityType; data: any }) => {
   const { t } = useTranslations();
 
   const IconComponent = ICONS[entity];
   return (
-    <Paper className="EntitySection">
-      <div className="EntitySectionHeader">
+    <StyledEntitySection>
+      <StyledEntitySectionHeader>
         <IconComponent />
         <div>
           <h1>{t(`${entity}_otsikko`) ?? entity}</h1>
         </div>
-      </div>
+      </StyledEntitySectionHeader>
       <EntityTable data={data} entity={entity} />
-    </Paper>
+    </StyledEntitySection>
   );
 };
 
@@ -37,7 +60,7 @@ export function App() {
   const { t } = useTranslations();
   useTitle(t("sivu_otsikko"));
 
-  const {lang, setLang} = useLanguageState();
+  const { lang, setLang } = useLanguageState();
 
   if (SUPPORTED_LANGUAGES.every((_) => _ !== lang)) {
     const userLanguage = window.navigator?.language?.split?.("-")?.[0];
