@@ -5,8 +5,8 @@ export type EntityType = typeof ENTITY_TYPES[number];
 export type Julkaisutila = "julkaistu" | "arkistoitu";
 
 export type WithAmounts = {
-  julkaistu_amount: number;
-  arkistoitu_amount: number;
+  julkaistu_amount?: number;
+  arkistoitu_amount?: number;
 };
 
 export type KeyValueDataWithAmount = {
@@ -17,9 +17,10 @@ export type EntitySubKey = "by_tyyppi" | "by_hakutapa";
 
 export type EntityDataWithSubKey<K extends EntitySubKey = EntitySubKey> = {
   by_tila: {
-    [key in Julkaisutila]?: {
-      _amount: number;
-    };
+    julkaistu_amount: number;
+    arkistoitu_amount: number;
+    julkaistu_jotpa_amount?: number
+    arkistoitu_jotpa_amount?: number
   };
 } & {
   [k in K]: KeyValueDataWithAmount;

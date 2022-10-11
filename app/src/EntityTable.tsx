@@ -1,12 +1,12 @@
 import { useMemo } from "react";
-import { EntityType, WithAmounts } from "./commonTypes";
+import { EntityDataWithSubKey, EntityType, WithAmounts } from "./commonTypes";
 import ArrowRightIcon from '@mui/icons-material/ArrowRightOutlined'
 import { useTranslations } from "./useTranslations";
 import { Box } from "@mui/material";
 
 type SubRowProps = {
   titleKey: string;
-  amounts: Amounts;
+  amounts: WithAmounts;
 };
 
 type RowProps = {
@@ -16,23 +16,16 @@ type RowProps = {
   indent?: boolean;
 };
 
-type Amounts = {
-  julkaistu_amount: number;
-  arkistoitu_amount: number;
-};
-
 const ContentRow = ({
   titleKey,
   amounts,
   subRows = [],
-  indent = false,
+  indent = false
 }: RowProps) => {
   const { t } = useTranslations();
 
   const julkaistuAmount = Number(amounts?.julkaistu_amount);
-  const totalAmount = Number(
-    amounts?.arkistoitu_amount + amounts?.julkaistu_amount
-  );
+  const totalAmount = Number(amounts?.arkistoitu_amount) + Number(amounts?.julkaistu_amount);
 
   return (
     <>
@@ -83,9 +76,9 @@ const EntryRow = ({ entry }: any) => {
 
 export const EntityTable = ({
   data,
-  entity,
+  entity
 }: {
-  data: any;
+  data: EntityDataWithSubKey;
   entity: EntityType;
 }) => {
   const childrenObj = entity === "haku" ? data.by_hakutapa : data.by_tyyppi;
@@ -135,7 +128,7 @@ export const EntityTable = ({
                 titleKey="jotpa_otsikko"
                 amounts={{
                   julkaistu_amount: data?.by_tila?.julkaistu_jotpa_amount,
-                  arkistoitu_amount: data?.by_tila?.arkistoitu_jotpa_amount,
+                  arkistoitu_amount: data?.by_tila?.arkistoitu_jotpa_amount
                 }}
               />
             </table>
