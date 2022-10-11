@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { EntityType, WithAmounts } from "./commonTypes";
-import { ReactComponent as ArrowRightOutlinedIcon } from "@material-design-icons/svg/outlined/arrow_right.svg";
+import ArrowRightIcon from '@mui/icons-material/ArrowRightOutlined'
 import { useTranslations } from "./useTranslations";
 import { Box } from "@mui/material";
 
@@ -39,7 +39,7 @@ const ContentRow = ({
       <tr key={titleKey}>
         <th className="col">
           <div style={{ display: "flex", alignItems: "center" }}>
-            {indent && <ArrowRightOutlinedIcon style={{ height: "15px" }} />}
+            {indent && <ArrowRightIcon style={{ height: "15px" }} />}
             <div style={{ textAlign: "left" }}>{t(titleKey) || titleKey}</div>
           </div>
         </th>

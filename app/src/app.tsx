@@ -15,7 +15,7 @@ const EntitySection = ({ entity, data }: { entity: EntityType; data: any }) => {
   return (
     <Paper className="EntitySection">
       <div className="EntitySectionHeader">
-        <IconComponent className="icon" />
+        <IconComponent />
         <div>
           <h1>{t(`${entity}_otsikko`) ?? entity}</h1>
         </div>

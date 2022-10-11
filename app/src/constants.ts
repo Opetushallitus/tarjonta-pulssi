@@ -1,20 +1,20 @@
-import { ReactComponent as SchoolIcon } from "@material-design-icons/svg/outlined/school.svg";
-import { ReactComponent as FlagIcon } from "@material-design-icons/svg/outlined/flag.svg";
-import { ReactComponent as AccessTimeIcon } from "@material-design-icons/svg/outlined/access_time.svg";
-import { ReactComponent as ListAltIcon } from "@material-design-icons/svg/outlined/list_alt.svg";
+import SchoolIcon from "@mui/icons-material/SchoolOutlined";
+import AccessTimeIcon from "@mui/icons-material/AccessTimeOutlined";
+import FlagIcon from "@mui/icons-material/FlagOutlined";
+import ListAltIcon from "@mui/icons-material/ListAltOutlined";
 
 export const ENTITY_TYPES = [
   "koulutus",
   "toteutus",
   "hakukohde",
-  "haku",
+  "haku"
 ] as const;
 
 export const ICONS = {
   koulutus: SchoolIcon,
   toteutus: FlagIcon,
   haku: AccessTimeIcon,
-  hakukohde: ListAltIcon,
+  hakukohde: ListAltIcon
 } as const;
 
 export const JSON_PATH =
@@ -30,7 +30,7 @@ export const colors = {
   lightGrey: "#B2B2B2", // Disabled states
   greyBg: "#F5F7F9", // Desktop BG
   white: "#FFFFFF", // Content area bg, text on dark bg
-  red: "#CC3300", // Error states
+  red: "#CC3300" // Error states
 };
 
 export const SUPPORTED_LANGUAGES = ["fi", "sv", "en"] as const;
