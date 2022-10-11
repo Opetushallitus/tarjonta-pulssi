@@ -7,8 +7,6 @@
       "es2020",
       "dom"
     ],
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact",
     "esModuleInterop": true,
     "declaration": true,
     "strict": true,
@@ -28,8 +26,5 @@
       "./node_modules/@types"
     ]
   },
-  "exclude": [
-    "node_modules",
-    "cdk.out"
-  ]
+  "include": ["bin", "lambda", "lib"]
 }
