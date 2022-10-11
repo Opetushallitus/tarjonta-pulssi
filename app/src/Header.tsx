@@ -9,6 +9,7 @@ import { OPINTOPOLKU_URL } from "./constants";
 import { LanguageDropdown } from "./LanguageDropdown";
 import { useTranslations } from "./useTranslations";
 import { useLanguageState } from "./useLanguageState";
+import { Box } from "@mui/system";
 
 const PulssiAppBar = styled(AppBar)(() => ({
   position: "sticky",
@@ -16,7 +17,7 @@ const PulssiAppBar = styled(AppBar)(() => ({
   flexDirection: "row",
   alignItems: "center",
   padding: "10px 20px",
-  justifyContent: "space-between",
+  justifyContent: "space-between"
 }));
 
 const getOpintopolkuHeaderLogo = (lang?: string | null) => {
@@ -45,17 +46,24 @@ const VisuallyHidden: React.FC = ({ children }) => (
 export const Header = () => {
   const { t } = useTranslations();
 
-  const {lang} = useLanguageState();
+  const { lang } = useLanguageState();
 
   const OpintopolkuHeaderLogoSvg = getOpintopolkuHeaderLogo(lang);
 
   return (
     <PulssiAppBar>
-      <Link href={OPINTOPOLKU_URL}>
-        <OpintopolkuHeaderLogoSvg focusable="false" aria-hidden="true" />
-        <VisuallyHidden>{t("siirry_opintopolkuun")}</VisuallyHidden>
-      </Link>
-      <Heading>{t("sivu_otsikko")}</Heading>
+      <Box display="flex" flexDirection="row" flexWrap="wrap">
+        <Link href={OPINTOPOLKU_URL}>
+          <OpintopolkuHeaderLogoSvg
+            focusable="false"
+            aria-hidden="true"
+            height="26px"
+            width="auto"
+          />
+          <VisuallyHidden>{t("siirry_opintopolkuun")}</VisuallyHidden>
+        </Link>
+        <Heading>{t("sivu_otsikko")}</Heading>
+      </Box>
       <LanguageDropdown />
     </PulssiAppBar>
   );
