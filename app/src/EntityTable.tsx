@@ -1,6 +1,11 @@
 import { useMemo } from "react";
-import { EntityDataWithSubKey, EntityType, SubKeyWithAmounts, WithAmounts } from "./commonTypes";
-import ArrowRightIcon from '@mui/icons-material/ArrowRightOutlined'
+import {
+  EntityDataWithSubKey,
+  EntityType,
+  SubKeyWithAmounts,
+  WithAmounts
+} from "./commonTypes";
+import ArrowRightIcon from "@mui/icons-material/ArrowRightOutlined";
 import { useTranslations } from "./useTranslations";
 import { Box } from "@mui/material";
 
@@ -25,7 +30,8 @@ const ContentRow = ({
   const { t } = useTranslations();
 
   const julkaistuAmount = Number(amounts?.julkaistu_amount);
-  const totalAmount = Number(amounts?.arkistoitu_amount) + Number(amounts?.julkaistu_amount);
+  const totalAmount =
+    Number(amounts?.arkistoitu_amount) + Number(amounts?.julkaistu_amount);
 
   return (
     <>
@@ -53,12 +59,16 @@ const ContentRow = ({
 
 type Entry = [string, SubKeyWithAmounts];
 
+
 const sortEntries = (entries: Array<Entry>) =>
-  entries.sort((row1, row2) => {
-    if (row1[0].toLowerCase()?.includes("muu ")) {
+  entries.sort((entry1, entry2) => (entry1[0] > entry2[0] ? 1 : -1));
+
+const sortSubEntries = (entries: Array<Entry>) =>
+  entries.sort((entry1, entry2) => {
+    if (entry1[0].toLowerCase()?.includes("muu")) {
       return 1;
     }
-    return row1[0] > row2[0] ? 1 : -1;
+    return entry1[0] > entry2[0] ? 1 : -1;
   });
 
 const useDataRows = (v: SubKeyWithAmounts) => {
@@ -66,11 +76,14 @@ const useDataRows = (v: SubKeyWithAmounts) => {
     const subEntries = Object.entries(v).filter(
       (ss) => !ss?.[0]?.endsWith("_amount")
     ) as Array<Entry>;
-    return (sortEntries(subEntries).map(([k, v]) => ({ titleKey: k, amounts: v })));
+    return sortSubEntries(subEntries).map(([k, v]) => ({
+      titleKey: k,
+      amounts: v
+    }));
   }, [v]);
 };
 
-const EntryRow = ({ entry }: {entry: Entry}) => {
+const EntryRow = ({ entry }: { entry: Entry }) => {
   const [k, v] = entry;
   const subRows = useDataRows(v);
 
@@ -84,7 +97,9 @@ export const EntityTable = ({
   data: EntityDataWithSubKey;
   entity: EntityType;
 }) => {
-  const childEntries = Object.entries(entity === "haku" ? data.by_hakutapa : data.by_tyyppi) as Array<Entry>;
+  const childEntries = Object.entries(
+    entity === "haku" ? data.by_hakutapa : data.by_tyyppi
+  ) as Array<Entry>;
   const { t } = useTranslations();
 
   return (
