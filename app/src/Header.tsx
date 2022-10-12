@@ -1,4 +1,4 @@
-import { AppBar, Link, Typography, styled } from "@mui/material";
+import { AppBar, Link, Typography, styled, useTheme, useMediaQuery } from "@mui/material";
 import { visuallyHidden } from "@mui/utils";
 
 import { ReactComponent as opintopolkuLogoEn } from "./assets/opintopolku_logo_header_en.svg";
@@ -17,6 +17,7 @@ const PulssiAppBar = styled(AppBar)(() => ({
   flexDirection: "row",
   alignItems: "center",
   padding: "10px 20px",
+  minHeight: "75px",  
   justifyContent: "space-between"
 }));
 
@@ -33,11 +34,15 @@ const getOpintopolkuHeaderLogo = (lang?: string | null) => {
   }
 };
 
-const Heading = styled(Typography)`
-  font-size: 35px;
-  font-weight: 600;
-  color: white;
-`;
+const Heading = styled(Typography)(({theme}) => ({
+  fontSize: "26px",
+  fontWeight: 600,
+  color: "white",
+  lineHeight: "22px",
+  [theme.breakpoints.down("sm")]: {
+    fontSize: "18px"
+  }
+}));
 
 const VisuallyHidden: React.FC = ({ children }) => (
   <span style={visuallyHidden}>{children}</span>
@@ -50,10 +55,14 @@ export const Header = () => {
 
   const OpintopolkuHeaderLogoSvg = getOpintopolkuHeaderLogo(lang);
 
+  const theme = useTheme();
+
+  const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
     <PulssiAppBar>
-      <Box display="flex" flexDirection="row" flexWrap="wrap">
-        <Link href={OPINTOPOLKU_URL}>
+      <Box display="flex" flexDirection={isSmall ? "column": "row"} flexWrap="wrap" justifyContent="flex-start" alignItems="flex-start" width="100%">
+        <Link href={OPINTOPOLKU_URL} sx={{paddingRight: 3}}>
           <OpintopolkuHeaderLogoSvg
             focusable="false"
             aria-hidden="true"
