@@ -2,7 +2,7 @@ import { useQuery } from "react-query";
 import { PulssiData } from "./commonTypes";
 import { JSON_PATH } from "./constants";
 
-const REFETCH_INTERVAL = 5 * 60 * 1000;
+const REFETCH_INTERVAL = 1 * 60 * 1000;
 
 export const usePulssiJson = () => {
   return useQuery<PulssiData>(
