@@ -49,8 +49,7 @@ const ContentRow = ({
           {Number.isNaN(totalAmount) ? "?" : totalAmount}
         </td>
       </tr>
-      {subRows &&
-        subRows.map((rowProps) => (
+      {subRows.map((rowProps) => (
           <ContentRow key={rowProps.titleKey} {...rowProps} indent={true} />
         ))}
     </>
@@ -98,8 +97,8 @@ export const EntityTable = ({
   entity: EntityType;
 }) => {
   const childEntries = Object.entries(
-    entity === "haku" ? data.by_hakutapa : data.by_tyyppi
-  ) as Array<Entry>;
+    data.by_hakutapa ? data.by_hakutapa : data.by_tyyppi
+  );
   const { t } = useTranslations();
 
   return (

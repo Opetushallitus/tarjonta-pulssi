@@ -15,16 +15,23 @@ export type SubKeyWithAmounts = {
 
 export type EntitySubKey = "by_tyyppi" | "by_hakutapa";
 
+type OneKey<K extends string, V = unknown> = {
+  [P in K]: Record<P, V> & Partial<Record<Exclude<K, P>, never>> extends infer O
+    ? { [Q in keyof O]: O[Q] }
+    : never;
+}[K];
+
 export type EntityDataWithSubKey<K extends EntitySubKey = EntitySubKey> = {
   by_tila: WithAmounts & {
-    julkaistu_jotpa_amount?: number
-    arkistoitu_jotpa_amount?: number
+    julkaistu_jotpa_amount?: number;
+    arkistoitu_jotpa_amount?: number;
   };
-} & {
-  [k in K]: {
-    [key in string]?: SubKeyWithAmounts
-  };
-};
+} & OneKey<
+  K,
+  {
+    [key in string]: SubKeyWithAmounts;
+  }
+>;
 
 export type PulssiData = {
   koulutukset: EntityDataWithSubKey<"by_tyyppi">;

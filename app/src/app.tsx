@@ -1,13 +1,13 @@
 import { usePulssiJson } from "./usePulssiJson";
 import { EntityTable } from "./EntityTable";
-import { EntityType } from "./commonTypes";
+import { EntityDataWithSubKey, EntityType } from "./commonTypes";
 import { ICONS, SUPPORTED_LANGUAGES } from "./constants";
 import { useTranslations } from "./useTranslations";
 import { Header } from "./Header";
 import { Box, CircularProgress, Paper } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import "./app.css";
 import { useLanguageState } from "./useLanguageState";
+import "./app.css";
 
 const StyledEntitySection = styled(Paper)`
   border: 1px solid rgba(0, 0, 0, 0.15);
@@ -31,7 +31,13 @@ const StyledEntitySectionHeader = styled(Box)`
   justify-content: center;
 `;
 
-const EntitySection = ({ entity, data }: { entity: EntityType; data: any }) => {
+const EntitySection = ({
+  entity,
+  data
+}: {
+  entity: EntityType;
+  data: EntityDataWithSubKey;
+}) => {
   const { t } = useTranslations();
 
   const IconComponent = ICONS[entity];
