@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { App } from "./app";
 import "./index.css";
 import { ThemeProvider } from "@emotion/react";
-import { colors } from "./constants";
 
 const queryClient = new QueryClient();
 
@@ -20,7 +19,7 @@ const router = createBrowserRouter([
 const theme = createTheme({
   palette: {
     primary: {
-      main: colors.brandGreen
+      main: "#3A7A10" //brandGreen
     }
   }
 });

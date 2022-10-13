@@ -1,4 +1,5 @@
-import { getTilaBuckets, RowWithKoulutustyyppiPath } from "../lambda/shared";
+import { initializeSubBuckets } from "../lambda/elasticUtils";
+import { RowWithKoulutustyyppiPath } from "../shared/types";
 
 test("getTilaBuckets should reset bucket amounts to zero, if they exist in db response, but not in elastic", () => {
   const rows: Array<RowWithKoulutustyyppiPath> = [
@@ -64,6 +65,6 @@ test("getTilaBuckets should reset bucket amounts to zero, if they exist in db re
   ];
 
   expect(
-    getTilaBuckets(rows, elasticResBody, "by_koulutustyyppi_path")
+    initializeSubBuckets(rows, elasticResBody, "by_koulutustyyppi_path")
   ).toMatchObject(expectedTilaBuckets);
 });

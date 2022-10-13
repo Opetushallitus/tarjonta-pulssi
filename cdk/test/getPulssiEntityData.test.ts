@@ -1,8 +1,8 @@
-import {  getPulssiEntityData } from "../lambda/shared";
+import { dbQueryResultToPulssiData } from "../lambda/pulssiViewerUtils";
 
 test("getPulssiEntityData", () => {
   expect(
-    getPulssiEntityData(
+    dbQueryResultToPulssiData(
       {
         rows: [
           {

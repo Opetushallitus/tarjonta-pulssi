@@ -23,6 +23,6 @@
       "react-dom": ["node_modules/preact/compat"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "../cdk/shared"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -1,14 +1,8 @@
 import { Handler } from "aws-lambda";
-import {
-  DEFAULT_DB_POOL_PARAMS,
-  getPulssiEntityData,
-  getSSMParam,
-  Julkaisutila,
-  putPulssiS3Object,
-} from "./shared";
-import type { EntityType } from "./shared";
+import { getPulssiData, getPulssiTranslations } from "./pulssiViewerUtils";
 import { Pool } from "pg";
-import fetch from "node-fetch";
+import { getSSMParam, putPulssiS3Object } from "./awsUtils";
+import { DEFAULT_DB_POOL_PARAMS } from "./dbUtils";
 
 const PULSSI_DB_USER = await getSSMParam(
   process.env.TARJONTAPULSSI_POSTGRES_RO_USER
@@ -26,73 +20,13 @@ const pulssiDbPool = new Pool({
   password: PULSSI_DB_PASSWORD,
 });
 
-const createTilaAmountCol = (entity: EntityType, tila: Julkaisutila) => {
-  let col = `coalesce(sum(amount) filter(where tila = '${tila}'), 0) as ${tila}_amount`;
-  if (entity === "toteutus") {
-    col += `, coalesce(sum(jotpa_amount) filter(where tila = '${tila}'), 0) as ${tila}_jotpa_amount`
-  }
-  return col
-}
-
-const getCounts = async (entity: EntityType) => {
-  const primaryColName = entity === "haku" ? "hakutapa" : "tyyppi_path";
-
-  const res = await pulssiDbPool.query(
-    `select ${primaryColName}, ${createTilaAmountCol(
-      entity,
-      "julkaistu"
-    )}, ${createTilaAmountCol(
-      entity,
-      "arkistoitu"
-    )} from ${entity}_amounts group by ${primaryColName} ${entity === "toteutus" ? ", jotpa_amount" : ""}`
-  );
-  return getPulssiEntityData(res, entity);
-};
-
-const koodistoURI = (koodistoNimi: string) =>
-  `https://virkailija.${process.env.PUBLICHOSTEDZONE}/koodisto-service/rest/json/${koodistoNimi}/koodi?onlyValidKoodis=true`;
-const localizationsUri = `https://virkailija.${process.env.PUBLICHOSTEDZONE}/lokalisointi/cxf/rest/v1/localisation?category=tarjonta-pulssi`;
-
-const getKoodistoTranslations = async (koodistoNimi: string) => {
-  const res = await fetch(koodistoURI(koodistoNimi));
-  const json: any = await res.json();
-  return json?.reduce((result: any, hakutapa: any) => {
-    result[hakutapa?.koodiUri] = Object.fromEntries(
-      hakutapa.metadata?.map((tr: any) => [tr.kieli.toLowerCase(), tr.nimi])
-    );
-    return result;
-  }, {});
-};
-
-const getLocalizations = async () => {
-  const res = await fetch(localizationsUri)
-  const json: any = await res.json()
-  const result: Record<string, any> = {};
-  json?.forEach((translation: any) => {
-    if (!result[translation.key]) {
-      result[translation.key] = {};
-    }
-    result[translation.key][translation.locale] = translation.value;
-  });
-  return result;
-};
-
 export const main: Handler = async (event, context /*, callback*/) => {
   // https://github.com/brianc/node-postgres/issues/930#issuecomment-230362178
   context.callbackWaitsForEmptyEventLoop = false; // !important to reuse pool
 
-  const pulssiData = {
-    koulutukset: await getCounts("koulutus"),
-    toteutukset: await getCounts("toteutus"),
-    hakukohteet: await getCounts("hakukohde"),
-    haut: await getCounts("haku"),
-  };
+  const translations = await getPulssiTranslations();
 
-  const translations = {
-    ...await getLocalizations(),
-    ...await getKoodistoTranslations("koulutustyyppi"),
-    ...await getKoodistoTranslations("hakutapa"),
-  };
+  const pulssiData = await getPulssiData(pulssiDbPool);
 
   await putPulssiS3Object({
     Key: "pulssi.json",

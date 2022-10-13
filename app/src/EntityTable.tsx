@@ -1,13 +1,8 @@
 import { useMemo } from "react";
-import {
-  EntityDataWithSubKey,
-  EntityType,
-  SubKeyWithAmounts,
-  WithAmounts
-} from "./commonTypes";
 import ArrowRightIcon from "@mui/icons-material/ArrowRightOutlined";
 import { useTranslations } from "./useTranslations";
 import { Box } from "@mui/material";
+import { EntityDataWithSubKey, EntityType, SubKeyWithAmounts, WithAmounts } from "../../cdk/shared/types";
 
 type SubRowProps = {
   titleKey: string;

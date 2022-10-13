@@ -1,6 +1,6 @@
 import { useQuery } from "react-query";
-import { PulssiData } from "./commonTypes";
 import { JSON_PATH } from "./constants";
+import { PulssiData } from "../../cdk/shared/types";
 
 const REFETCH_INTERVAL = 1 * 60 * 1000;
 

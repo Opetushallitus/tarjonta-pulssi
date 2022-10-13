@@ -6,7 +6,7 @@ import { styled } from "@mui/material/styles";
 
 import { useLanguageState } from "./useLanguageState";
 import { useTranslations } from "./useTranslations";
-import { SUPPORTED_LANGUAGES } from "./constants";
+import { SUPPORTED_LANGUAGES } from "../../cdk/shared/constants";
 
 const CustomInput = styled(InputBase)({
   fontSize: "small",
@@ -27,6 +27,7 @@ export const LanguageDropdown = () => {
   const handleChange = (event: any) => {
     setLang(event.target.value as string);
   };
+
   return (
     <Box display="flex" flexDirection="column" alignItems="center">
       <LanguageIcon
