@@ -5,16 +5,14 @@ import { Select, MenuItem, InputBase, Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
 import { useLanguageState } from "./useLanguageState";
-import { useTranslations } from "./useTranslations";
 import { SUPPORTED_LANGUAGES } from "../../cdk/shared/constants";
+import { LANGUAGES_BY_CODE } from "./constants";
 
 const CustomInput = styled(InputBase)({
-  fontSize: "small",
   color: "white"
 });
 
 export const LanguageDropdown = () => {
-  const { t } = useTranslations();
   const { lang, setLang } = useLanguageState();
 
   const [open, setOpen] = React.useState(false);
@@ -50,10 +48,11 @@ export const LanguageDropdown = () => {
         onOpen={handleOpen}
         onChange={handleChange}
         input={<CustomInput />}
+        renderValue={(value) => value?.toUpperCase()}
       >
         {SUPPORTED_LANGUAGES.map((langCode) => (
           <MenuItem key={langCode} value={langCode}>
-            {t(`kieli.${langCode}`) ?? langCode}
+            {LANGUAGES_BY_CODE[langCode] ?? langCode}
           </MenuItem>
         ))}
       </Select>

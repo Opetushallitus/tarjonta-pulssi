@@ -14,3 +14,9 @@ export const JSON_PATH =
   process.env.NODE_ENV === "development" ? "/test_data/" : "/";
 
 export const OPINTOPOLKU_URL = "https://opintopolku.fi";
+
+export const LANGUAGES_BY_CODE = {
+  fi: "Suomeksi",
+  sv: "På svenska",
+  en: "In English"
+}
