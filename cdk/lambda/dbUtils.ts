@@ -1,6 +1,14 @@
 import { getSSMParam } from "./awsUtils";
 import { Pool, PoolClient } from "pg";
 import { EntityType, Julkaisutila, ToteutusRow } from "../shared/types";
+import {
+  AggregationsFilterAggregate,
+} from "@elastic/elasticsearch/api/types";
+import {
+  bucketsToArr,
+  getSubBuckets,
+  SearchResultsByEntity,
+} from "./elasticUtils";
 
 export const DEFAULT_DB_POOL_PARAMS = {
   max: 1,
@@ -95,21 +103,25 @@ const saveToteutusAmounts = async (
 
 export const savePulssiAmounts = async (
   pulssiClient: PoolClient,
-  mSearchRes: any
+  searchResultsByEntity: SearchResultsByEntity
 ) => {
   try {
     await pulssiClient.query("BEGIN");
-    for (const [entity, elasticResBody] of Object.entries(mSearchRes) as any) {
+    for (const [entity, elasticResBody] of Object.entries(
+      searchResultsByEntity
+    )) {
       const subAggName =
         entity === "haku" ? "by_hakutapa" : "by_koulutustyyppi_path";
 
       const subAggColumn = entity === "haku" ? "hakutapa" : "tyyppi_path";
 
-      const tilaBuckets = elasticResBody?.aggregations?.by_tila?.buckets;
+      const tilaBuckets = bucketsToArr(
+        elasticResBody?.aggregations?.by_tila?.buckets
+      );
 
       for (const tilaBucket of tilaBuckets) {
-        const tila = tilaBucket.key;
-        const subBuckets = tilaBucket?.[subAggName]?.buckets ?? [];
+        const tila = tilaBucket.key as Julkaisutila;
+        const subBuckets = getSubBuckets(tilaBucket, subAggName);
 
         for (const subBucket of subBuckets) {
           const amount = Number(subBucket.doc_count ?? 0);
@@ -121,7 +133,10 @@ export const savePulssiAmounts = async (
           )?.rows?.[0];
 
           if (entity === "toteutus") {
-            const jotpaAmount = Number(subBucket?.has_jotpa?.doc_count ?? 0);
+            const jotpaAmount = Number(
+              (subBucket?.has_jotpa as AggregationsFilterAggregate)
+                ?.doc_count ?? 0
+            );
 
             await saveToteutusAmounts(pulssiClient, existingRow, {
               tyyppi_path: subBucket.key,

@@ -1,4 +1,13 @@
-import { Client as ElasticSearchClient } from "@elastic/elasticsearch";
+import { ApiResponse, Client as ElasticSearchClient } from "@elastic/elasticsearch";
+import type { Client as IElasticSearchClient } from "@elastic/elasticsearch/api/new";
+
+import {
+  AggregationsBuckets,
+  AggregationsStringTermsAggregate,
+  AggregationsStringTermsBucket,
+  MsearchMultiSearchItem,
+  MsearchResponse,
+} from "@elastic/elasticsearch/api/types";
 import { ENTITY_TYPES } from "../shared/constants";
 import { EntityType, Row } from "../shared/types";
 import { getSSMParam } from "./awsUtils";
@@ -7,9 +16,38 @@ export const connectElastic = async () => {
   const elasticUrlWithCredentials = await getSSMParam(
     process.env.KOUTA_ELASTIC_URL_WITH_CREDENTIALS
   );
-  return new ElasticSearchClient({
+
+  // @ts-expect-error @elastic/elasticsearch
+  const client: IElasticSearchClient = new ElasticSearchClient({
     node: elasticUrlWithCredentials,
   });
+  return client;
+};
+
+export type { Client as IElasticSearchClient } from "@elastic/elasticsearch/api/new";
+
+export type SearchResultsByEntity = Record<
+  EntityType,
+  PulssiSearchResponseItem | null
+>;
+
+export type PulssiAggregations = {
+  by_tila: AggregationsStringTermsAggregate;
+};
+
+export type PulssiSearchResponseItem =
+  MsearchMultiSearchItem<EntityDocument> & {
+    aggregations: PulssiAggregations;
+  };
+
+export type SearchApiResponse = ApiResponse<
+  MsearchResponse<EntityDocument>,
+  PulssiAggregations
+>;
+
+export type EntityDocument = {
+  koulutustyyppiPath?: string;
+  hakutapa?: string;
 };
 
 const DEFAULT_AGGS = {
@@ -51,10 +89,17 @@ const AGGS_BY_ENTITY: Record<EntityType, object> = {
   },
 } as const;
 
+export const bucketsToArr = <T = unknown>(buckets?: AggregationsBuckets<T>) =>
+  buckets ? Object.values(buckets) : [];
+
+export const getSubBuckets = (bucket: AggregationsStringTermsBucket, subAggName: string) =>
+  bucketsToArr((bucket?.[subAggName] as AggregationsStringTermsAggregate | undefined)
+    ?.buckets);
+
 export const getAmountsFromElastic = async (
-  elasticClient: ElasticSearchClient
+  elasticClient: IElasticSearchClient
 ) => {
-  return elasticClient.msearch({
+  return elasticClient.msearch<EntityDocument, PulssiAggregations>({
     body: ENTITY_TYPES.flatMap((entity) => [
       { index: `${entity}-kouta` },
       {
@@ -78,8 +123,11 @@ export const getAmountsFromElastic = async (
   });
 };
 
-const resetSubBucket = (subBuckets: any, subAggKey: string) => {
-  const subBucket = subBuckets?.find(
+const resetSubBucket = (
+  subBuckets: AggregationsBuckets<AggregationsStringTermsBucket> | undefined,
+  subAggKey: string
+) => {
+  const subBucket = bucketsToArr(subBuckets)?.find(
     (v: { key: string }) => v.key === subAggKey
   );
   if (Array.isArray(subBuckets) && subBucket == null) {
@@ -92,10 +140,10 @@ const resetSubBucket = (subBuckets: any, subAggKey: string) => {
 
 export const initializeSubBuckets = (
   rows: Array<Row>,
-  elasticRes: any,
+  elasticRes: PulssiSearchResponseItem,
   subAggName: "by_koulutustyyppi_path" | "by_hakutapa"
 ) => {
-  const tilaBuckets = elasticRes?.aggregations?.by_tila?.buckets ?? [];
+  const tilaBuckets = bucketsToArr(elasticRes?.aggregations?.by_tila?.buckets);
 
   // Asetetaan nollaksi aggregaatioiden luvut, jotka löytyy kannasta, mutta ei elasticista.
   // Bucketteja voi kadota, jos entiteettejä muokataan. Tarvitsee nollata, jotta kantaan ei jää haamu-lukuja sotkemaan.
@@ -115,7 +163,7 @@ export const initializeSubBuckets = (
       tilaBuckets.push(tilaBucket);
     }
 
-    const subBuckets = tilaBucket?.[subAggName]?.buckets;
+    const subBuckets = getSubBuckets(tilaBucket, subAggName)
 
     if ("hakutapa" in row) {
       resetSubBucket(subBuckets, row.hakutapa);
