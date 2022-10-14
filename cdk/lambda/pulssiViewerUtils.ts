@@ -1,3 +1,4 @@
+import fetch from "node-fetch";
 import { Pool, QueryResult } from "pg";
 import { EntityType } from "../shared/types";
 import { DbRowBase, queryPulssiAmounts } from "./dbUtils";
