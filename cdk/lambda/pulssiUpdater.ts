@@ -40,7 +40,7 @@ const initializeEntityBuckets = async (
       const dbGroupByResRows =
         (
           await pulssiClient.query(
-            `select tila, ${subAggColumn} from ${entity}_amounts group by (tila, ${subAggColumn})`
+            `select tila, ${subAggColumn} from ${entity}_amounts`
           )
         )?.rows ?? [];
 
@@ -63,7 +63,7 @@ const saveAmountsFromElasticToDb = async (
     pulssiClient,
     searchApiResponse
   );
-  return savePulssiAmounts(pulssiClient, searchResultsByEntity);
+  await savePulssiAmounts(pulssiClient, searchResultsByEntity);
 };
 
 export const main: Handler = async (event, context, callback) => {
