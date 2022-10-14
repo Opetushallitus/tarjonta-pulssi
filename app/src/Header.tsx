@@ -39,6 +39,7 @@ const Heading = styled(Typography)(({theme}) => ({
   fontWeight: 600,
   color: "white",
   lineHeight: "22px",
+  letterSpacing: "1px",
   [theme.breakpoints.down("sm")]: {
     fontSize: "18px"
   }
@@ -71,7 +72,7 @@ export const Header = () => {
           />
           <VisuallyHidden>{t("siirry_opintopolkuun")}</VisuallyHidden>
         </Link>
-        <Heading>{t("sivu_otsikko")}</Heading>
+        <Heading variant="h1">{t("sivu_otsikko")}</Heading>
       </Box>
       <LanguageDropdown />
     </PulssiAppBar>
