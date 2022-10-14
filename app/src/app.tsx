@@ -3,7 +3,7 @@ import { EntityTable } from "./EntityTable";
 import { ICONS } from "./constants";
 import { useTranslations } from "./useTranslations";
 import { Header } from "./Header";
-import { Box, CircularProgress, Paper } from "@mui/material";
+import { Box, CircularProgress, Paper, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useLanguageState } from "./useLanguageState";
 import "./app.css";
@@ -32,6 +32,14 @@ const StyledEntitySectionHeader = styled(Box)`
   justify-content: center;
 `;
 
+const SectionHeading = styled(Typography)`
+  font-size: 1.5rem;
+  font-weight: 500;
+  text-align: left;
+  margin: 0;
+  padding-left: 14px;
+`
+
 const EntitySection = ({
   entity,
   data
@@ -46,9 +54,7 @@ const EntitySection = ({
     <StyledEntitySection>
       <StyledEntitySectionHeader>
         <IconComponent />
-        <div>
-          <h1>{t(`${entity}_otsikko`) ?? entity}</h1>
-        </div>
+        <SectionHeading variant="h2">{t(`${entity}_otsikko`)}</SectionHeading>
       </StyledEntitySectionHeader>
       <EntityTable data={data} entity={entity} />
     </StyledEntitySection>
