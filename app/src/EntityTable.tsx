@@ -2,6 +2,12 @@ import { useMemo } from "react";
 import ArrowRightIcon from "@mui/icons-material/ArrowRightOutlined";
 import { useTranslations } from "./useTranslations";
 import { Box, styled, Typography } from "@mui/material";
+import {
+  EntityDataWithSubKey,
+  EntityType,
+  SubKeyWithAmounts,
+  WithAmounts
+} from "../../cdk/shared/types";
 
 type SubRowProps = {
   titleKey: string;
@@ -15,6 +21,8 @@ type RowProps = {
   indent?: boolean;
 };
 
+type Entry = [string, SubKeyWithAmounts];
+
 const ContentRow = ({
   titleKey,
   amounts,
@@ -26,8 +34,9 @@ const ContentRow = ({
   const julkaistuAmount = Number(amounts?.julkaistu_amount);
   const totalAmount =
     Number(amounts?.arkistoitu_amount) + Number(amounts?.julkaistu_amount);
+  const rowHasData = julkaistuAmount !== 0 || totalAmount !== 0;
 
-  return (
+  return rowHasData ? (
     <>
       <tr key={titleKey}>
         <th className="col">
@@ -44,14 +53,11 @@ const ContentRow = ({
         </td>
       </tr>
       {subRows.map((rowProps) => (
-          <ContentRow key={rowProps.titleKey} {...rowProps} indent={true} />
-        ))}
+        <ContentRow key={rowProps.titleKey} {...rowProps} indent={true} />
+      ))}
     </>
-  );
+  ) : null;
 };
-
-type Entry = [string, SubKeyWithAmounts];
-
 
 const sortEntries = (entries: Array<Entry>) =>
   entries.sort((entry1, entry2) => (entry1[0] > entry2[0] ? 1 : -1));
