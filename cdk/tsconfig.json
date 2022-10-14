@@ -5,7 +5,6 @@
     "moduleResolution": "node",
     "lib": [
       "es2020",
-      "dom"
     ],
     "esModuleInterop": true,
     "declaration": true,
@@ -26,5 +25,5 @@
       "./node_modules/@types"
     ]
   },
-  "include": ["bin", "lambda", "lib"]
+  "include": ["bin", "lib"]
 }
