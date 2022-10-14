@@ -1,4 +1,7 @@
-import { ApiResponse, Client as ElasticSearchClient } from "@elastic/elasticsearch";
+import {
+  ApiResponse,
+  Client as ElasticSearchClient,
+} from "@elastic/elasticsearch";
 import type { Client as IElasticSearchClient } from "@elastic/elasticsearch/api/new";
 
 import {
@@ -89,12 +92,17 @@ const AGGS_BY_ENTITY: Record<EntityType, object> = {
   },
 } as const;
 
-export const bucketsToArr = <T = unknown>(buckets?: AggregationsBuckets<T>) =>
-  buckets ? Object.values(buckets) : [];
+export const bucketsAsArr = <T = unknown>(buckets?: AggregationsBuckets<T>) =>
+  buckets ? (buckets as Array<T>) : [];
 
-export const getSubBuckets = (bucket: AggregationsStringTermsBucket, subAggName: string) =>
-  bucketsToArr((bucket?.[subAggName] as AggregationsStringTermsAggregate | undefined)
-    ?.buckets);
+export const getSubBuckets = (
+  bucket: AggregationsStringTermsBucket,
+  subAggName: string
+) =>
+  bucketsAsArr(
+    (bucket?.[subAggName] as AggregationsStringTermsAggregate | undefined)
+      ?.buckets
+  );
 
 export const getAmountsFromElastic = async (
   elasticClient: IElasticSearchClient
@@ -127,7 +135,7 @@ const resetSubBucket = (
   subBuckets: AggregationsBuckets<AggregationsStringTermsBucket> | undefined,
   subAggKey: string
 ) => {
-  const subBucket = bucketsToArr(subBuckets)?.find(
+  const subBucket = bucketsAsArr(subBuckets)?.find(
     (v: { key: string }) => v.key === subAggKey
   );
   if (Array.isArray(subBuckets) && subBucket == null) {
@@ -136,6 +144,7 @@ const resetSubBucket = (
       doc_count: 0,
     });
   }
+  return subBuckets;
 };
 
 export const initializeSubBuckets = (
@@ -143,7 +152,7 @@ export const initializeSubBuckets = (
   elasticRes: PulssiSearchResponseItem,
   subAggName: "by_koulutustyyppi_path" | "by_hakutapa"
 ) => {
-  const tilaBuckets = bucketsToArr(elasticRes?.aggregations?.by_tila?.buckets);
+  const tilaBuckets = bucketsAsArr(elasticRes?.aggregations?.by_tila?.buckets);
 
   // Asetetaan nollaksi aggregaatioiden luvut, jotka löytyy kannasta, mutta ei elasticista.
   // Bucketteja voi kadota, jos entiteettejä muokataan. Tarvitsee nollata, jotta kantaan ei jää haamu-lukuja sotkemaan.
@@ -163,7 +172,7 @@ export const initializeSubBuckets = (
       tilaBuckets.push(tilaBucket);
     }
 
-    const subBuckets = getSubBuckets(tilaBucket, subAggName)
+    const subBuckets = getSubBuckets(tilaBucket, subAggName);
 
     if ("hakutapa" in row) {
       resetSubBucket(subBuckets, row.hakutapa);

@@ -5,7 +5,7 @@ import {
   AggregationsFilterAggregate,
 } from "@elastic/elasticsearch/api/types";
 import {
-  bucketsToArr,
+  bucketsAsArr,
   getSubBuckets,
   SearchResultsByEntity,
 } from "./elasticUtils";
@@ -115,7 +115,7 @@ export const savePulssiAmounts = async (
 
       const subAggColumn = entity === "haku" ? "hakutapa" : "tyyppi_path";
 
-      const tilaBuckets = bucketsToArr(
+      const tilaBuckets = bucketsAsArr(
         elasticResBody?.aggregations?.by_tila?.buckets
       );
 
