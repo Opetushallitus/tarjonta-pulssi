@@ -1,8 +1,7 @@
 import { useMemo } from "react";
 import ArrowRightIcon from "@mui/icons-material/ArrowRightOutlined";
 import { useTranslations } from "./useTranslations";
-import { Box } from "@mui/material";
-import { EntityDataWithSubKey, EntityType, SubKeyWithAmounts, WithAmounts } from "../../cdk/shared/types";
+import { Box, styled, Typography } from "@mui/material";
 
 type SubRowProps = {
   titleKey: string;
@@ -84,6 +83,11 @@ const EntryRow = ({ entry }: { entry: Entry }) => {
   return <ContentRow titleKey={k} amounts={v} subRows={subRows} />;
 };
 
+const JoistaHeading = styled(Typography)`
+  font-size: 19px;
+  font-weight: 500;
+`;
+
 export const EntityTable = ({
   data,
   entity
@@ -124,7 +128,16 @@ export const EntityTable = ({
         </table>
       </Box>
       {entity === "toteutus" && (
-        <Box sx={{ borderTop: "1px solid rgba(0, 0, 0, 0.15)" }}>
+        <Box>
+          <Box
+            sx={{
+              p: 2,
+              borderTop: "1px solid rgba(0, 0, 0, 0.15)",
+              borderBottom: "1px solid rgba(0, 0, 0, 0.15)"
+            }}
+          >
+            <JoistaHeading variant="h3">{t("joista_otsikko")}</JoistaHeading>
+          </Box>
           <Box m={2}>
             <table style={{ width: "100%" }}>
               <thead>
