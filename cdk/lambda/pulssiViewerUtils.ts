@@ -115,7 +115,6 @@ const getLocalizations = async () => {
 export const getPulssiTranslations = async () => {
   return {
     ...(await getLocalizations()),
-    ...(await getKoodistoTranslations("koulutustyyppi")),
     ...(await getKoodistoTranslations("hakutapa")),
   };
 };
