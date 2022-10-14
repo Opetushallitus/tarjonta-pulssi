@@ -144,7 +144,6 @@ const resetSubBucket = (
       doc_count: 0,
     });
   }
-  return subBuckets;
 };
 
 export const initializeSubBuckets = (
