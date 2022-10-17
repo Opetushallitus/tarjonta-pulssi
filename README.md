@@ -18,7 +18,7 @@
 `aws/config.py ymparisto put-secret -k postgresqls/tarjontapulssi/master-user-password`  
 `aws/config.py ymparisto put-secret -k postgresqls/tarjontapulssi/app-user-password`  
 `aws/config.py ymparisto put-secret -k postgresqls/tarjontapulssi/readonly-user-password`
-`aws/config.py ymparisto put-secret -k postgresqls/tarjontapulssi/app-user-name`
+`aws/config.py ymparisto put-secret -k postgresqls/tarjontapulssi/app-user-name`  
 `aws/config.py ymparisto put-secret -k postgresqls/tarjontapulssi/readonly-user-name`
 
 #### Lisää tietokanta stacks.json:iin (tarvitsee tehdä vain kerran ja toimii kaikkien ympäristöjen kanssa)
