@@ -1,25 +1,51 @@
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
   text-align: center;
+  color: black;
+  width: 100%;
+  background-color: rgb(255, 255, 255);
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.preact:hover {
-  filter: drop-shadow(0 0 2em #673ab8aa);
+@media (max-width: 2350px) {
+  #app {
+    max-width: 1280px;
+  }
 }
 
-.card {
-  padding: 2em;
+main {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
 }
 
-.read-the-docs {
-  color: #888;
+table {
+  box-sizing: border-box;
+  border-collapse: collapse;
+}
+
+th.row {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  text-align: right;
+}
+
+th.col {
+  border-right: 1px solid rgba(0, 0, 0, 0.15);
+  text-align: left;
+}
+
+td,
+th {
+  padding: 8px;
+}
+
+th {
+  font-weight: 500;
+}
+
+td.content {
+  text-align: right;
+}
+
+tfoot {
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
 }

@@ -1,17 +1,14 @@
 #!/usr/bin/env node
-import 'source-map-support/register';
-import * as cdk from 'aws-cdk-lib';
-import { TarjontaPulssiStack } from '../lib/tarjonta-pulssi';
-
+import "source-map-support/register";
+import * as cdk from "aws-cdk-lib";
+import { TarjontaPulssiStack } from "../lib/tarjonta-pulssi";
 
 const app = new cdk.App();
 const environmentName = app.node.tryGetContext("environment");
 const publicHostedZone = app.node.tryGetContext("publichostedzone");
 const publicHostedZoneId = app.node.tryGetContext("publichostedzoneid");
 
-
-
-new TarjontaPulssiStack(app, 'tarjonta-pulssi', {
+new TarjontaPulssiStack(app, "tarjonta-pulssi", {
   stackName: `${environmentName}-tarjonta-pulssi`,
   environmentName: environmentName,
   publicHostedZone: publicHostedZone,

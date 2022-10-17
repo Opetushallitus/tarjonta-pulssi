@@ -1,65 +1,171 @@
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
-import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
-import React, { useState } from 'react';
-import { Typography } from '@mui/material';
-import { Box } from '@mui/system';
-import { EntityType, WithAmounts } from './commonTypes';
+import { useMemo } from "react";
+import ArrowRightIcon from "@mui/icons-material/ArrowRightOutlined";
+import { useTranslations } from "./useTranslations";
+import { Box, styled, Typography } from "@mui/material";
+import {
+  EntityDataWithSubKey,
+  EntityType,
+  SubKeyWithAmounts,
+  WithAmounts
+} from "../../cdk/shared/types";
 
-const ExpandIcon = ({isExpanded}: {isExpanded: boolean}) => isExpanded ? <ExpandLessOutlinedIcon /> : <ExpandMoreOutlinedIcon />
+type SubRowProps = {
+  titleKey: string;
+  amounts: WithAmounts;
+};
 
 type RowProps = {
-  title: string; amounts: WithAmounts; subRows?: any, indent?: boolean
-}
+  titleKey: string;
+  amounts: WithAmounts;
+  subRows?: Array<SubRowProps>;
+  indent?: boolean;
+};
 
-const ContentRow = React.memo(({title, amounts, subRows = [], indent = false}: RowProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+type Entry = [string, SubKeyWithAmounts];
 
-  return <>
-  <TableRow key={title}>
-    <TableCell sx={{ cursor: subRows?.length ? 'pointer' : 'inherit'}} onClick={() => {setIsExpanded(s => !s)}} component="th" scope="row">
-      <Box display="flex" alignItems="center">
-        {indent && <Typography>-&nbsp;</Typography>}
-        <Typography component="span">{title}</Typography>
-        {subRows && subRows?.length > 0 && <ExpandIcon isExpanded={isExpanded} />}
-      </Box>
-    </TableCell>
-    <TableCell align="right">{amounts?.julkaistu_amount}</TableCell>
-    <TableCell align="right">{
-      (amounts.julkaistu_amount) + (amounts.arkistoitu_amount)}
-    </TableCell>
-  </TableRow>
-  {subRows && isExpanded && subRows.map((rowProps:any) => <ContentRow {...rowProps} indent={true} />)}
-</>
-})
+const ContentRow = ({
+  titleKey,
+  amounts,
+  subRows = [],
+  indent = false
+}: RowProps) => {
+  const { t } = useTranslations();
 
-const SubEntry = ({entry}: any) => {
+  const julkaistuAmount = Number(amounts?.julkaistu_amount);
+  const totalAmount =
+    Number(amounts?.arkistoitu_amount) + Number(amounts?.julkaistu_amount);
+  const rowHasData = julkaistuAmount !== 0 || totalAmount !== 0;
+
+  return rowHasData ? (
+    <>
+      <tr key={titleKey}>
+        <th className="col">
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {indent && <ArrowRightIcon style={{ height: "15px" }} />}
+            <div style={{ textAlign: "left" }}>{t(titleKey) || titleKey}</div>
+          </div>
+        </th>
+        <td className="content">
+          {Number.isNaN(julkaistuAmount) ? "?" : julkaistuAmount}
+        </td>
+        <td className="content">
+          {Number.isNaN(totalAmount) ? "?" : totalAmount}
+        </td>
+      </tr>
+      {subRows.map((rowProps) => (
+        <ContentRow key={rowProps.titleKey} {...rowProps} indent={true} />
+      ))}
+    </>
+  ) : null;
+};
+
+const sortEntries = (entries: Array<Entry>) =>
+  entries.sort((entry1, entry2) => (entry1[0] > entry2[0] ? 1 : -1));
+
+const sortSubEntries = (entries: Array<Entry>) =>
+  entries.sort((entry1, entry2) => {
+    if (entry1[0].toLowerCase()?.includes("muu")) {
+      return 1;
+    }
+    return entry1[0] > entry2[0] ? 1 : -1;
+  });
+
+const useDataRows = (v: SubKeyWithAmounts) => {
+  return useMemo(() => {
+    const subEntries = Object.entries(v).filter(
+      (ss) => !ss?.[0]?.endsWith("_amount")
+    ) as Array<Entry>;
+    return sortSubEntries(subEntries).map(([k, v]) => ({
+      titleKey: k,
+      amounts: v
+    }));
+  }, [v]);
+};
+
+const EntryRow = ({ entry }: { entry: Entry }) => {
   const [k, v] = entry;
-  const subEntries = Object.entries(v).filter(ss => !ss?.[0]?.endsWith('_amount'))
+  const subRows = useDataRows(v);
 
-  return <ContentRow title={k} amounts={v} subRows={subEntries.map(([k, v]) => ({ title: k, amounts: v}))} />
-}
+  return <ContentRow titleKey={k} amounts={v} subRows={subRows} />;
+};
 
-export const EntityTable = ({data, entity}: {data: any, entity: EntityType}) => {
-    const childrenObj = entity === "haku" ? data.by_hakutapa : data.by_tyyppi;
+const JoistaHeading = styled(Typography)`
+  font-size: 19px;
+  font-weight: 500;
+`;
 
-    return <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell component="th" scope="row">{entity === "haku" ? "hakutapa" : "tyyppi"}</TableCell>
-            <TableCell>Julkaistut</TableCell>
-            <TableCell>Kokonaismäärä</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-        {Object.entries(childrenObj).map((subEntry: any) => <SubEntry entry={subEntry} />)}
-        <ContentRow title="Yhteensä" amounts={data?.by_tila} />
-      </TableBody>
-    </Table>
-}
+export const EntityTable = ({
+  data,
+  entity
+}: {
+  data: EntityDataWithSubKey;
+  entity: EntityType;
+}) => {
+  const childEntries = Object.entries(
+    data.by_hakutapa ? data.by_hakutapa : data.by_tyyppi
+  );
+  const { t } = useTranslations();
+
+  return (
+    <>
+      <Box m={2}>
+        <table>
+          <thead>
+            <tr>
+              <th className="row col">
+                {entity === "haku"
+                  ? t("hakutapa_otsikko")
+                  : t("tyyppi_otsikko")}
+              </th>
+              <th className="row">{t("julkaistut_otsikko")}</th>
+              <th className="row" style={{ maxWidth: "100px" }}>
+                {t("molemmat_tilat_otsikko")}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortEntries(childEntries).map((entry) => (
+              <EntryRow key={entry[0]} entry={entry} />
+            ))}
+          </tbody>
+          <tfoot>
+            <ContentRow titleKey="yhteensa_otsikko" amounts={data?.by_tila} />
+          </tfoot>
+        </table>
+      </Box>
+      {entity === "toteutus" && (
+        <Box>
+          <Box
+            sx={{
+              p: 2,
+              borderTop: "1px solid rgba(0, 0, 0, 0.15)",
+              borderBottom: "1px solid rgba(0, 0, 0, 0.15)"
+            }}
+          >
+            <JoistaHeading variant="h3">{t("joista_otsikko")}</JoistaHeading>
+          </Box>
+          <Box m={2}>
+            <table style={{ width: "100%" }}>
+              <thead>
+                <tr>
+                  <th className="row col"></th>
+                  <th className="row">{t("julkaistut_otsikko")}</th>
+                  <th className="row" style={{ maxWidth: "100px" }}>
+                    {t("molemmat_tilat_otsikko")}
+                  </th>
+                </tr>
+              </thead>
+              <ContentRow
+                titleKey="jotpa_otsikko"
+                amounts={{
+                  julkaistu_amount: data?.by_tila?.julkaistu_jotpa_amount,
+                  arkistoitu_amount: data?.by_tila?.arkistoitu_jotpa_amount
+                }}
+              />
+            </table>
+          </Box>
+        </Box>
+      )}
+    </>
+  );
+};
