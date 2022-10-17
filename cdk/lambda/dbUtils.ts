@@ -147,7 +147,7 @@ export const savePulssiAmounts = async (
           } else {
             if (existingRow) {
               // Ei päivitetä kantaa, jos luku ei ole muuttunut!
-              if (existingRow.amount !== amount) {
+              if (Number(existingRow.amount) !== amount) {
                 console.log(
                   `Updating changed ${entity} amount (${tila}, ${subBucket.key}) = ${amount}`
                 );
