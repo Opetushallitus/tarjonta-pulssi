@@ -13,7 +13,8 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
-import { PublicHostedZone } from "aws-cdk-lib/aws-route53";
+import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
+import { Rule, Schedule } from "aws-cdk-lib/aws-events";
 
 // import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 // import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
@@ -292,15 +293,14 @@ export class TarjontaPulssiStack extends cdk.Stack {
       }
     );
 
-    // const eventRule = new Rule(this, 'scheduleRule', {
-    //   schedule: Schedule.expression('cron(*/5 * * * *)'),
-    // });
-    // eventRule.addTarget(new LambdaFunction(tarjontaPulssiLamda))
+    const eventRule = new Rule(this, 'scheduleRule', {
+      schedule: Schedule.rate(cdk.Duration.minutes(10)),
+    });
+    eventRule.addTarget(new LambdaFunction(tarjontaPulssiUpdaterLambda));
 
     /**
      * Fetch PostgreSQLS SG name and ID
      */
-
     [
       {
         name: "TarjontaPulssiLambdaSG",
