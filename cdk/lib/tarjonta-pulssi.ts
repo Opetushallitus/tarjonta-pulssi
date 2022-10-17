@@ -105,7 +105,7 @@ export class TarjontaPulssiStack extends cdk.Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       additionalBehaviors: { 
-        '/*.json': {
+        '/pulssi.json': {
           origin: StaticContentBucketOrigin,
           cachePolicy: noCachePolicy,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
@@ -245,7 +245,7 @@ export class TarjontaPulssiStack extends cdk.Stack {
       sources: [s3deploy.Source.asset('../app/dist')],
       destinationBucket: staticContentBucket,
       distribution,
-      distributionPaths: ['/index.html', '/assets/*'],
+      distributionPaths: ['/index.html', '/assets/*', '/translations.json'],
       prune: false
     });
 

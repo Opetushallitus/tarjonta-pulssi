@@ -5,10 +5,10 @@
     "cdk": "bin/cdk.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc ./bin/*.ts ./lib/*.ts",
     "clean": "tsc --build --clean",
     "watch": "tsc -w",
-    "test": "jest",
+    "test": "jest  --watch",
     "cdk": "cdk",
     "umzug": "ts-node ./db/umzug/migrate.ts",
     "eslint": "eslint ./*.{js,ts}",
@@ -37,7 +37,6 @@
     "aws-cdk-lib": "2.39.1",
     "aws-sdk": "^2.1217.0",
     "constructs": "^10.0.0",
-    "node-fetch": "^3.2.10",
     "pg": "^8.8.0",
     "source-map-support": "^0.5.21"
   }

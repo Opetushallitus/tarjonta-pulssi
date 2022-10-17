@@ -1,5 +1,5 @@
 import { Handler } from "aws-lambda";
-import { getPulssiData, getPulssiTranslations } from "./pulssiViewerUtils";
+import { getPulssiData } from "./pulssiViewerUtils";
 import { Pool } from "pg";
 import { getSSMParam, putPulssiS3Object } from "./awsUtils";
 import { DEFAULT_DB_POOL_PARAMS } from "./dbUtils";
@@ -24,19 +24,11 @@ export const main: Handler = async (event, context /*, callback*/) => {
   // https://github.com/brianc/node-postgres/issues/930#issuecomment-230362178
   context.callbackWaitsForEmptyEventLoop = false; // !important to reuse pool
 
-  const translations = await getPulssiTranslations();
-
   const pulssiData = await getPulssiData(pulssiDbPool);
 
   await putPulssiS3Object({
     Key: "pulssi.json",
     Body: JSON.stringify(pulssiData),
-    ContentType: "application/json; charset=utf-8",
-  });
-
-  await putPulssiS3Object({
-    Key: "translations.json",
-    Body: JSON.stringify(translations),
     ContentType: "application/json; charset=utf-8",
   });
 };
