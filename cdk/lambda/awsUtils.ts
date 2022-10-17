@@ -17,10 +17,10 @@ export function putPulssiS3Object(params: Omit<PutObjectRequest, "Bucket">) {
     .promise();
 }
 
-export function invokeViewerLambda() {
+export function invokePublisherLambda() {
   return lambda
     .invoke({
-      FunctionName: process.env.VIEWER_LAMBDA_NAME,
+      FunctionName: process.env.PUBLISHER_LAMBDA_NAME,
       InvocationType: "Event",
       LogType: "Tail",
       Payload: null,

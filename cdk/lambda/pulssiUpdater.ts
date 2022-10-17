@@ -1,6 +1,6 @@
 import { Handler } from "aws-lambda";
 import { PoolClient } from "pg";
-import { invokeViewerLambda } from "./awsUtils";
+import { invokePublisherLambda } from "./awsUtils";
 import {
   connectElastic,
   IElasticSearchClient,
@@ -17,7 +17,7 @@ const elasticClient = await connectElastic();
 const pulssiDbPool = await createPulssiDbPool();
 
 const initializeEntityBuckets = async (
-  pulssiClient,
+  pulssiClient: PoolClient,
   searchApiRes: SearchApiResponse
 ) => {
 
@@ -74,7 +74,7 @@ export const main: Handler = async (event, context, callback) => {
 
   try {
     await saveAmountsFromElasticToDb(elasticClient, pulssiClient);
-    await invokeViewerLambda();
+    await invokePublisherLambda();
   } finally {
     // https://github.com/brianc/node-postgres/issues/1180#issuecomment-270589769
     pulssiClient.release(true);

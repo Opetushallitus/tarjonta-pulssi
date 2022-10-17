@@ -1,5 +1,5 @@
 import { Handler } from "aws-lambda";
-import { getPulssiData } from "./pulssiViewerUtils";
+import { getPulssiData } from "./pulssiPublisherUtils";
 import { Pool } from "pg";
 import { getSSMParam, putPulssiS3Object } from "./awsUtils";
 import { DEFAULT_DB_POOL_PARAMS } from "./dbUtils";

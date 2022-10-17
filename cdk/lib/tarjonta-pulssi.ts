@@ -164,11 +164,11 @@ export class TarjontaPulssiStack extends cdk.Stack {
       }
     );
 
-    const tarjontaPulssiViewerLambda = new NodejsFunction(
+    const tarjontaPulssiPublisherLambda = new NodejsFunction(
       this,
-      "TarjontaPulssiViewerLambda",
+      "TarjontaPulssiPublisherLambda",
       {
-        entry: "lambda/pulssiViewer.ts",
+        entry: "lambda/pulssiPublisher.ts",
         handler: "main",
         runtime: Runtime.NODEJS_16_X,
         logRetention: RetentionDays.ONE_YEAR,
@@ -246,7 +246,7 @@ export class TarjontaPulssiStack extends cdk.Stack {
           TARJONTAPULSSI_POSTGRES_APP_USER: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
           TARJONTAPULSSI_POSTGRES_APP_PASSWORD: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
           KOUTA_ELASTIC_URL_WITH_CREDENTIALS: `/${props.environmentName}/services/kouta-indeksoija/kouta-indeksoija-elastic7-url-with-credentials`,
-          VIEWER_LAMBDA_NAME: tarjontaPulssiViewerLambda.functionName,
+          PUBLISHER_LAMBDA_NAME: tarjontaPulssiPublisherLambda.functionName,
         },
         initialPolicy: [
           new PolicyStatement({
@@ -262,7 +262,7 @@ export class TarjontaPulssiStack extends cdk.Stack {
           }),
           new PolicyStatement({
             effect: Effect.ALLOW,
-            resources: [tarjontaPulssiViewerLambda.functionArn],
+            resources: [tarjontaPulssiPublisherLambda.functionArn],
             actions: ["lambda:InvokeFunction", "lambda:InvokeAsync"],
           }),
         ],

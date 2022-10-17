@@ -1,4 +1,4 @@
-import { dbQueryResultToPulssiData } from "../lambda/pulssiViewerUtils";
+import { dbQueryResultToPulssiData } from "../lambda/pulssiPublisherUtils";
 
 test("getPulssiEntityData", () => {
   expect(
