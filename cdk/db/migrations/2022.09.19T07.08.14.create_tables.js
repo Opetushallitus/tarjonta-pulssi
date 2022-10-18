@@ -1,7 +1,4 @@
-import { ClientBase } from "pg";
-import { MigrationFn } from "umzug";
-
-const historyTableInitSql = (name: string, fields: Array<string>) => {
+const historyTableInitSql = (name, fields) => {
   return `CREATE table ${name}_history (like ${name});
     create or replace function set_temporal_columns() returns trigger as
     $$
@@ -55,7 +52,7 @@ amount bigint NOT NULL,
 transaction_id bigint not null default txid_current(),
 system_time tstzrange not null default tstzrange(now(), null, '[)'),`;
 
-export const up: MigrationFn<ClientBase> = async ({ context: pg }) => {
+const up = async ({ context: pg }) => {
   await pg.query(`
 CREATE TABLE koulutus_amounts (
     tyyppi_path varchar NOT NULL,
@@ -107,7 +104,7 @@ CREATE TABLE haku_amounts (
   );
 };
 
-export const down: MigrationFn<ClientBase> = async ({ context: pg }) => {
+const down = async ({ context: pg }) => {
   await pg.query(`
 DROP TABLE koulutus_amounts, koulutus_amounts_history;
 `);
@@ -121,3 +118,5 @@ DROP TABLE hakukohde_amounts, hakukohde_amounts_history;
 DROP TABLE haku_amounts, haku_amounts_history;
 `);
 };
+
+module.exports = { up, down }
