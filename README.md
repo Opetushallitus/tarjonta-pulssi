@@ -31,8 +31,8 @@
 `aws/cloudformation.py ymparisto postgresqls create -s tarjontapulssi`
 
 #### Luo tietokantakäyttäjät
-`cd tools/db`
+`cd tools/db`  
 `./update-postgres-db-roles.sh ymparisto tarjontapulssi`
 
 ## Deployaa tarjonta-pulssi sovellus (tarjonta-pulssi repositoryssä)
-`./deploy.sh ymparisto deploy`
+`./deploy.sh ymparisto deploy -d`

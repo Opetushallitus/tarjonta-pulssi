@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -xeo pipefail
+set -eo pipefail
 
 if [ $# == 0  ] || [ $# -gt 3 ] 
 then
@@ -58,8 +58,10 @@ git_root=$(git rev-parse --show-toplevel)
 
 
 if [[ -n "${dependencies}" ]]; then
-    echo "Installing dependencies"
+    echo "Installing CDK dependencies.."
     cd "${git_root}/cdk/" && npm ci
+    echo "Installing Lambda dependencies.."
+    cd "${git_root}/app/" && npm ci
 fi
 
 environment=${POSITIONAL[-1]}
