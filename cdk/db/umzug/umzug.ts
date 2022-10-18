@@ -10,10 +10,10 @@ import { MigrationFn } from 'umzug';
 export const up: MigrationFn<ClientBase> = params => {};
 export const down: MigrationFn<ClientBase> = params => {};`.trimStart();
 
-export const createMigrator = (client: ClientBase) =>
+export const createMigrator = (client: ClientBase, migrationsPath = "db/migrations") =>
   new Umzug({
     migrations: {
-      glob: "db/migrations/*.{ts,up.sql}",
+      glob: `${migrationsPath}/*.{ts,up.sql}`,
       resolve(params) {
         return params.path?.endsWith(".sql")
           ? {

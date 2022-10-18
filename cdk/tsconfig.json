@@ -25,5 +25,5 @@
       "./node_modules/@types"
     ]
   },
-  "include": ["bin", "lib"]
+  "exclude": ["node_modules", "cdk.out"]
 }
