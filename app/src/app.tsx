@@ -38,7 +38,7 @@ const SectionHeading = styled(Typography)`
   text-align: left;
   margin: 0;
   padding-left: 14px;
-`
+`;
 
 const EntitySection = ({
   entity,
@@ -61,15 +61,51 @@ const EntitySection = ({
   );
 };
 
+const Centered = styled(Box)({
+  display: "flex",
+  width: "100%",
+  height: "100%",
+  justifyContent: "center",
+  alignItems: "center"
+});
+
 const useTitle = (title: string) => {
   if (title && title !== document.title) {
     document.title = title;
   }
 };
 
-export function App() {
+const AppMain = () => {
   const { data, status } = usePulssiJson();
 
+  switch (status) {
+    case "error":
+      return (
+        <Centered>
+          <Box>Error loading data!</Box>
+        </Centered>
+      );
+    case "loading":
+      return (
+        <Centered>
+          <CircularProgress />
+        </Centered>
+      );
+    case "success":
+      return (
+        <>
+          <EntitySection entity="koulutus" data={data?.koulutukset} />
+          <EntitySection entity="toteutus" data={data?.toteutukset} />
+          <EntitySection entity="hakukohde" data={data?.hakukohteet} />
+          <EntitySection entity="haku" data={data?.haut} />
+        </>
+      );
+    default:
+      return <div></div>;
+  }
+};
+
+export function App() {
   const { t } = useTranslations();
   useTitle(t("sivu_otsikko"));
 
@@ -84,24 +120,12 @@ export function App() {
     }
   }
 
-  switch (status) {
-    case "error":
-      return <div>Error loading data!</div>;
-    case "loading":
-      return <CircularProgress />;
-    case "success":
-      return (
-        <>
-          <Header />
-          <main>
-            <EntitySection entity="koulutus" data={data?.koulutukset} />
-            <EntitySection entity="toteutus" data={data?.toteutukset} />
-            <EntitySection entity="hakukohde" data={data?.hakukohteet} />
-            <EntitySection entity="haku" data={data?.haut} />
-          </main>
-        </>
-      );
-    default:
-      return <div></div>;
-  }
+  return (
+    <>
+      <Header />
+      <main>
+        <AppMain />
+      </main>
+    </>
+  );
 }
