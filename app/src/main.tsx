@@ -1,13 +1,18 @@
 import React from "react";
-import { createTheme } from "@mui/material/styles";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { render } from "preact";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { App } from "./app";
 import "./index.css";
-import { ThemeProvider } from "@emotion/react";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 0,
+    },
+  }
+});
 
 const router = createBrowserRouter([
   {
