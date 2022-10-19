@@ -95,9 +95,9 @@
     "en": "of which"
   },
   "jotpa_otsikko": {
-    "fi": "JOTPA-rahoitettuja koulutuksien toteutuksia",
-    "sv": "JOTPA-financierad utbildningstillfällen",
-    "en": "JOTPA-financed learning opportunity instances"
+    "fi": "JOTPA-rahoitettuja",
+    "sv": "JOTPA-financierad",
+    "en": "JOTPA-financed"
   },
   "julkaistut_otsikko": {
     "fi": "Julkaistut",
@@ -162,7 +162,7 @@
   "tuva": {
     "fi": "Tutkintokoulutukseen valmentava koulutus (TUVA)",
     "sv": "Utbildning som handleder för examensutbildning (Hux)",
-    "en": "Tutkintokoulutukseen valmentava koulutus (TUVA)"
+    "en": "Preparatory education for programmes leading to an upper secondary qualification (TUVA)"
   },
   "tyyppi_otsikko": {
     "fi": "Koulutustyyppi",
