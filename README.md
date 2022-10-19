@@ -51,11 +51,11 @@ Cdk-hakemistosta löytyy AWS:n CDK-kirjastolla toteutetut infran määrittelytie
 
 ### Tietokantamigraatiot
 
-Tietokantamigraatiot on toteutettu [Umzug](https://github.com/sequelize/umzug)-kirjastolla ja ne löytyvät hakemistosta cdk/db/migrations. Migraatiot on toteutettu JavaScript-tiedostoina CommonJS-moduuleina, jotta niitä on helpompi ajaa lambdassa. 
+Tietokantamigraatiot on toteutettu [Umzug](https://github.com/sequelize/umzug)-kirjastolla ja ne löytyvät hakemistosta cdk/db/migrations. Migraatiot ajetaan lambdassa automaattisesti deployn yhteydessä ja ne on toteutettu JavaScript CommonJS-moduuleina, jotta niitä on helpompi ajaa lambdassa. 
 
-Voit luoda uuden migraation komennolla `npm run umzug -- create --name "migraation-nimi.js"`
+Migraatiot voi ajaa myös käsin. Jos haluat ajaa migraatioita käsin esim. untuvaa vasten, aseta ensin VPN päälle ja tunneloi haluamasi ympäristön tietokantayhteys localhostiin. Lisää migrate.ts:ään kyseisen ympäristön tietokannan käyttäjätunnus ja salasana. Sen jälkeen voit ajaa kantaan migraatiot komennolla `npm run umzug up`. 
 
-Migraatiot ajetaan lambdassa automaattisesti deployn yhteydessä, mutta ne voi ajaa myös käsin. Jos haluat ajaa migraatioita käsin esim. untuvaa vasten, aseta ensin VPN päälle ja tunneloi haluamasi ympäristön tietokantayhteys localhostiin. Muuta sitten migrate.ts-tiedoston koodia siellä olevien kommenttien mukaisesti ja lisää sinne kyseisen ympäristön tietokannan käyttäjätunnus ja salasana. Sen jälkeen voit ajaa kantaan migraatiot komennolla `npm run umzug up`.
+Yhdistettyäsi yllä olevan ohjeen avulla migrate.ts:n kantaan, voit myös luoda uuden migraation komennolla `npm run umzug -- create --name "migraation-nimi.js"`. 
 
 ## Testaus
 
@@ -67,4 +67,4 @@ Tarjonta-pulssin tietojen esittämistä varten on toteutettu yhden sivun sovellu
 
 ### Ajaminen lokaalisti
 
-Sovelluksen voi käynnistää lokaalisti komennolla `npm run dev`. Erotuksena tuotanto-versioon tällöin käytetään `pulssi.json`-tiedostoa test_data-hakemistosta, eikä juuresta.
+Sovelluksen voi käynnistää lokaalisti komennolla `npm run dev`. Erotuksena tuotanto-versioon tällöin ladataan `pulssi.json`-tiedosto test_data-hakemistosta, eikä juuresta.
