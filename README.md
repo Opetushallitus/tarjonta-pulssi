@@ -23,9 +23,9 @@ Cdk-hakemistosta löytyy AWS:n CDK-kirjastolla toteutetut infran määrittelytie
 * `./deploy.sh build`   			pelkästään buildaa Lambdojen TypeScriptit ja CDK templatet
 * `./deploy.sh ympäristö deploy`   	buildaa kuten yllä sekä deployaa kohdeympäristöön
 * `-d`   	                        Asentaa tarvittavat NPM - kirjastot (npm ci)
-## Sovelluksen rakentaminen tyhjästä AWS:ään
-### Tietokanta (cloud-base repositoryssä)
-#### Luo tietokannan luontia varten tarvittavat salaisuudet (älä sisällytä merkkejä  / , ` , @ )
+### Sovelluksen rakentaminen tyhjästä AWS:ään
+#### Tietokanta (cloud-base repositoryssä)
+##### Luo tietokannan luontia varten tarvittavat salaisuudet (älä sisällytä merkkejä  / , ` , @ )
 
 `aws/config.py ymparisto put-secret -k postgresqls/tarjontapulssi/master-user-password`  
 `aws/config.py ymparisto put-secret -k postgresqls/tarjontapulssi/app-user-password`  
@@ -33,20 +33,20 @@ Cdk-hakemistosta löytyy AWS:n CDK-kirjastolla toteutetut infran määrittelytie
 `aws/config.py ymparisto put-secret -k postgresqls/tarjontapulssi/app-user-name`  
 `aws/config.py ymparisto put-secret -k postgresqls/tarjontapulssi/readonly-user-name`
 
-#### Lisää tietokanta stacks.json:iin (tarvitsee tehdä vain kerran ja toimii kaikkien ympäristöjen kanssa)
+##### Lisää tietokanta stacks.json:iin (tarvitsee tehdä vain kerran ja toimii kaikkien ympäristöjen kanssa)
 `vim aws/templates/stacks.json`
 
-#### Lisää tietokanta environment.json:iin
+##### Lisää tietokanta environment.json:iin
 `vim aws/environments/ymparisto/environment.json`
 
-#### Luo tietokanta
+##### Luo tietokanta
 `aws/cloudformation.py ymparisto postgresqls create -s tarjontapulssi`
 
-#### Luo tietokantakäyttäjät
+##### Luo tietokantakäyttäjät
 `cd tools/db`  
 `./update-postgres-db-roles.sh ymparisto tarjontapulssi`
 
-## Deployaa tarjonta-pulssi sovellus (tarjonta-pulssi repositoryssä)
+#### Deployaa tarjonta-pulssi sovellus (tarjonta-pulssi repositoryssä)
 `./deploy.sh ymparisto deploy -d`
 
 ### Tietokantamigraatiot
@@ -57,7 +57,7 @@ Migraatiot voi ajaa myös käsin. Jos haluat ajaa migraatioita käsin esim. untu
 
 Yhdistettyäsi yllä olevan ohjeen avulla migrate.ts:n kantaan, voit myös luoda uuden migraation komennolla `npm run umzug -- create --name "migraation-nimi.js"`. 
 
-## Testaus
+### Testaus
 
 Yksikkötestit on toteutettu Jest-kirjastolla. Ne voi ajaa komennolla `npm run test`. Testit ajetaan myös automaattisesti Github Actionsissa.
 
