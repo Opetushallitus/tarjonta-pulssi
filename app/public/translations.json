@@ -6,7 +6,8 @@
   },
   "amk": {
     "fi": "Ammattikorkeakoulutus",
-    "sv": "Yrkeshögskoleutbildning"
+    "sv": "Yrkeshögskoleutbildning",
+    "en": "UAS programmes"
   },
   "amm": {
     "en": "Vocational education and training",
@@ -24,7 +25,9 @@
     "en": "Further vocational qualification"
   },
   "amm-muu": {
-    "fi": "Muu ammatillinen tutkintoon johtamaton"
+    "fi": "Muu ammatillinen tutkintoon johtamaton",
+    "sv": "Övrig yrkesutbildning",
+    "en": "Other vocational education"
   },
   "amm-ope-erityisope-ja-opo": {
     "fi": "Ammatillinen opettajan-, erityisopettajan- ja opinto-ohjaajankoulutus",
@@ -42,11 +45,14 @@
     "en": "Qualification unit"
   },
   "amm-tutkintoon-johtamaton": {
-    "fi": "Ammatillinen tutkintoon johtamaton koulutus"
+    "fi": "Ammatillinen tutkintoon johtamaton koulutus",
+    "sv": "Yrkesutbildning som leder inte till examen",
+    "en": "Vocational education that does not lead to a qualification"
   },
   "avoin-amk": {
     "fi": "Avoin ammattikorkeakoulu",
-    "sv": "Öppen yrkeshögskola"
+    "sv": "Öppen yrkeshögskola",
+    "en": "Open UAS"
   },
   "avoin-yo": {
     "fi": "Avoin yliopisto",
@@ -70,32 +76,43 @@
   },
   "hakukohde_otsikko": {
     "fi": "Hakukohteet",
-    "en": "Study programmes",
+    "en": "Study programmes available for application",
     "sv": "Ansökningsmål"
   },
   "haku_otsikko": {
     "fi": "Haut",
-    "sv": "Ansökningar"
+    "sv": "Ansökningar",
+    "en": "Application procedures"
   },
   "hakutapa_otsikko": {
     "fi": "Hakutapa",
     "sv": "Ansökningssätt",
-    "en": "Application procedure"
+    "en": "Type of application procedure"
   },
   "joista_otsikko": {
-    "fi": "joista"
+    "fi": "joista",
+    "sv": "av vilket",
+    "en": "of which"
   },
   "jotpa_otsikko": {
-    "fi": "JOTPA-rahoitettuja"
+    "fi": "JOTPA-rahoitettuja koulutuksien toteutuksia",
+    "sv": "JOTPA-financierad utbildningstillfällen",
+    "en": "JOTPa-financed learning opportunity instances"
   },
   "julkaistut_otsikko": {
-    "fi": "Julkaistut"
+    "fi": "Julkaistut",
+    "sv": "Publicerade",
+    "en": "Published"
   },
   "kk": {
-    "fi": "Korkeakoulututkinnot"
+    "fi": "Korkeakoulututkinnot",
+    "sv": "Högskoleexamina",
+    "en": "Higher education degrees"
   },
   "kk-muu": {
-    "fi": "Korkeakoulujen tutkintoon johtamattomat koulutukset"
+    "fi": "Korkeakoulujen tutkintoon johtamattomat koulutukset",
+    "sv": "Högskoleutbildning som leder inte till examen",
+    "en": "Higher education that does not lead to a degree"
   },
   "kk-opintojakso": {
     "en": "Course",
@@ -109,7 +126,7 @@
   },
   "koulutus_otsikko": {
     "fi": "Koulutukset",
-    "en": "Study programmes",
+    "en": "Learning opportunity specifications",
     "sv": "Utbildningar"
   },
   "lk": {
@@ -118,13 +135,19 @@
     "en": "General upper secondary education"
   },
   "molemmat_tilat_otsikko": {
-    "fi": "Julkaistut + Arkistoidut"
+    "fi": "Julkaistut + Arkistoidut",
+    "sv": "Publicerade + Arkiverade",
+    "en": "Published + Archived"
   },
   "muu-amm-tutkintoon-johtava": {
-    "fi": "Muu ammatillinen tutkintoon johtava"
+    "fi": "Muu ammatillinen tutkintoon johtava",
+    "sv": "Övrig yrkesutbildning som leder till examen",
+    "en": "Other vocational education that leads to a qualification" 
   },
   "sivu_otsikko": {
-    "fi": "Tarjonta-pulssi"
+    "fi": "Tarjonta-pulssi",
+    "sv": "Utbildningsutbuds-puls",
+    "en": "Education database pulse"
   },
   "telma": {
     "en": "Preparatory education for work and independent living (TELMA)",
@@ -133,7 +156,8 @@
   },
   "toteutus_otsikko": {
     "fi": "Toteutukset",
-    "sv": "Förverkliganden"
+    "sv": "Förverkliganden",
+    "en": "Learning opportunity instances"
   },
   "tuva": {
     "fi": "Tutkintokoulutukseen valmentava koulutus (TUVA)",
@@ -151,7 +175,9 @@
     "sv": "Fritt bildningsarbete"
   },
   "yhteensa_otsikko": {
-    "fi": "Yhteensä"
+    "fi": "Yhteensä",
+    "sv": "Totalt",
+    "en": "Total"
   },
   "yo": {
     "en": "University education",
