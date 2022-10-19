@@ -10,7 +10,7 @@ export const ICONS = {
   hakukohde: ListAltIcon
 } as const;
 
-export const JSON_PATH = import.meta.env.DEV ? "/test_data/" : "/";
+export const PULSSI_JSON_PATH = import.meta.env.DEV ? "/test_data/" : "/";
 
 export const OPINTOPOLKU_URL =
   window.location.protocol +
