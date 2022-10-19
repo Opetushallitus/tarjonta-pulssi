@@ -299,7 +299,7 @@ export class TarjontaPulssiStack extends cdk.Stack {
         runtime: Runtime.NODEJS_16_X,
         logRetention: RetentionDays.ONE_YEAR,
         architecture: Architecture.ARM_64,
-        timeout: cdk.Duration.seconds(15),
+        timeout: cdk.Duration.minutes(2),
         vpc: myvpc,
         vpcSubnets: {
           subnetType: SubnetType.PRIVATE_WITH_NAT,
