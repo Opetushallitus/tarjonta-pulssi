@@ -9,7 +9,10 @@ const JS_MIGRATION_TEMPLATE = `const up = params => {};
 const down = params => {};
 module.exports = { up, down }`.trimStart();
 
-export const createMigrator = (client: ClientBase, migrationsPath = "db/migrations") =>
+export const createMigrator = (
+  client: ClientBase,
+  migrationsPath = "db/migrations"
+) =>
   new Umzug({
     migrations: {
       glob: `${migrationsPath}/*.{js,up.sql}`,
@@ -25,10 +28,10 @@ export const createMigrator = (client: ClientBase, migrationsPath = "db/migratio
                   fs
                     .readFileSync(params.path!.replace(".up.sql", ".down.sql"))
                     .toString()
-                )
+                ),
             }
           : Umzug.defaultResolver(params);
-      }
+      },
     },
     context: client,
     storage: {
@@ -52,7 +55,7 @@ export const createMigrator = (client: ClientBase, migrationsPath = "db/migratio
           `delete from ${MIGRATIONS_TABLE_NAME} where name = $1`,
           [name]
         );
-      }
+      },
     },
     logger: console,
     create: {
@@ -64,13 +67,13 @@ export const createMigrator = (client: ClientBase, migrationsPath = "db/migratio
         } else if (ext === ".sql") {
           return [
             [filepath.replace(".sql", ".up.sql"), "-- up"],
-            [filepath.replace(".sql", ".down.sql"), "-- down"]
+            [filepath.replace(".sql", ".down.sql"), "-- down"],
           ];
         } else {
           throw Error(`Invalid migration type ${ext}!`);
         }
-      }
-    }
+      },
+    },
   });
 
 export type Migration = Umzug<ClientBase>;
