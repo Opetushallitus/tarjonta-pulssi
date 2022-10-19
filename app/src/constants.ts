@@ -12,7 +12,10 @@ export const ICONS = {
 
 export const JSON_PATH = import.meta.env.DEV ? "/test_data/" : "/";
 
-export const OPINTOPOLKU_URL = "https://opintopolku.fi";
+export const OPINTOPOLKU_URL =
+  window.location.protocol +
+  "//" +
+  window.location.host.split(".").slice(-2).join(".");
 
 export const LANGUAGES_BY_CODE = {
   fi: "Suomeksi",
