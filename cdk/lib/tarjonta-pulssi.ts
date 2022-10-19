@@ -351,7 +351,15 @@ export class TarjontaPulssiStack extends cdk.Stack {
     const eventRule = new Rule(this, "scheduleRule", {
       schedule: Schedule.rate(cdk.Duration.minutes(10)),
     });
-    eventRule.addTarget(new LambdaFunction(tarjontaPulssiUpdaterLambda));
+    // Trigger db migration Lambda on CloudFormation CREATE_COMPLETE & UPDATE_COMPLETE
+    const stackChangeRule = new Rule(this, 'stackChangeRule', {
+      eventPattern: {
+        source: ["aws.cloudformation"],
+        resources: [ this.stackId ],
+        detail: { "status-details.status": ["CREATE_COMPLETE", "UPDATE_COMPLETE"] }
+      },
+    });
+    stackChangeRule.addTarget(new LambdaFunction(tarjontaPulssiDbMigratorLambda));
 
     /**
      * Fetch PostgreSQLS SG name and ID
