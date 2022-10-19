@@ -55,38 +55,12 @@ done
 
 git_root=$(git rev-parse --show-toplevel)
 
-
-
 if [[ -n "${dependencies}" ]]; then
     echo "Installing CDK dependencies.."
     cd "${git_root}/cdk/" && npm ci
     echo "Installing app dependencies.."
     cd "${git_root}/app/" && npm ci
 fi
-
-environment=${POSITIONAL[-1]}
-## Profiles are defined in user's .aws/config
-if [[ "${environment}" =~ ^(sade)$ ]]; then
-    aws_profile="oph-prod"
-    r53_domain="opintopolku.fi"
-    hosted_zone_id="ZNMCY72OCXY4M"
-elif [[ "${environment}" =~ ^(untuva)$ ]]; then
-    aws_profile="oph-dev"
-    r53_domain="${environment}opintopolku.fi"
-    hosted_zone_id="Z1399RU36FG2N9"
-elif [[ "${environment}" =~ ^(hahtuva)$ ]]; then
-    aws_profile="oph-dev"
-    r53_domain="${environment}opintopolku.fi"
-    hosted_zone_id="Z20VS6J64SGAG9"
-elif [[ "${environment}" =~ ^(pallero)$ ]]; then
-    aws_profile="oph-dev"
-    r53_domain="testiopintopolku.fi"
-    hosted_zone_id="Z175BBXSKVCV3B"
-else 
-    echo "Unknown environment: ${environment}"
-    exit 0
-fi
-
 
 if [[ "${build}" == "true" ]]; then
     echo "Building Lambda code and synthesizing CDK template"
@@ -96,8 +70,30 @@ if [[ "${build}" == "true" ]]; then
     npm run build
     npx cdk synth
 fi
-
 if [[ "${deploy}" == "true" ]]; then
+    environment=${POSITIONAL[-1]}
+    ## Profiles are defined in user's .aws/config
+    if [[ "${environment}" =~ ^(sade)$ ]]; then
+        aws_profile="oph-prod"
+        r53_domain="opintopolku.fi"
+        hosted_zone_id="ZNMCY72OCXY4M"
+    elif [[ "${environment}" =~ ^(untuva)$ ]]; then
+        aws_profile="oph-dev"
+        r53_domain="${environment}opintopolku.fi"
+        hosted_zone_id="Z1399RU36FG2N9"
+    elif [[ "${environment}" =~ ^(hahtuva)$ ]]; then
+        aws_profile="oph-dev"
+        r53_domain="${environment}opintopolku.fi"
+        hosted_zone_id="Z20VS6J64SGAG9"
+    elif [[ "${environment}" =~ ^(pallero)$ ]]; then
+        aws_profile="oph-dev"
+        r53_domain="testiopintopolku.fi"
+        hosted_zone_id="Z175BBXSKVCV3B"
+    else 
+        echo "Unknown environment: ${environment}"
+        exit 0
+    fi
+
    echo "Building Lambda code, synhesizing CDK code and deploying to environment: $environment"
    cd "${git_root}/app/"
    npm run build
