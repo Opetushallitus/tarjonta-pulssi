@@ -60,7 +60,7 @@ git_root=$(git rev-parse --show-toplevel)
 if [[ -n "${dependencies}" ]]; then
     echo "Installing CDK dependencies.."
     cd "${git_root}/cdk/" && npm ci
-    echo "Installing Lambda dependencies.."
+    echo "Installing app dependencies.."
     cd "${git_root}/app/" && npm ci
 fi
 

@@ -8,7 +8,7 @@ const client = new Client({
   database: "tarjontapulssi",
   user: "DUMMY",
   password: "DUMMY",
-});
+}); 
 
 client
   .connect()

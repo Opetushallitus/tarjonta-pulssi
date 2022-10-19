@@ -1,7 +1,12 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { NodejsFunction, OutputFormat } from "aws-cdk-lib/aws-lambda-nodejs";
-import { Runtime, Architecture } from "aws-cdk-lib/aws-lambda";
+import {
+  Runtime,
+  Architecture,
+  LayerVersion,
+  Code,
+} from "aws-cdk-lib/aws-lambda";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 import { SecurityGroup, Vpc, SubnetType, Port } from "aws-cdk-lib/aws-ec2";
@@ -16,8 +21,6 @@ import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import { Rule, Schedule } from "aws-cdk-lib/aws-events";
 
-// import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
-// import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 interface TarjontaPulssiStackProps extends cdk.StackProps {
   environmentName: string;
   publicHostedZone: string;
@@ -281,6 +284,58 @@ export class TarjontaPulssiStack extends cdk.Stack {
       }
     );
 
+    const dbMigrationsLayer = new LayerVersion(this, "db-migrations-layer", {
+      compatibleRuntimes: [Runtime.NODEJS_16_X],
+      code: Code.fromAsset("db/migrations"),
+      description: "umzug db migration files",
+    });
+
+    const tarjontaPulssiDbMigratorLambda = new NodejsFunction(
+      this,
+      "TarjontaPulssiDbMigratorLambda",
+      {
+        entry: "lambda/pulssiDbMigrator.ts",
+        handler: "main",
+        runtime: Runtime.NODEJS_16_X,
+        logRetention: RetentionDays.ONE_YEAR,
+        architecture: Architecture.ARM_64,
+        timeout: cdk.Duration.minutes(2),
+        vpc: myvpc,
+        vpcSubnets: {
+          subnetType: SubnetType.PRIVATE_WITH_NAT,
+        },
+        securityGroups: [TarjontaPulssiLambdaSecurityGroup],
+        environment: {
+          PUBLICHOSTEDZONE: `${props.publicHostedZone}`,
+          TARJONTAPULSSI_POSTGRES_APP_USER: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
+          TARJONTAPULSSI_POSTGRES_APP_PASSWORD: `/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
+        },
+        initialPolicy: [
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            resources: [
+              `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-name`,
+              `arn:aws:ssm:eu-west-1:*:parameter/${props.environmentName}/postgresqls/tarjontapulssi/app-user-password`,
+            ],
+            actions: ["ssm:GetParameter"],
+          }),
+        ],
+        bundling: {
+          // pg-native is not available and won't be used. This is letting the
+          // bundler (esbuild) know pg-native won't be included in the bundled JS
+          // file.
+          externalModules: ["aws-sdk", "pg-native"],
+          // https://github.com/aws/aws-sdk-js-v3/issues/3023
+          sourcesContent: false,
+          mainFields: ["module", "main"],
+          format: OutputFormat.ESM,
+          banner:
+            "import {createRequire} from 'module';const require = createRequire(import.meta.url)",
+        },
+        layers: [dbMigrationsLayer],
+      }
+    );
+
     const deployment = new s3deploy.BucketDeployment(
       this,
       "DeployWithInvalidation",
@@ -293,10 +348,27 @@ export class TarjontaPulssiStack extends cdk.Stack {
       }
     );
 
-    const eventRule = new Rule(this, 'scheduleRule', {
+    const scheduleRule = new Rule(this, "scheduleRule", {
       schedule: Schedule.rate(cdk.Duration.minutes(10)),
     });
-    eventRule.addTarget(new LambdaFunction(tarjontaPulssiUpdaterLambda));
+    scheduleRule.addTarget(new LambdaFunction(tarjontaPulssiUpdaterLambda));
+
+    // Trigger db migration Lambda on CloudFormation CREATE_COMPLETE & UPDATE_COMPLETE
+    const stackChangeRule = new Rule(this, "stackChangeRule", {
+      eventPattern: {
+        source: ["aws.cloudformation"],
+        resources: [this.stackId],
+        detail: {
+          "status-details.status": ["CREATE_COMPLETE", "UPDATE_COMPLETE"],
+        },
+      },
+    });
+    stackChangeRule.addTarget(
+      new LambdaFunction(tarjontaPulssiDbMigratorLambda)
+    );
+
+    // Trigger also updater-lambda to create pulssi.json
+    stackChangeRule.addTarget(new LambdaFunction(tarjontaPulssiUpdaterLambda));
 
     /**
      * Fetch PostgreSQLS SG name and ID

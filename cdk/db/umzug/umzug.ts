@@ -5,15 +5,14 @@ import { ClientBase } from "pg";
 
 const MIGRATIONS_TABLE_NAME = "umzug_migrations";
 
-const TS_MIGRATION_TEMPLATE = `import { ClientBase } from 'pg';
-import { MigrationFn } from 'umzug';
-export const up: MigrationFn<ClientBase> = params => {};
-export const down: MigrationFn<ClientBase> = params => {};`.trimStart();
+const JS_MIGRATION_TEMPLATE = `const up = params => {};
+const down = params => {};
+module.exports = { up, down }`.trimStart();
 
-export const createMigrator = (client: ClientBase) =>
+export const createMigrator = (client: ClientBase, migrationsPath = "db/migrations") =>
   new Umzug({
     migrations: {
-      glob: "db/migrations/*.{ts,up.sql}",
+      glob: `${migrationsPath}/*.{js,up.sql}`,
       resolve(params) {
         return params.path?.endsWith(".sql")
           ? {
@@ -60,8 +59,8 @@ export const createMigrator = (client: ClientBase) =>
       folder: "db/migrations",
       template(filepath: string): Array<[string, string]> {
         const ext = path.extname(filepath);
-        if (ext === ".ts") {
-          return [[filepath, TS_MIGRATION_TEMPLATE]];
+        if (ext === ".js") {
+          return [[filepath, JS_MIGRATION_TEMPLATE]];
         } else if (ext === ".sql") {
           return [
             [filepath.replace(".sql", ".up.sql"), "-- up"],
