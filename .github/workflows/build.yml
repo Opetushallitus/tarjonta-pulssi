@@ -16,5 +16,9 @@ jobs:
           node-version: 16
           cache: 'npm'
           cache-dependency-path: cdk/package-lock.json
-      - run: npm run test
+      - name: Run tests
+        run: |
+          cd cdk
+          npm ci --no-audit --prefer-offline
+          npm run test
 
