@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import { useQuery } from "react-query";
-import { JSON_PATH } from "./constants";
 import { useLanguageState } from "./useLanguageState";
 
 export const useTranslations = () => {
@@ -9,7 +8,7 @@ export const useTranslations = () => {
   const { data } = useQuery<Record<string, any>>(
     "getTranslations",
     () =>
-      fetch(JSON_PATH + "translations.json").then((response) =>
+      fetch("translations.json").then((response) =>
         response.json()
       ),
     {
