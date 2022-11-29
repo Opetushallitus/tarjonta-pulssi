@@ -15,7 +15,7 @@ key="$1"
 case $key in
     -h | --help | help )
     echo '''
-Usage: cdk.sh [-h] [-d] environment deploy/build
+Usage: deploy.sh [-h] [-d] environment deploy/build
 
 Light weight version of cdk.sh in cloud-base 
 
