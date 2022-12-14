@@ -402,5 +402,23 @@ export class TarjontaPulssiStack extends cdk.Stack {
         Port.tcp(port)
       );
     });
+    
+    const ElasticSearchEndpointSGId = cdk.Token.asString(
+      cdk.Fn.importValue(`${props.environmentName}-ElasticsearchSG`)
+    );
+    
+    const ElasticSearchEndpointSG = SecurityGroup.fromSecurityGroupId(
+      this,
+      "ElasticSearchEndpointSecurityGroup",
+      ElasticSearchEndpointSGId
+    );
+
+    // Ingress TarjontapulssiLambda -> ElasticSearchEndpoint
+    [9243, 443].forEach((port) => {
+      ElasticSearchEndpointSG.addIngressRule(
+        TarjontaPulssiLambdaSecurityGroup,
+        Port.tcp(port)
+      );
+    });
   }
 }
