@@ -213,5 +213,10 @@
     "fi": "Lisähaku",
     "sv": "Tilläggsansökan",
     "en": "Supplementary application"
+  },
+  "erikoistumiskoulutus": {
+    "fi": "Erikoistumiskoulutus",
+    "sv": "Specialiseringsutbildning",
+    "en": "Specialist education"
   }
 }
