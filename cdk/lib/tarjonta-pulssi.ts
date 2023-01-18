@@ -125,6 +125,7 @@ export class TarjontaPulssiStack extends cdk.Stack {
       defaultRootObject: "index.html",
       domainNames: [`tarjonta-pulssi.${props.publicHostedZone}`],
       minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+      httpVersion: cloudfront.HttpVersion.HTTP2_AND_3,
       errorResponses: [
         {
           httpStatus: 403,
