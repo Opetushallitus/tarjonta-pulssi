@@ -42,6 +42,10 @@ export class TarjontaPulssiStack extends cdk.Stack {
       ],
     });
 
+    const devOrProd = props.environmentName == 'sade'? 'prod' : 'dev'
+
+    const cloudfrontWAFId = cdk.aws_ssm.StringParameter.fromStringParameterName(this, 'webacl', `/${devOrProd}/shield/waf-global-arn`);
+
     const zone = route53.HostedZone.fromHostedZoneAttributes(
       this,
       "PublicHostedZone",
@@ -149,6 +153,7 @@ export class TarjontaPulssiStack extends cdk.Stack {
             cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         },
       },
+      webAclId: cloudfrontWAFId.stringValue
     });
 
     // Route53 alias record for the CloudFront distribution
