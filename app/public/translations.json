@@ -218,5 +218,10 @@
     "fi": "Erikoistumiskoulutus",
     "sv": "Specialiseringsutbildning",
     "en": "Specialist education"
+  },
+  "taiteen-perusopetus": {
+    "fi": "Taiteen perusopetus",
+    "sv": "Grundläggande konstundervisning",
+    "en": "Basic education in the arts"
   }
 }
