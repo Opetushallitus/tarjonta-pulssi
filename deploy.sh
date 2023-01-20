@@ -71,7 +71,7 @@ if [[ "${build}" == "true" ]]; then
     npx cdk synth
 fi
 if [[ "${deploy}" == "true" ]]; then
-    environment=${POSITIONAL[-1]}
+    environment=${POSITIONAL[~-1]}
     ## Profiles are defined in user's .aws/config
     if [[ "${environment}" =~ ^(sade)$ ]]; then
         aws_profile="oph-prod"
