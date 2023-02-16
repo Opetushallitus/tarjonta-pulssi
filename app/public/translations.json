@@ -223,5 +223,10 @@
     "fi": "Taiteen perusopetus",
     "sv": "Grundläggande konstundervisning",
     "en": "Basic education in the arts"
+  },
+  "muu": {
+    "fi": "Muu koulutus",
+    "sv": "Annan utbildning",
+    "en": "Other education"
   }
 }
