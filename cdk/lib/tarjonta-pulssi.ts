@@ -20,6 +20,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import { Rule, Schedule } from "aws-cdk-lib/aws-events";
+import { PriceClass } from "aws-cdk-lib/aws-cloudfront";
 
 interface TarjontaPulssiStackProps extends cdk.StackProps {
   environmentName: string;
@@ -153,7 +154,8 @@ export class TarjontaPulssiStack extends cdk.Stack {
             cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         },
       },
-      webAclId: cloudfrontWAFId.stringValue
+      webAclId: cloudfrontWAFId.stringValue,
+      priceClass: PriceClass.PRICE_CLASS_100
     });
 
     // Route53 alias record for the CloudFront distribution
