@@ -12,6 +12,12 @@
     "test:watch": "jest --watch",
     "cdk": "cdk",
     "umzug": "ts-node ./db/umzug/migrate.ts",
+    "database": "./test/tools/start_postgresql && npm run umzug up",
+    "elastic": "./test/tools/start_elasticsearch",
+    "elasticdump": "./test/resources/load_elastic_dump.sh http://host.docker.internal:9200 data,mapping,alias,settings,template",
+    "update": "ts-node ./lambda/updateLocally.ts",	
+    "publish": "ts-node ./lambda/publishLocally.ts",
+    "preparetest": "npm run elasticdump && npm run update && npm run publish",
     "eslint": "eslint ./*.{js,ts}",
     "prettier": "prettier ./*"
   },

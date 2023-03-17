@@ -17,6 +17,8 @@ Cdk-hakemistosta löytyy AWS:n CDK-kirjastolla toteutetut infran määrittelytie
 
 * aws-profiilit ovat käyttäjän kotihakemistossa `cloud-base` - repositorystä löytyvän `tools/config-wizard.sh` mukaiset.
 * npm ja npx - asennettuina
+* [AWS cli](https://aws.amazon.com/cli/) ElasticSearch -kontti-imagen latausta varten. Tätä tarvitaan ainoastaan testidataa päivitettäessä.#
+* [Docker](https://www.docker.com/get-started) ElasticSearchia ja PostgreSQLää varten. Tätä tarvitaan ainoastaan testidataa päivitettäessä.
 
 ### Lambdojen buildaus ja deploy
 
@@ -59,7 +61,39 @@ Yhdistettyäsi yllä olevan ohjeen avulla migrate.ts:n kantaan, voit myös luoda
 
 ### Testaus
 
-Yksikkötestit on toteutettu Jest-kirjastolla. Ne voi ajaa komennolla `npm run test`. Testit ajetaan myös automaattisesti Github Actionsissa.
+Yksikkö- ja integrointi-testit on toteutettu Jest-kirjastolla. Ne voi ajaa komennolla `npm run test`. Testit ajetaan myös automaattisesti Github Actionsissa.
+
+#### Testidatan päivitys
+
+Testidata viittaa tässä `cdk/test/resources/pulssi.json` -tiedostoon, joka sisältää tarjonta-pulssin lambda-funktioilla lokaalisti tuotettua dataa.
+
+##### PostgreSQL Kontti-imagen luonti (tarvitsee tehdä vain kerran):
+`cd postgresql`
+`docker build --tag tarjontapulssi-postgres`
+
+##### Lokaalin tarjontapulssi-tietokannan käynnistys
+`npm run database`
+
+##### Lokaalin Elasticsearchin käynnistys
+
+Ellei Elasticsearchia ole aiemmin ajettu Docker-kontissa käyttäjän koneella, ladataan kontti-image automaattisesti ensimmäisellä käynnistyskerralla (Tehdään siis ainoastaan kerran).
+Ennen käynnistystä ajetaan komento:
+`aws ecr get-login-password --region eu-west-1 --profile oph-utility | docker login --username AWS --password-stdin 190073735177.dkr.ecr.eu-west-1.amazonaws.com`
+
+Elasticsearch käynnistetään komennolla:
+`docker run -d --rm --name kouta-elastic --env "discovery.type=single-node" -p 127.0.0.1:9200:9200 -p 127.0.0.1:9300:9300 -e xpack.security.enabled=false 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/elasticsearch-kouta:8.5.2`
+
+##### Elasticsearch-dumppien kopiointi
+
+Tarjontapulssin testidata generoidaan kouta-indeksoijan tuottamien Elasticsearch-dumppien perusteella. (kts. kouta-indeksoija README, Mock-datan generointi).
+Päivitetyt dump-tiedostot kopioidaan kouta-indeksoijan `elasticdump/tarjonta-pulssi` -hakemistosta tarjonta-pulssin `cdk/test/resources/elasticdump` -hakemistoon.
+
+##### Elasticsearch-dumppien lataaminen lokaaliin Elasticsearchiin
+`npm run elasticdump`
+
+
+##### Lambda-funktioiden ajaminen lokaalisti
+`npm run preparetest`
 
 ## Front-end sovellus
 

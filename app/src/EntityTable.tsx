@@ -162,6 +162,20 @@ export const EntityTable = ({
                   arkistoitu_amount: data?.by_tila?.arkistoitu_jotpa_amount
                 }}
               />
+              <ContentRow
+                titleKey="taydennyskoulutus_otsikko"
+                amounts={{
+                  julkaistu_amount: data?.by_tila?.julkaistu_taydennyskoulutus_amount,
+                  arkistoitu_amount: data?.by_tila?.arkistoitu_taydennyskoulutus_amount
+                }}
+              />
+              <ContentRow
+                titleKey="tyovoimakoulutus_otsikko"
+                amounts={{
+                  julkaistu_amount: data?.by_tila?.julkaistu_tyovoimakoulutus_amount,
+                  arkistoitu_amount: data?.by_tila?.arkistoitu_tyovoimakoulutus_amount
+                }}
+              />
             </table>
           </Box>
         </Box>

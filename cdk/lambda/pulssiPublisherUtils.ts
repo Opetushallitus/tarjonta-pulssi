@@ -62,7 +62,18 @@ export const dbQueryResultToPulssiData = (
             arkistoitu_jotpa_amount: sumBy(rows, (row: DbRowBase) =>
               Number(row?.arkistoitu_jotpa_amount ?? 0)
             ),
-          }
+            julkaistu_taydennyskoulutus_amount: sumBy(rows, (row: DbRowBase) =>
+              Number(row.julkaistu_taydennyskoulutus_amount ?? 0)
+            ),
+            arkistoitu_taydennyskoulutus_amount: sumBy(rows, (row: DbRowBase) =>
+              Number(row?.arkistoitu_taydennyskoulutus_amount ?? 0)
+            ),          
+            julkaistu_tyovoimakoulutus_amount: sumBy(rows, (row: DbRowBase) =>
+              Number(row.julkaistu_tyovoimakoulutus_amount ?? 0)
+            ),
+            arkistoitu_tyovoimakoulutus_amount: sumBy(rows, (row: DbRowBase) =>
+              Number(row?.arkistoitu_tyovoimakoulutus_amount ?? 0)
+            ),          }
         : {}),
     },
     [dataKeyName]: countsBySubKey,
