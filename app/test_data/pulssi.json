@@ -67,6 +67,22 @@
         "kk-opintokokonaisuus": {
           "julkaistu_amount": 2,
           "arkistoitu_amount": 0
+        },
+        "kk-opintojakso": {
+          "julkaistu_amount": 2,
+          "arkistoitu_amount": 1
+        },
+        "kk-opintokokonaisuus-avoin": {
+          "julkaistu_amount": 3,
+          "arkistoitu_amount": 2
+        },
+        "kk-opintojakso-avoin": {
+          "julkaistu_amount": 4,
+          "arkistoitu_amount": 3
+        },        
+        "ope-pedag-opinnot": {
+          "julkaistu_amount": 1,
+          "arkistoitu_amount": 0
         }
       },
       "lk": {
@@ -88,7 +104,11 @@
       "julkaistu_amount": 6584,
       "arkistoitu_amount": 990,
       "julkaistu_jotpa_amount": 1,
-      "arkistoitu_jotpa_amount": 0
+      "arkistoitu_jotpa_amount": 0,
+      "julkaistu_taydennyskoulutus_amount": 2,
+      "arkistoitu_taydennyskoulutus_amount": 1,
+      "julkaistu_tyovoimakoulutus_amount": 3,
+      "arkistoitu_tyovoimakoulutus_amount": 2
     },
     "by_tyyppi": {
       "amm-tutkintoon-johtamaton": {
@@ -154,6 +174,18 @@
           "julkaistu_amount": 1,
           "arkistoitu_amount": 0
         },
+        "kk-opintojakso": {
+          "julkaistu_amount": 2,
+          "arkistoitu_amount": 1
+        },
+        "kk-opintokokonaisuus-avoin": {
+          "julkaistu_amount": 3,
+          "arkistoitu_amount": 2
+        },
+        "kk-opintojakso-avoin": {
+          "julkaistu_amount": 4,
+          "arkistoitu_amount": 3
+        },        
         "ope-pedag-opinnot": {
           "julkaistu_amount": 1,
           "arkistoitu_amount": 0

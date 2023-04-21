@@ -24,6 +24,10 @@ export type DbRowBase = {
   arkistoitu_amount: number;
   julkaistu_jotpa_amount?: number;
   arkistoitu_jotpa_amount?: number;
+  julkaistu_taydennyskoulutus_amount?: number;
+  arkistoitu_taydennyskoulutus_amount?: number;
+  julkaistu_tyovoimakoulutus_amount?: number;
+  arkistoitu_tyovoimakoulutus_amount?: number;
 };
 
 export const createPulssiDbPool = async () => {
@@ -49,6 +53,8 @@ const createTilaAmountCol = (entity: EntityType, tila: Julkaisutila) => {
   let col = `coalesce(sum(amount) filter(where tila = '${tila}'), 0) as ${tila}_amount`;
   if (entity === "toteutus") {
     col += `, coalesce(sum(jotpa_amount) filter(where tila = '${tila}'), 0) as ${tila}_jotpa_amount`;
+    col += `, coalesce(sum(taydennyskoulutus_amount) filter(where tila = '${tila}'), 0) as ${tila}_taydennyskoulutus_amount`;
+    col += `, coalesce(sum(tyovoimakoulutus_amount) filter(where tila = '${tila}'), 0) as ${tila}_tyovoimakoulutus_amount`;
   }
   return col;
 };
@@ -67,13 +73,16 @@ export const queryPulssiAmounts = async (
       entity,
       "arkistoitu"
     )} from ${entity}_amounts group by ${primaryColName} ${
-      entity === "toteutus" ? ", jotpa_amount" : ""
+      entity === "toteutus" ? ", jotpa_amount, taydennyskoulutus_amount, tyovoimakoulutus_amount" : ""
     }`
   );
 };
 
 const toteutusRowHasChanged = (row1: ToteutusRow, row2: ToteutusRow) => {
-  return row1.amount !== row2.amount || row1.jotpa_amount !== row2.jotpa_amount;
+  return row1.amount !== row2.amount || 
+    row1.jotpa_amount !== row2.jotpa_amount || 
+    row1.taydennyskoulutus_amount !== row2.taydennyskoulutus_amount || 
+    row1.tyovoimakoulutus_amount !== row2.tyovoimakoulutus_amount;
 };
 
 const saveToteutusAmounts = async (
@@ -84,19 +93,22 @@ const saveToteutusAmounts = async (
   if (existingRow) {
     if (toteutusRowHasChanged(existingRow, newRow)) {
       console.log(
-        `Updating changed toteutus amounts (${newRow.tila}, ${newRow.tyyppi_path}) = ${newRow.amount} (jotpa = ${newRow.jotpa_amount})`
+        `Updating changed toteutus amounts (${newRow.tila}, ${newRow.tyyppi_path}) = ${newRow.amount} (jotpa = ${newRow.jotpa_amount}, taydennyskoulutus = ${newRow.taydennyskoulutus_amount}, tyovoimakoulutus = ${newRow.tyovoimakoulutus_amount})`
       );
 
       await pulssiClient.query(
-        `UPDATE toteutus_amounts SET amount = ${newRow.amount}, jotpa_amount = ${newRow.jotpa_amount} WHERE tila = '${newRow.tila}' AND tyyppi_path = '${newRow.tyyppi_path}'`
+        `UPDATE toteutus_amounts SET amount = ${newRow.amount}, jotpa_amount = ${newRow.jotpa_amount}, 
+        taydennyskoulutus_amount = ${newRow.taydennyskoulutus_amount}, tyovoimakoulutus_amount = ${newRow.tyovoimakoulutus_amount}  
+        WHERE tila = '${newRow.tila}' AND tyyppi_path = '${newRow.tyyppi_path}'`
       );
     }
   } else {
     console.log(
-      `Inserting toteutus amounts (${newRow.tila}, ${newRow.tyyppi_path}) = ${newRow.amount} (jotpa = ${newRow.jotpa_amount})`
+      `Inserting toteutus amounts (${newRow.tila}, ${newRow.tyyppi_path}) = ${newRow.amount} (jotpa = ${newRow.jotpa_amount}, taydennyskoulutus = ${newRow.taydennyskoulutus_amount}, tyovoimakoulutus = ${newRow.tyovoimakoulutus_amount})`
     );
     await pulssiClient.query(
-      `INSERT INTO toteutus_amounts(tyyppi_path, tila, amount, jotpa_amount) values('${newRow.tyyppi_path}', '${newRow.tila}', ${newRow.amount}, ${newRow.jotpa_amount})`
+      `INSERT INTO toteutus_amounts(tyyppi_path, tila, amount, jotpa_amount, taydennyskoulutus_amount, tyovoimakoulutus_amount) 
+      values('${newRow.tyyppi_path}', '${newRow.tila}', ${newRow.amount}, ${newRow.jotpa_amount}, ${newRow.taydennyskoulutus_amount}, ${newRow.tyovoimakoulutus_amount})`
     );
   }
 };
@@ -138,11 +150,23 @@ export const savePulssiAmounts = async (
                 ?.doc_count ?? 0
             );
 
+            const taydennyskoulutusAmount = Number(
+              (subBucket?.is_taydennyskoulutus as AggregationsFilterAggregate)
+                ?.doc_count ?? 0
+            );
+            
+            const tyovoimakoulutusAmount = Number(
+              (subBucket?.is_tyovoimakoulutus as AggregationsFilterAggregate)
+                ?.doc_count ?? 0
+            );
+
             await saveToteutusAmounts(pulssiClient, existingRow, {
               tyyppi_path: subBucket.key,
               tila,
               amount,
               jotpa_amount: jotpaAmount,
+              taydennyskoulutus_amount: taydennyskoulutusAmount,
+              tyovoimakoulutus_amount: tyovoimakoulutusAmount,
             });
           } else {
             if (existingRow) {

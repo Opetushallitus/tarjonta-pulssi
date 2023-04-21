@@ -78,6 +78,20 @@ const AGGS_BY_ENTITY: Record<EntityType, object> = {
             },
           },
         },
+        is_taydennyskoulutus: {
+          filter: {
+            term: {
+              "metadata.isTaydennyskoulutus": true,
+            },
+          },
+        },
+        is_tyovoimakoulutus: {
+          filter: {
+            term: {
+              "metadata.isTyovoimakoulutus": true,
+            },
+          },
+        },      
       },
     },
   },

@@ -99,6 +99,16 @@
     "sv": "JOTPA-financierad",
     "en": "JOTPA-financed"
   },
+  "taydennyskoulutus_otsikko": {
+    "fi": "Täydennyskoulutuksia",
+    "sv": "Fortbildningar",
+    "en": "Continuing education studies"
+  },  
+  "tyovoimakoulutus_otsikko": {
+    "fi": "Työvoimakoulutuksia",
+    "sv": "Arbetskraftsutbildningar",
+    "en": "Labour market training courses"
+  },
   "julkaistut_otsikko": {
     "fi": "Julkaistut",
     "sv": "Publicerade",
@@ -123,6 +133,16 @@
     "fi": "Opintokokonaisuus",
     "sv": "Studiehelhet",
     "en": "Study module"
+  },
+  "kk-opintojakso-avoin": {
+    "en": "Course, open higher education studies",
+    "fi": "Opintojakso, avoin korkeakoulutus",
+    "sv": "Studieavsnitt, öppen högskoleutbildning"
+  },
+  "kk-opintokokonaisuus-avoin": {
+    "fi": "Opintokokonaisuus, avoin korkeakoulutus",
+    "sv": "Studiehelhet, öppen högskoleutbildning",
+    "en": "Study module, open higher education studies"
   },
   "koulutus_otsikko": {
     "fi": "Koulutukset",

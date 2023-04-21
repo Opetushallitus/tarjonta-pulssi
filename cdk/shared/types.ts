@@ -19,6 +19,8 @@ export type RowWithKoulutustyyppiPath = {
 
 export type ToteutusRow = RowWithKoulutustyyppiPath & {
   jotpa_amount: number;
+  taydennyskoulutus_amount: number;
+  tyovoimakoulutus_amount: number;
 };
 
 export type Row = HakuRow | RowWithKoulutustyyppiPath;
@@ -44,6 +46,10 @@ export type EntityDataWithSubKey<K extends EntitySubKey = EntitySubKey> = {
   by_tila: WithAmounts & {
     julkaistu_jotpa_amount?: number;
     arkistoitu_jotpa_amount?: number;
+    julkaistu_taydennyskoulutus_amount?: number;
+    arkistoitu_taydennyskoulutus_amount?: number;
+    julkaistu_tyovoimakoulutus_amount?: number;
+    arkistoitu_tyovoimakoulutus_amount?: number;
   };
 } & OneKey<
   K,
