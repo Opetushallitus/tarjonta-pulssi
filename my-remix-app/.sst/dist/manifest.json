@@ -1,0 +1,299 @@
+{
+  "version": "33.0.0",
+  "artifacts": {
+    "untuva-tarjonta-pulssi-app-TARJONTAPULSSI.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "untuva-tarjonta-pulssi-app-TARJONTAPULSSI": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://153563371259/eu-west-1",
+      "properties": {
+        "templateFile": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI.template.json",
+        "tags": {
+          "sst:app": "tarjonta-pulssi-app",
+          "sst:stage": "untuva"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::153563371259:role/cdk-hnb659fds-deploy-role-153563371259-eu-west-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::153563371259:role/cdk-hnb659fds-cfn-exec-role-153563371259-eu-west-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-153563371259-eu-west-1/da2ccdfeb26d065bfe2e6a6842b6dea6d50b25b61b0db20ecfbf0223eac9b106.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "untuva-tarjonta-pulssi-app-TARJONTAPULSSI.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::153563371259:role/cdk-hnb659fds-lookup-role-153563371259-eu-west-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "untuva-tarjonta-pulssi-app-TARJONTAPULSSI.assets"
+      ],
+      "metadata": {
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "sst:app",
+                "Value": "tarjonta-pulssi-app"
+              },
+              {
+                "Key": "sst:stage",
+                "Value": "untuva"
+              }
+            ]
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/CustomResourceHandler/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomResourceHandlerServiceRole41AEC181"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/CustomResourceHandler/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomResourceHandlerE8FB56BA"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/S3Bucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteS3Bucket2B2851F3"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/S3Bucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteS3BucketPolicyBB4DF05F"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/S3Bucket/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteS3BucketAutoDeleteObjectsCustomResource3E10A2DE"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/ServerFunction/AssetReplacerPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteServerFunctionAssetReplacerPolicy304BF125"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/ServerFunction/AssetReplacer/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteServerFunctionAssetReplacer9A11D516"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/ServerFunction/ServerFunction/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteServerFunctionServiceRole8328A688"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/ServerFunction/ServerFunction/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteServerFunctionServiceRoleDefaultPolicy6EA49472"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/ServerFunction/ServerFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteServerFunction6DFA6F1B"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/ServerFunction/ServerFunction/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteServerFunctionLogRetention7123678D"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/ServerFunction/ServerFunction/FunctionUrl/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteServerFunctionFunctionUrl1B09C490"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/ServerFunction/ServerFunction/invoke-function-url": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteServerFunctioninvokefunctionurlEABB57E1"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/ServerCache/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteServerCacheDD54ACDF"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/CloudFrontFunction/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteCloudFrontFunctionE91DD486"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Distribution/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteDistribution706F5265"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Distribution/Origin2/S3Origin/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteDistributionOrigin2S3Origin49B86EE9"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/ServerFunctionInvalidatorPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteServerFunctionInvalidatorPolicy004B2ED1"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/AwsCliLayer/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteAwsCliLayer359A0EF0"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/S3Uploader/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteS3UploaderServiceRole973F5A0B"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/S3Uploader/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteS3UploaderServiceRoleDefaultPolicy8BA893D3"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/S3Uploader/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteS3Uploader2837C218"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/S3Handler/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteS3HandlerServiceRole6D2CC8E3"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/S3Handler/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteS3HandlerServiceRoleDefaultPolicy1BD27252"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/S3Handler/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteS3Handler84D19388"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/S3Deployment/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteS3DeploymentB932FFDB"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/CloudFrontFunctionForStaticBehavior/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteCloudFrontFunctionForStaticBehavior212B969D"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/CloudFrontInvalidatorPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteCloudFrontInvalidatorPolicyEE18C654"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/CloudFrontInvalidator/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteCloudFrontInvalidator18BEA866"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Parameter_url/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "siteParameterurl3D1716BC"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/SSTStackOutputurl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "url"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/SSTStackOutputSSTMetadata": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SSTMetadata"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/untuva-tarjonta-pulssi-app-TARJONTAPULSSI/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    }
+  }
+}
