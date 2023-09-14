@@ -148,6 +148,64 @@
               "version": "2.91.0"
             }
           },
+          "myVPC": {
+            "id": "myVPC",
+            "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/myVPC",
+            "children": {
+              "PublicSubnet1": {
+                "id": "PublicSubnet1",
+                "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/myVPC/PublicSubnet1",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.91.0"
+                }
+              },
+              "PublicSubnet2": {
+                "id": "PublicSubnet2",
+                "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/myVPC/PublicSubnet2",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.91.0"
+                }
+              },
+              "PublicSubnet3": {
+                "id": "PublicSubnet3",
+                "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/myVPC/PublicSubnet3",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.91.0"
+                }
+              },
+              "PrivateSubnet1": {
+                "id": "PrivateSubnet1",
+                "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/myVPC/PrivateSubnet1",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.91.0"
+                }
+              },
+              "PrivateSubnet2": {
+                "id": "PrivateSubnet2",
+                "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/myVPC/PrivateSubnet2",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.91.0"
+                }
+              },
+              "PrivateSubnet3": {
+                "id": "PrivateSubnet3",
+                "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/myVPC/PrivateSubnet3",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.91.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.Resource",
+              "version": "2.91.0"
+            }
+          },
           "site": {
             "id": "site",
             "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site",
@@ -437,6 +495,18 @@
                                         ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
                                       ]
                                     ]
+                                  },
+                                  {
+                                    "Fn::Join": [
+                                      "",
+                                      [
+                                        "arn:",
+                                        {
+                                          "Ref": "AWS::Partition"
+                                        },
+                                        ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+                                      ]
+                                    ]
                                   }
                                 ],
                                 "tags": [
@@ -533,6 +603,48 @@
                           "version": "2.91.0"
                         }
                       },
+                      "SecurityGroup": {
+                        "id": "SecurityGroup",
+                        "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/ServerFunction/ServerFunction/SecurityGroup",
+                        "children": {
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/ServerFunction/ServerFunction/SecurityGroup/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::EC2::SecurityGroup",
+                              "aws:cdk:cloudformation:props": {
+                                "groupDescription": "Automatic security group for Lambda Function untuvatarjontapulssiappTARJONTAPULSSIsiteServerFunctionCC9BA52B",
+                                "securityGroupEgress": [
+                                  {
+                                    "cidrIp": "0.0.0.0/0",
+                                    "description": "Allow all outbound traffic by default",
+                                    "ipProtocol": "-1"
+                                  }
+                                ],
+                                "tags": [
+                                  {
+                                    "key": "sst:app",
+                                    "value": "tarjonta-pulssi-app"
+                                  },
+                                  {
+                                    "key": "sst:stage",
+                                    "value": "untuva"
+                                  }
+                                ],
+                                "vpcId": "vpc-9e4d54f9"
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_ec2.CfnSecurityGroup",
+                              "version": "2.91.0"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_ec2.SecurityGroup",
+                          "version": "2.91.0"
+                        }
+                      },
                       "Resource": {
                         "id": "Resource",
                         "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/ServerFunction/ServerFunction/Resource",
@@ -573,7 +685,22 @@
                                 "value": "untuva"
                               }
                             ],
-                            "timeout": 10
+                            "timeout": 10,
+                            "vpcConfig": {
+                              "subnetIds": [
+                                "subnet-a47a39ff",
+                                "subnet-01505666",
+                                "subnet-a12b20e8"
+                              ],
+                              "securityGroupIds": [
+                                {
+                                  "Fn::GetAtt": [
+                                    "siteServerFunctionSecurityGroup9CF5E743",
+                                    "GroupId"
+                                  ]
+                                }
+                              ]
+                            }
                           }
                         },
                         "constructInfo": {
@@ -786,6 +913,261 @@
                   "version": "10.2.69"
                 }
               },
+              "HostedZone": {
+                "id": "HostedZone",
+                "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/HostedZone",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.91.0"
+                }
+              },
+              "Certificate": {
+                "id": "Certificate",
+                "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Certificate",
+                "children": {
+                  "CertificateRequestorFunction": {
+                    "id": "CertificateRequestorFunction",
+                    "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Certificate/CertificateRequestorFunction",
+                    "children": {
+                      "ServiceRole": {
+                        "id": "ServiceRole",
+                        "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Certificate/CertificateRequestorFunction/ServiceRole",
+                        "children": {
+                          "ImportServiceRole": {
+                            "id": "ImportServiceRole",
+                            "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Certificate/CertificateRequestorFunction/ServiceRole/ImportServiceRole",
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.Resource",
+                              "version": "2.91.0"
+                            }
+                          },
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Certificate/CertificateRequestorFunction/ServiceRole/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                              "aws:cdk:cloudformation:props": {
+                                "assumeRolePolicyDocument": {
+                                  "Statement": [
+                                    {
+                                      "Action": "sts:AssumeRole",
+                                      "Effect": "Allow",
+                                      "Principal": {
+                                        "Service": "lambda.amazonaws.com"
+                                      }
+                                    }
+                                  ],
+                                  "Version": "2012-10-17"
+                                },
+                                "managedPolicyArns": [
+                                  {
+                                    "Fn::Join": [
+                                      "",
+                                      [
+                                        "arn:",
+                                        {
+                                          "Ref": "AWS::Partition"
+                                        },
+                                        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                                      ]
+                                    ]
+                                  }
+                                ],
+                                "tags": [
+                                  {
+                                    "key": "sst:app",
+                                    "value": "tarjonta-pulssi-app"
+                                  },
+                                  {
+                                    "key": "sst:stage",
+                                    "value": "untuva"
+                                  }
+                                ]
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                              "version": "2.91.0"
+                            }
+                          },
+                          "DefaultPolicy": {
+                            "id": "DefaultPolicy",
+                            "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Certificate/CertificateRequestorFunction/ServiceRole/DefaultPolicy",
+                            "children": {
+                              "Resource": {
+                                "id": "Resource",
+                                "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Certificate/CertificateRequestorFunction/ServiceRole/DefaultPolicy/Resource",
+                                "attributes": {
+                                  "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                                  "aws:cdk:cloudformation:props": {
+                                    "policyDocument": {
+                                      "Statement": [
+                                        {
+                                          "Action": [
+                                            "acm:RequestCertificate",
+                                            "acm:DescribeCertificate",
+                                            "acm:DeleteCertificate",
+                                            "acm:AddTagsToCertificate"
+                                          ],
+                                          "Effect": "Allow",
+                                          "Resource": "*"
+                                        },
+                                        {
+                                          "Action": "route53:GetChange",
+                                          "Effect": "Allow",
+                                          "Resource": "*"
+                                        },
+                                        {
+                                          "Action": "route53:changeResourceRecordSets",
+                                          "Condition": {
+                                            "ForAllValues:StringEquals": {
+                                              "route53:ChangeResourceRecordSetsRecordTypes": [
+                                                "CNAME"
+                                              ],
+                                              "route53:ChangeResourceRecordSetsActions": [
+                                                "UPSERT"
+                                              ]
+                                            },
+                                            "ForAllValues:StringLike": {
+                                              "route53:ChangeResourceRecordSetsNormalizedRecordNames": [
+                                                "*.tarjonta-pulssi.untuvaopintopolku.fi"
+                                              ]
+                                            }
+                                          },
+                                          "Effect": "Allow",
+                                          "Resource": {
+                                            "Fn::Join": [
+                                              "",
+                                              [
+                                                "arn:",
+                                                {
+                                                  "Ref": "AWS::Partition"
+                                                },
+                                                ":route53:::hostedzone/Z1399RU36FG2N9"
+                                              ]
+                                            ]
+                                          }
+                                        }
+                                      ],
+                                      "Version": "2012-10-17"
+                                    },
+                                    "policyName": "siteCertificateCertificateRequestorFunctionServiceRoleDefaultPolicyF666908B",
+                                    "roles": [
+                                      {
+                                        "Ref": "siteCertificateCertificateRequestorFunctionServiceRole713C0E1E"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "constructInfo": {
+                                  "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                                  "version": "2.91.0"
+                                }
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_iam.Policy",
+                              "version": "2.91.0"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_iam.Role",
+                          "version": "2.91.0"
+                        }
+                      },
+                      "Code": {
+                        "id": "Code",
+                        "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Certificate/CertificateRequestorFunction/Code",
+                        "children": {
+                          "Stage": {
+                            "id": "Stage",
+                            "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Certificate/CertificateRequestorFunction/Code/Stage",
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.AssetStaging",
+                              "version": "2.91.0"
+                            }
+                          },
+                          "AssetBucket": {
+                            "id": "AssetBucket",
+                            "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Certificate/CertificateRequestorFunction/Code/AssetBucket",
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_s3.BucketBase",
+                              "version": "2.91.0"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_s3_assets.Asset",
+                          "version": "2.91.0"
+                        }
+                      },
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Certificate/CertificateRequestorFunction/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                          "aws:cdk:cloudformation:props": {
+                            "code": {
+                              "s3Bucket": "cdk-hnb659fds-assets-153563371259-eu-west-1",
+                              "s3Key": "a1466b91ba8942c1f5251540844c3af7879992dead6cbbd88e38bfb77a07ad8d.zip"
+                            },
+                            "handler": "index.certificateRequestHandler",
+                            "role": {
+                              "Fn::GetAtt": [
+                                "siteCertificateCertificateRequestorFunctionServiceRole713C0E1E",
+                                "Arn"
+                              ]
+                            },
+                            "runtime": "nodejs16.x",
+                            "tags": [
+                              {
+                                "key": "sst:app",
+                                "value": "tarjonta-pulssi-app"
+                              },
+                              {
+                                "key": "sst:stage",
+                                "value": "untuva"
+                              }
+                            ],
+                            "timeout": 900
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_lambda.CfnFunction",
+                          "version": "2.91.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_lambda.Function",
+                      "version": "2.91.0"
+                    }
+                  },
+                  "CertificateRequestorResource": {
+                    "id": "CertificateRequestorResource",
+                    "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Certificate/CertificateRequestorResource",
+                    "children": {
+                      "Default": {
+                        "id": "Default",
+                        "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Certificate/CertificateRequestorResource/Default",
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.CfnResource",
+                          "version": "2.91.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.CustomResource",
+                      "version": "2.91.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.Resource",
+                  "version": "2.91.0"
+                }
+              },
               "Distribution": {
                 "id": "Distribution",
                 "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/Distribution",
@@ -903,7 +1285,9 @@
                             ],
                             "lambdaFunctionAssociations": []
                           },
-                          "aliases": [],
+                          "aliases": [
+                            "tarjonta-pulssi.untuvaopintopolku.fi"
+                          ],
                           "cacheBehaviors": [
                             {
                               "pathPattern": "build/*",
@@ -964,7 +1348,17 @@
                           ],
                           "defaultRootObject": "",
                           "httpVersion": "http2",
-                          "ipv6Enabled": true
+                          "ipv6Enabled": true,
+                          "viewerCertificate": {
+                            "acmCertificateArn": {
+                              "Fn::GetAtt": [
+                                "siteCertificateCertificateRequestorResource6EC2A2A2",
+                                "Arn"
+                              ]
+                            },
+                            "minimumProtocolVersion": "TLSv1.2_2021",
+                            "sslSupportMethod": "sni-only"
+                          }
                         },
                         "tags": [
                           {
@@ -1022,6 +1416,92 @@
                 },
                 "constructInfo": {
                   "fqn": "aws-cdk-lib.aws_cloudfront.Distribution",
+                  "version": "2.91.0"
+                }
+              },
+              "AliasRecord": {
+                "id": "AliasRecord",
+                "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/AliasRecord",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/AliasRecord/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Route53::RecordSet",
+                      "aws:cdk:cloudformation:props": {
+                        "aliasTarget": {
+                          "hostedZoneId": {
+                            "Fn::FindInMap": [
+                              "AWSCloudFrontPartitionHostedZoneIdMap",
+                              {
+                                "Ref": "AWS::Partition"
+                              },
+                              "zoneId"
+                            ]
+                          },
+                          "dnsName": {
+                            "Fn::GetAtt": [
+                              "siteDistribution706F5265",
+                              "DomainName"
+                            ]
+                          }
+                        },
+                        "hostedZoneId": "Z1399RU36FG2N9",
+                        "name": "tarjonta-pulssi.untuvaopintopolku.fi.",
+                        "type": "A"
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_route53.CfnRecordSet",
+                      "version": "2.91.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_route53.ARecord",
+                  "version": "2.91.0"
+                }
+              },
+              "AliasRecordAAAA": {
+                "id": "AliasRecordAAAA",
+                "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/AliasRecordAAAA",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/site/AliasRecordAAAA/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Route53::RecordSet",
+                      "aws:cdk:cloudformation:props": {
+                        "aliasTarget": {
+                          "hostedZoneId": {
+                            "Fn::FindInMap": [
+                              "AWSCloudFrontPartitionHostedZoneIdMap",
+                              {
+                                "Ref": "AWS::Partition"
+                              },
+                              "zoneId"
+                            ]
+                          },
+                          "dnsName": {
+                            "Fn::GetAtt": [
+                              "siteDistribution706F5265",
+                              "DomainName"
+                            ]
+                          }
+                        },
+                        "hostedZoneId": "Z1399RU36FG2N9",
+                        "name": "tarjonta-pulssi.untuvaopintopolku.fi.",
+                        "type": "AAAA"
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_route53.CfnRecordSet",
+                      "version": "2.91.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_route53.AaaaRecord",
                   "version": "2.91.0"
                 }
               },
@@ -1795,20 +2275,7 @@
                           "sst:stage": "untuva"
                         },
                         "type": "String",
-                        "value": {
-                          "Fn::Join": [
-                            "",
-                            [
-                              "https://",
-                              {
-                                "Fn::GetAtt": [
-                                  "siteDistribution706F5265",
-                                  "DomainName"
-                                ]
-                              }
-                            ]
-                          ]
-                        }
+                        "value": "https://tarjonta-pulssi.untuvaopintopolku.fi"
                       }
                     },
                     "constructInfo": {
@@ -2013,6 +2480,14 @@
             "constructInfo": {
               "fqn": "constructs.Construct",
               "version": "10.2.69"
+            }
+          },
+          "AWSCloudFrontPartitionHostedZoneIdMap": {
+            "id": "AWSCloudFrontPartitionHostedZoneIdMap",
+            "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/AWSCloudFrontPartitionHostedZoneIdMap",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnMapping",
+              "version": "2.91.0"
             }
           },
           "SSTStackOutputurl": {

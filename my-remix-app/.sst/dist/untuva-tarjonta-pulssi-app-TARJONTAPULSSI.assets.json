@@ -43,6 +43,20 @@
         }
       }
     },
+    "a1466b91ba8942c1f5251540844c3af7879992dead6cbbd88e38bfb77a07ad8d": {
+      "source": {
+        "path": "asset.a1466b91ba8942c1f5251540844c3af7879992dead6cbbd88e38bfb77a07ad8d",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "153563371259-eu-west-1": {
+          "bucketName": "cdk-hnb659fds-assets-153563371259-eu-west-1",
+          "objectKey": "a1466b91ba8942c1f5251540844c3af7879992dead6cbbd88e38bfb77a07ad8d.zip",
+          "region": "eu-west-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::153563371259:role/cdk-hnb659fds-file-publishing-role-153563371259-eu-west-1"
+        }
+      }
+    },
     "a693cfb9791c2f3a58e1f440ed41e600585a4eed80b4f3c2e2966215c078cf45": {
       "source": {
         "path": "asset.a693cfb9791c2f3a58e1f440ed41e600585a4eed80b4f3c2e2966215c078cf45",
@@ -99,7 +113,7 @@
         }
       }
     },
-    "da2ccdfeb26d065bfe2e6a6842b6dea6d50b25b61b0db20ecfbf0223eac9b106": {
+    "63d90bd49b30fd58678878bc44daf4d5c7bcc9112dcc8d77768cb6dd4c7205bf": {
       "source": {
         "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI.template.json",
         "packaging": "file"
@@ -107,7 +121,7 @@
       "destinations": {
         "153563371259-eu-west-1": {
           "bucketName": "cdk-hnb659fds-assets-153563371259-eu-west-1",
-          "objectKey": "da2ccdfeb26d065bfe2e6a6842b6dea6d50b25b61b0db20ecfbf0223eac9b106.json",
+          "objectKey": "63d90bd49b30fd58678878bc44daf4d5c7bcc9112dcc8d77768cb6dd4c7205bf.json",
           "region": "eu-west-1",
           "assumeRoleArn": "arn:${AWS::Partition}:iam::153563371259:role/cdk-hnb659fds-file-publishing-role-153563371259-eu-west-1"
         }
