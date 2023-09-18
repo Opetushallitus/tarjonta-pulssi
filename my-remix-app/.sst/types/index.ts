@@ -6,6 +6,15 @@ declare module "sst/node/config" {
   }
 }
 
+import "sst/node/api";
+declare module "sst/node/api" {
+  export interface ApiResources {
+    "api": {
+      url: string;
+    }
+  }
+}
+
 import "sst/node/site";
 declare module "sst/node/site" {
   export interface RemixSiteResources {
