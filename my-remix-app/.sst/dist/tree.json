@@ -469,6 +469,14 @@
                                 "policyDocument": {
                                   "Statement": [
                                     {
+                                      "Action": "ssm:GetParameter",
+                                      "Effect": "Allow",
+                                      "Resource": [
+                                        "arn:aws:ssm:eu-west-1:*:parameter/untuva/postgresqls/tarjontapulssi/app-user-name",
+                                        "arn:aws:ssm:eu-west-1:*:parameter/untuva/postgresqls/tarjontapulssi/app-user-password"
+                                      ]
+                                    },
+                                    {
                                       "Action": [
                                         "xray:PutTraceSegments",
                                         "xray:PutTelemetryRecords"
@@ -519,6 +527,9 @@
                         },
                         "environment": {
                           "variables": {
+                            "TARJONTAPULLSSI_POSTGRES_ADDRESS": "tarjontapulssi.db.untuvaopintopolku.fi",
+                            "TARJONTAPULSSI_POSTGRES_APP_USER": "/untuva/postgresqls/tarjontapulssi/app-user-name",
+                            "TARJONTAPULSSI_POSTGRES_APP_PASSWORD": "/untuva/postgresqls/tarjontapulssi/app-user-password",
                             "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
                             "SST_APP": "tarjonta-pulssi-app",
                             "SST_STAGE": "untuva",
@@ -3034,14 +3045,6 @@
                 }
               }
             },
-            "constructInfo": {
-              "fqn": "aws-cdk-lib.Resource",
-              "version": "2.91.0"
-            }
-          },
-          "ElasticSearchEndpointSecurityGroup": {
-            "id": "ElasticSearchEndpointSecurityGroup",
-            "path": "untuva-tarjonta-pulssi-app-TARJONTAPULSSI/ElasticSearchEndpointSecurityGroup",
             "constructInfo": {
               "fqn": "aws-cdk-lib.Resource",
               "version": "2.91.0"

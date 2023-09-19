@@ -1,0 +1,847 @@
+{
+ "Resources": {
+  "CustomResourceHandlerServiceRole41AEC181": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "sst:app",
+      "Value": "tarjonta-pulssi-app"
+     },
+     {
+      "Key": "sst:stage",
+      "Value": "esa-hakala"
+     }
+    ]
+   }
+  },
+  "CustomResourceHandlerE8FB56BA": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-153563371259-eu-west-1",
+     "S3Key": "f2148259775db1dc9d5553272184aecd7f6dfd1b21246166698ec616a3aa572d.zip"
+    },
+    "Handler": "index.handler",
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomResourceHandlerServiceRole41AEC181",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs16.x",
+    "Tags": [
+     {
+      "Key": "sst:app",
+      "Value": "tarjonta-pulssi-app"
+     },
+     {
+      "Key": "sst:stage",
+      "Value": "esa-hakala"
+     }
+    ],
+    "Timeout": 900
+   },
+   "DependsOn": [
+    "CustomResourceHandlerServiceRole41AEC181"
+   ]
+  },
+  "SiteSecurityGroup2B0CBA7F": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "esa-hakala-tarjonta-pulssi-app-TARJONTAPULSSI/SiteSecurityGroup",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "sst:app",
+      "Value": "tarjonta-pulssi-app"
+     },
+     {
+      "Key": "sst:stage",
+      "Value": "esa-hakala"
+     }
+    ],
+    "VpcId": "vpc-12345"
+   }
+  },
+  "apiApiC3C473D0": {
+   "Type": "AWS::ApiGatewayV2::Api",
+   "Properties": {
+    "CorsConfiguration": {
+     "AllowCredentials": false,
+     "AllowHeaders": [
+      "*"
+     ],
+     "AllowMethods": [
+      "*"
+     ],
+     "AllowOrigins": [
+      "*"
+     ]
+    },
+    "Name": "esa-hakala-tarjonta-pulssi-app-api",
+    "ProtocolType": "HTTP",
+    "Tags": {
+     "sst:app": "tarjonta-pulssi-app",
+     "sst:stage": "esa-hakala"
+    }
+   }
+  },
+  "apiApiDefaultStageA626ED4D": {
+   "Type": "AWS::ApiGatewayV2::Stage",
+   "Properties": {
+    "AccessLogSettings": {
+     "DestinationArn": {
+      "Fn::GetAtt": [
+       "apiLogGroup924E5B7A",
+       "Arn"
+      ]
+     },
+     "Format": "{\"requestTime\":\"$context.requestTime\",\"requestId\":\"$context.requestId\",\"httpMethod\":\"$context.httpMethod\",\"path\":\"$context.path\",\"routeKey\":\"$context.routeKey\",\"status\":$context.status,\"responseLatency\":$context.responseLatency,\"integrationRequestId\":\"$context.integration.requestId\",\"integrationStatus\":\"$context.integration.status\",\"integrationLatency\":\"$context.integration.latency\",\"integrationServiceStatus\":\"$context.integration.integrationStatus\",\"ip\":\"$context.identity.sourceIp\",\"userAgent\":\"$context.identity.userAgent\"}"
+    },
+    "ApiId": {
+     "Ref": "apiApiC3C473D0"
+    },
+    "AutoDeploy": true,
+    "StageName": "$default",
+    "Tags": {
+     "sst:app": "tarjonta-pulssi-app",
+     "sst:stage": "esa-hakala"
+    }
+   }
+  },
+  "apiLogGroup924E5B7A": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/vendedlogs/apis/esa-hakala-tarjonta-pulssi-app-api-",
+       {
+        "Ref": "apiApiC3C473D0"
+       },
+       "/default"
+      ]
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "sst:app",
+      "Value": "tarjonta-pulssi-app"
+     },
+     {
+      "Key": "sst:stage",
+      "Value": "esa-hakala"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain"
+  },
+  "apiLambdaGETServiceRole57A117D1": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "sst:app",
+      "Value": "tarjonta-pulssi-app"
+     },
+     {
+      "Key": "sst:stage",
+      "Value": "esa-hakala"
+     }
+    ]
+   }
+  },
+  "apiLambdaGETServiceRoleDefaultPolicyE9384899": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "ssm:GetParameter",
+       "Effect": "Allow",
+       "Resource": [
+        "arn:aws:ssm:eu-west-1:*:parameter/esa-hakala/postgresqls/tarjontapulssi/app-user-name",
+        "arn:aws:ssm:eu-west-1:*:parameter/esa-hakala/postgresqls/tarjontapulssi/app-user-password"
+       ]
+      },
+      {
+       "Action": [
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "iot:*",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "s3:*",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":s3:::sstbootstrap-euwest1facae36a-14iz6y7y8vpu3"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":s3:::sstbootstrap-euwest1facae36a-14iz6y7y8vpu3/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "apiLambdaGETServiceRoleDefaultPolicyE9384899",
+    "Roles": [
+     {
+      "Ref": "apiLambdaGETServiceRole57A117D1"
+     }
+    ]
+   }
+  },
+  "apiLambdaGET2D5CB7A7": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Architectures": [
+     "x86_64"
+    ],
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-153563371259-eu-west-1",
+     "S3Key": "4802b88ff95b9f55d47fed8c3185644545c13d0a169fec1d6f0d9562f403e13c.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "TARJONTAPULLSSI_POSTGRES_ADDRESS": "tarjontapulssi.db.undefined",
+      "TARJONTAPULSSI_POSTGRES_APP_USER": "/esa-hakala/postgresqls/tarjontapulssi/app-user-name",
+      "TARJONTAPULSSI_POSTGRES_APP_PASSWORD": "/esa-hakala/postgresqls/tarjontapulssi/app-user-password",
+      "SST_FUNCTION_ID": "c8b2a822cb83513ecfe145673ca49d9bac963d15d3",
+      "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+      "SST_APP": "tarjonta-pulssi-app",
+      "SST_STAGE": "esa-hakala",
+      "SST_SSM_PREFIX": "/sst/tarjonta-pulssi-app/esa-hakala/",
+      "SST_DEBUG_IS_API_ROUTE": "1"
+     }
+    },
+    "EphemeralStorage": {
+     "Size": 512
+    },
+    "Handler": "bridge.handler",
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::GetAtt": [
+      "apiLambdaGETServiceRole57A117D1",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "sst:app",
+      "Value": "tarjonta-pulssi-app"
+     },
+     {
+      "Key": "sst:stage",
+      "Value": "esa-hakala"
+     }
+    ],
+    "Timeout": 10,
+    "TracingConfig": {
+     "Mode": "Active"
+    },
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "SiteSecurityGroup2B0CBA7F",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      "p-12345",
+      "p-67890"
+     ]
+    }
+   },
+   "DependsOn": [
+    "apiLambdaGETServiceRoleDefaultPolicyE9384899",
+    "apiLambdaGETServiceRole57A117D1"
+   ]
+  },
+  "apiLambdaGETEventInvokeConfig794FB4BC": {
+   "Type": "AWS::Lambda::EventInvokeConfig",
+   "Properties": {
+    "FunctionName": {
+     "Ref": "apiLambdaGET2D5CB7A7"
+    },
+    "MaximumRetryAttempts": 0,
+    "Qualifier": "$LATEST"
+   }
+  },
+  "apiRouteGETIntegrationGET451F73F0": {
+   "Type": "AWS::ApiGatewayV2::Integration",
+   "Properties": {
+    "ApiId": {
+     "Ref": "apiApiC3C473D0"
+    },
+    "IntegrationType": "AWS_PROXY",
+    "IntegrationUri": {
+     "Fn::GetAtt": [
+      "apiLambdaGET2D5CB7A7",
+      "Arn"
+     ]
+    },
+    "PayloadFormatVersion": "2.0"
+   }
+  },
+  "apiRouteGETIntegrationGETPermission02100559": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "apiLambdaGET2D5CB7A7",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:eu-west-1:153563371259:",
+       {
+        "Ref": "apiApiC3C473D0"
+       },
+       "/*/*/"
+      ]
+     ]
+    }
+   }
+  },
+  "apiRouteGET1A9E87AB": {
+   "Type": "AWS::ApiGatewayV2::Route",
+   "Properties": {
+    "ApiId": {
+     "Ref": "apiApiC3C473D0"
+    },
+    "AuthorizationType": "AWS_IAM",
+    "RouteKey": "GET /",
+    "Target": {
+     "Fn::Join": [
+      "",
+      [
+       "integrations/",
+       {
+        "Ref": "apiRouteGETIntegrationGET451F73F0"
+       }
+      ]
+     ]
+    }
+   }
+  },
+  "apiParameterurl1D4D90E2": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/sst/tarjonta-pulssi-app/esa-hakala/Api/api/url",
+    "Tags": {
+     "sst:app": "tarjonta-pulssi-app",
+     "sst:stage": "esa-hakala"
+    },
+    "Type": "String",
+    "Value": {
+     "Fn::GetAtt": [
+      "apiApiC3C473D0",
+      "ApiEndpoint"
+     ]
+    }
+   }
+  },
+  "siteServerFunctionRole1F8F4FAC": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":iam::153563371259:root"
+          ]
+         ]
+        }
+       }
+      },
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "MaxSessionDuration": 43200,
+    "Tags": [
+     {
+      "Key": "sst:app",
+      "Value": "tarjonta-pulssi-app"
+     },
+     {
+      "Key": "sst:stage",
+      "Value": "esa-hakala"
+     }
+    ]
+   }
+  },
+  "siteServerFunctionAssetReplacerPolicy304BF125": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetObject",
+        "s3:PutObject"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":s3:::cdk-hnb659fds-assets-153563371259-eu-west-1/*"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "siteServerFunctionAssetReplacerPolicy304BF125",
+    "Roles": [
+     {
+      "Ref": "CustomResourceHandlerServiceRole41AEC181"
+     }
+    ]
+   }
+  },
+  "siteServerFunctionAssetReplacer9A11D516": {
+   "Type": "Custom::AssetReplacer",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomResourceHandlerE8FB56BA",
+      "Arn"
+     ]
+    },
+    "bucket": "cdk-hnb659fds-assets-153563371259-eu-west-1",
+    "key": "0c248f0804df94e0c1dc32b359325d53acc0475f0319b793ddec02680b9c5d5c.zip",
+    "replacements": []
+   },
+   "DependsOn": [
+    "siteServerFunctionAssetReplacerPolicy304BF125"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "siteServerFunction6DFA6F1B": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Architectures": [
+     "arm64"
+    ],
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-153563371259-eu-west-1",
+     "S3Key": "0c248f0804df94e0c1dc32b359325d53acc0475f0319b793ddec02680b9c5d5c.zip"
+    },
+    "Description": "Server handler placeholder",
+    "Environment": {
+     "Variables": {
+      "SST_APP": "tarjonta-pulssi-app",
+      "SST_STAGE": "esa-hakala",
+      "SST_SSM_PREFIX": "/sst/tarjonta-pulssi-app/esa-hakala/",
+      "SST_Api_url_api": {
+       "Fn::GetAtt": [
+        "apiApiC3C473D0",
+        "ApiEndpoint"
+       ]
+      }
+     }
+    },
+    "Handler": "index.handler",
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::GetAtt": [
+      "siteServerFunctionRole1F8F4FAC",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "sst:app",
+      "Value": "tarjonta-pulssi-app"
+     },
+     {
+      "Key": "sst:stage",
+      "Value": "esa-hakala"
+     }
+    ],
+    "Timeout": 10
+   },
+   "DependsOn": [
+    "siteServerFunctionAssetReplacer9A11D516",
+    "siteServerFunctionRole1F8F4FAC"
+   ]
+  },
+  "siteServerFunctionLogRetention7123678D": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "siteServerFunction6DFA6F1B"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 3
+   },
+   "DependsOn": [
+    "siteServerFunctionAssetReplacer9A11D516"
+   ]
+  },
+  "siteParameterurl3D1716BC": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/sst/tarjonta-pulssi-app/esa-hakala/RemixSite/site/url",
+    "Tags": {
+     "sst:app": "tarjonta-pulssi-app",
+     "sst:stage": "esa-hakala"
+    },
+    "Type": "String",
+    "Value": "localhost"
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "sst:app",
+      "Value": "tarjonta-pulssi-app"
+     },
+     {
+      "Key": "sst:stage",
+      "Value": "esa-hakala"
+     }
+    ]
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:PutRetentionPolicy",
+        "logs:DeleteRetentionPolicy"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+    "Roles": [
+     {
+      "Ref": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+     }
+    ]
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Handler": "index.handler",
+    "Runtime": "nodejs18.x",
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-153563371259-eu-west-1",
+     "S3Key": "5cc92ed0cea39e2b8de2dbc527dfb5980a3af9564bd1084d840b9787c7d0467e.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+      "Arn"
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "sst:app",
+      "Value": "tarjonta-pulssi-app"
+     },
+     {
+      "Key": "sst:stage",
+      "Value": "esa-hakala"
+     }
+    ]
+   },
+   "DependsOn": [
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+   ]
+  },
+  "PostgreSqlsSecurityGroupfromesahakalatarjontapulssiappTARJONTAPULSSISiteSecurityGroup85A968B533060AA6324A": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "from esahakalatarjontapulssiappTARJONTAPULSSISiteSecurityGroup85A968B5:3306",
+    "FromPort": 3306,
+    "GroupId": {
+     "Fn::ImportValue": "esa-hakala-PostgreSQLSG"
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "SiteSecurityGroup2B0CBA7F",
+      "GroupId"
+     ]
+    },
+    "ToPort": 3306
+   }
+  }
+ },
+ "Outputs": {
+  "ApiUrl": {
+   "Value": {
+    "Fn::GetAtt": [
+     "apiApiC3C473D0",
+     "ApiEndpoint"
+    ]
+   }
+  },
+  "SSTMetadata": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "{\"app\":\"tarjonta-pulssi-app\",\"stage\":\"esa-hakala\",\"version\":\"2.24.26\",\"metadata\":[{\"id\":\"api\",\"addr\":\"c85e53f38c95c6e319730c852de8f65d98f2ad0d39\",\"stack\":\"esa-hakala-tarjonta-pulssi-app-TARJONTAPULSSI\",\"type\":\"Api\",\"data\":{\"graphql\":false,\"url\":\"https://",
+      {
+       "Ref": "apiApiC3C473D0"
+      },
+      ".execute-api.eu-west-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/\",\"httpApiId\":\"",
+      {
+       "Ref": "apiApiC3C473D0"
+      },
+      "\",\"routes\":[{\"type\":\"function\",\"route\":\"GET /\",\"fn\":{\"node\":\"c8b2a822cb83513ecfe145673ca49d9bac963d15d3\",\"stack\":\"esa-hakala-tarjonta-pulssi-app-TARJONTAPULSSI\"}}]}},{\"id\":\"Lambda_GET_--\",\"addr\":\"c8b2a822cb83513ecfe145673ca49d9bac963d15d3\",\"stack\":\"esa-hakala-tarjonta-pulssi-app-TARJONTAPULSSI\",\"type\":\"Function\",\"data\":{\"arn\":\"",
+      {
+       "Fn::GetAtt": [
+        "apiLambdaGET2D5CB7A7",
+        "Arn"
+       ]
+      },
+      "\",\"runtime\":\"nodejs16.x\",\"handler\":\"packages/functions/src/time.handler\",\"localId\":\"c8b2a822cb83513ecfe145673ca49d9bac963d15d3\",\"secrets\":[]}},{\"id\":\"site\",\"addr\":\"c838931bc657ad818cef7a94e8b77b55aa9f7fc308\",\"stack\":\"esa-hakala-tarjonta-pulssi-app-TARJONTAPULSSI\",\"type\":\"RemixSite\",\"data\":{\"mode\":\"placeholder\",\"path\":\".\",\"runtime\":\"nodejs18.x\",\"server\":\"",
+      {
+       "Fn::GetAtt": [
+        "siteServerFunction6DFA6F1B",
+        "Arn"
+       ]
+      },
+      "\",\"secrets\":[]}},{\"id\":\"ServerFunction\",\"addr\":\"c8a69396335b1c27c3e3ca565966c446199e269d9c\",\"stack\":\"esa-hakala-tarjonta-pulssi-app-TARJONTAPULSSI\",\"type\":\"Function\",\"data\":{\"arn\":\"",
+      {
+       "Fn::GetAtt": [
+        "siteServerFunction6DFA6F1B",
+        "Arn"
+       ]
+      },
+      "\",\"runtime\":\"nodejs18.x\",\"handler\":\"index.handler\",\"localId\":\"c8a69396335b1c27c3e3ca565966c446199e269d9c\",\"secrets\":[]}}]}"
+     ]
+    ]
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

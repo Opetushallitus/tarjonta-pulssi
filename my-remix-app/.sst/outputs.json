@@ -1,7 +1,5 @@
 {
   "untuva-tarjonta-pulssi-app-TARJONTAPULSSI": {
-    "customurl": "https://tarjonta-pulssi.untuvaopintopolku.fi",
-    "ApiUrl": "https://lqbezb6a57.execute-api.eu-west-1.amazonaws.com",
-    "cloudfronturl": "https://d1lgdwzggdcxrf.cloudfront.net"
+    "ApiUrl": "https://lqbezb6a57.execute-api.eu-west-1.amazonaws.com"
   }
 }

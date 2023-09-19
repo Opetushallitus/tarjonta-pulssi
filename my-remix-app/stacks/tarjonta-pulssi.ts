@@ -1,10 +1,7 @@
 import { StackContext, RemixSite, Api } from "sst/constructs";
-import { Vpc, SubnetType, SecurityGroup, Port, Connections } from "aws-cdk-lib/aws-ec2";
-import * as rds from "aws-cdk-lib/aws-rds";
-import * as secretsManager from "aws-cdk-lib/aws-secretsmanager";
+import { Vpc, SubnetType, SecurityGroup, Port } from "aws-cdk-lib/aws-ec2";
 import { Fn, Token } from "aws-cdk-lib";
-
-
+import { PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 
 
 export function TARJONTAPULSSI({ stack }: StackContext) {
@@ -48,56 +45,35 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
     vpcName: `opintopolku-vpc-${stack.stage}`
   });
 
-
-  // const myvpc = Vpc.fromVpcAttributes(stack, "VPC", {
-  //   vpcId: Fn.importValue(`${stack.stage}-Vpc`),
-  //   availabilityZones: [
-  //     Fn.importValue(`${stack.stage}-SubnetAvailabilityZones`),
-  //   ],
-  //   privateSubnetIds: [
-  //     Fn.importValue(`${stack.stage}-PrivateSubnet1`),
-  //     Fn.importValue(`${stack.stage}-PrivateSubnet2`),
-  //     Fn.importValue(`${stack.stage}-PrivateSubnet3`),
-  //   ],
-  // });
-
-// Import existing Database
- 
-
-// new RDS(stack, "Database", {
-//     engine: "postgresql11.13",
-//     defaultDatabaseName: "acme",
-//     cdk: {
-//       cluster: rds.ServerlessCluster.fromServerlessClusterAttributes(
-//         stack,
-//         "ICluster",
-//         {
-//           clusterIdentifier: `${stack.stage}-tarjontapulssi`,
-//         }
-//       ),
-//       secret: secretsManager.Secret.fromSecretAttributes(stack, "ISecret", {
-//         secretPartialArn:
-//           "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret",
-//       }),
-//     },
-//   });
   
-// Database interaction Lambda, example Lambda from here
+// Database interaction Lambda, example Lambda from here https://docs.sst.dev/apis#add-an-api
+// Augmented with a VPC, Security Group and IAM policy to be able to access RDS databases that
+// reside within the VPC
   const siteSg = new SecurityGroup(stack, "SiteSecurityGroup", { vpc: ophVpc })
 
   const dbApi = new Api(stack, "api", {
     defaults: {
       authorizer: "iam",
       function: {
-        // environment: {
+        environment: {
         //   KOUTA_POSTGRES_RO_USER: `/${stack.stage}/postgresqls/kouta/readonly-user-name`,
         //   KOUTA_POSTGRES_RO_PASSWORD: `/${stack.stage}/postgresqls/kouta/readonly-user-password`,
         //   PUBLICHOSTEDZONE: `${stack.stage}`,
-        //   TARJONTAPULSSI_POSTGRES_APP_USER: `/${stack.stage}/postgresqls/tarjontapulssi/app-user-name`,
-        //   TARJONTAPULSSI_POSTGRES_APP_PASSWORD: `/${stack.stage}/postgresqls/tarjontapulssi/app-user-password`,
+           TARJONTAPULLSSI_POSTGRES_ADDRESS: `tarjontapulssi.db.${OPHhostedZone}`,
+           TARJONTAPULSSI_POSTGRES_APP_USER: `/${stack.stage}/postgresqls/tarjontapulssi/app-user-name`,
+           TARJONTAPULSSI_POSTGRES_APP_PASSWORD: `/${stack.stage}/postgresqls/tarjontapulssi/app-user-password`,
         //   KOUTA_ELASTIC_URL_WITH_CREDENTIALS: `/${stack.stage}/services/kouta-indeksoija/kouta-indeksoija-elastic7-url-with-credentials`,
-        // },
-        
+        },
+        initialPolicy: [
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            resources: [
+              `arn:aws:ssm:eu-west-1:*:parameter/${stack.stage}/postgresqls/tarjontapulssi/app-user-name`,
+              `arn:aws:ssm:eu-west-1:*:parameter/${stack.stage}/postgresqls/tarjontapulssi/app-user-password`,
+            ],
+            actions: ["ssm:GetParameter"],
+          }),
+        ],
         vpc: ophVpc,
         securityGroups: [siteSg],
         vpcSubnets: {
@@ -135,49 +111,26 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
     PostgreSQLSGId
   );
 
-  // Ingress TarjontapulssiLambda -> PostgreSqls
-  // [5432].forEach((port) => {
-  //   PostgreSQLSG.addIngressRule(
-  //     TarjontaPulssiLambdaSecurityGroup,
-  //     Port.tcp(port)
-  //   );
-  // });
-  
-  const ElasticSearchEndpointSGId = Token.asString(
-    Fn.importValue(`${stack.stage}-ElasticsearchSG`)
-  );
-  
-  const ElasticSearchEndpointSG = SecurityGroup.fromSecurityGroupId(
-    this,
-    "ElasticSearchEndpointSecurityGroup",
-    ElasticSearchEndpointSGId
-  );
-
-  // Ingress TarjontapulssiLambda -> ElasticSearchEndpoint
-  // [9243, 443].forEach((port) => {
-  //   ElasticSearchEndpointSG.addIngressRule(
-  //     api,
-  //     Port.tcp(port)
-  //   );
-  // });
-
-
-
-  // dbApi.Connections.allowTo(
-  //   PostgreSQLSG,
-  //   Port.tcp(3306)
-  //   )
-  
-  // [9243, 443].forEach((port) => {
-  //   ElasticSearchEndpointSG.addIngressRule(
-  //     dbApi,
-  //     Port.tcp(port)
-  //   );
-  // });
-    
   PostgreSQLSG.connections.allowFrom(siteSg, Port.tcp(3306))
 
-// Stack outputs
+// In case Elastic Search access is needed later on  
+//  const ElasticSearchEndpointSGId = Token.asString(
+//    Fn.importValue(`${stack.stage}-ElasticsearchSG`)
+//  );
+  
+//  const ElasticSearchEndpointSG = SecurityGroup.fromSecurityGroupId(
+//    this,
+//    "ElasticSearchEndpointSecurityGroup",
+//    ElasticSearchEndpointSGId
+//  );
+
+//  ElasticSearchEndpointSG.connections.allowFrom(siteSg, Port.tcp(9243))
+//  ElasticSearchEndpointSG.connections.allowFrom(siteSg, Port.tcp(443)) 
+    
+
+
+
+// Stack - level outputs
   stack.addOutputs({
     cloudfronturl: site.url,
     customurl: site.customDomainUrl,

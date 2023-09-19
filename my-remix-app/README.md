@@ -1,5 +1,38 @@
-# Welcome to Remix!
+# Tarjonta-pulssi, powered by SST and Remix
 
+Infrastructure of this project is deployed using SST, which is providing higher level constructs for CDK.
+
+## Working with SST
+
+The infrastructure stacks are defined in /stacks and the stacks are initialized in `sst.config.ts` - file. The available stages are hardcoded into the infrastructure stack.
+
+Suggested way of working with SST:
+
+First time setup, run
+```sh
+npm install
+```
+
+Install and configure aws-vault https://github.com/99designs/aws-vault (you can skip this step, but you will be asked for MFA every time you perform `npx sst deploy` for example)
+
+Open CLI session to the target environment using aws-vault 
+
+```sh
+aws-vault exec oph-dev
+```
+
+Lambda live developement (https://docs.sst.dev/live-lambda-development):
+```sh
+npx sst dev --profile=oph-dev --stage=untuva
+```
+
+Deploying changes to the environment:
+```sh
+npx sst deploy --profile=oph-dev --stage=untuva
+```
+
+
+## Remix default documentation
 - [Remix Docs](https://remix.run/docs)
 
 ## Development
@@ -37,22 +70,3 @@ Make sure to deploy the output of `remix build`
 - `build/`
 - `public/build/`
 
-### Using a Template
-
-When you ran `npx create-remix@latest` there were a few choices for hosting. You can run that again to create a new project, then copy over relevant code/assets from your current app to the new project that's pre-configured for your target server.
-
-Most importantly, this means everything in the `app/` directory, but if you've further customized your current application outside of there it may also include:
-
-- Any assets you've added/updated in `public/`
-- Any updated versions of root files such as `.eslintrc.js`, etc.
-
-```sh
-cd ..
-# create a new project, and pick a pre-configured host
-npx create-remix@latest
-cd my-new-remix-app
-# remove the new project's app (not the old one!)
-rm -rf app
-# copy your app over
-cp -R ../my-old-remix-app/app app
-```

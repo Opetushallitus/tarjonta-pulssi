@@ -231,6 +231,14 @@
     "PolicyDocument": {
      "Statement": [
       {
+       "Action": "ssm:GetParameter",
+       "Effect": "Allow",
+       "Resource": [
+        "arn:aws:ssm:eu-west-1:*:parameter/untuva/postgresqls/tarjontapulssi/app-user-name",
+        "arn:aws:ssm:eu-west-1:*:parameter/untuva/postgresqls/tarjontapulssi/app-user-password"
+       ]
+      },
+      {
        "Action": [
         "xray:PutTraceSegments",
         "xray:PutTelemetryRecords"
@@ -261,6 +269,9 @@
     },
     "Environment": {
      "Variables": {
+      "TARJONTAPULLSSI_POSTGRES_ADDRESS": "tarjontapulssi.db.untuvaopintopolku.fi",
+      "TARJONTAPULSSI_POSTGRES_APP_USER": "/untuva/postgresqls/tarjontapulssi/app-user-name",
+      "TARJONTAPULSSI_POSTGRES_APP_PASSWORD": "/untuva/postgresqls/tarjontapulssi/app-user-password",
       "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
       "SST_APP": "tarjonta-pulssi-app",
       "SST_STAGE": "untuva",
