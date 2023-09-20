@@ -49,7 +49,7 @@ export const createPulssiDbPool = async () => {
   });
 };
 
-const createTilaAmountCol = (entity: EntityType, tila: Julkaisutila) => {
+export const createTilaAmountCol = (entity: EntityType, tila: Julkaisutila) => {
   let col = `coalesce(sum(amount) filter(where tila = '${tila}'), 0) as ${tila}_amount`;
   if (entity === "toteutus") {
     col += `, coalesce(sum(jotpa_amount) filter(where tila = '${tila}'), 0) as ${tila}_jotpa_amount`;
@@ -78,11 +78,11 @@ export const queryPulssiAmounts = async (
   );
 };
 
-const toteutusRowHasChanged = (row1: ToteutusRow, row2: ToteutusRow) => {
-  return row1.amount !== row2.amount || 
-    row1.jotpa_amount !== row2.jotpa_amount || 
-    row1.taydennyskoulutus_amount !== row2.taydennyskoulutus_amount || 
-    row1.tyovoimakoulutus_amount !== row2.tyovoimakoulutus_amount;
+export const toteutusRowHasChanged = (existingRow: ToteutusRow, newRow: ToteutusRow) => {
+  return Number(existingRow.amount) !== newRow.amount || 
+    Number(existingRow.jotpa_amount) !== newRow.jotpa_amount || 
+    Number(existingRow.taydennyskoulutus_amount) !== newRow.taydennyskoulutus_amount || 
+    Number(existingRow.tyovoimakoulutus_amount) !== newRow.tyovoimakoulutus_amount;
 };
 
 const saveToteutusAmounts = async (

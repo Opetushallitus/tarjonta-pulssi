@@ -1,0 +1,31 @@
+table {
+  box-sizing: border-box;
+  border-collapse: collapse;
+}
+
+th.row {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  text-align: right;
+}
+
+th.col {
+  border-right: 1px solid rgba(0, 0, 0, 0.15);
+  text-align: left;
+}
+
+td,
+th {
+  padding: 8px;
+}
+
+th {
+  font-weight: 500;
+}
+
+td.content {
+  text-align: right;
+}
+
+tfoot {
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+}
