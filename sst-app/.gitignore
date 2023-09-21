@@ -1,0 +1,9 @@
+node_modules
+
+/.sst
+/.cache
+/build
+/packages/frontend/.cache
+/packages/frontend/build
+/packages/frontend/public/build
+.env
