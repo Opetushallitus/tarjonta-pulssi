@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-echo "Launching tarjontapulssi-database."
-
-docker run --rm -d --name tarjontapulssi-database --env POSTGRES_PASSWORD=postgres -p 5432:5432 tarjontapulssi-postgres
-
-echo "Done."

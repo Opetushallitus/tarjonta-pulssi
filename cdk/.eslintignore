@@ -1,5 +1,0 @@
-node_modules
-cdk.out
-cdk/*.js
-!migrate.js
-cdk/*.d.ts
