@@ -1,14 +1,12 @@
-import { useMemo } from "react";
 import ArrowRightIcon from "@mui/icons-material/ArrowRightOutlined";
 import { Box, styled, Typography } from "@mui/material";
-import type { EntityType } from "../../../cdk/shared/types";
-import type { EntityDataWithSubKey, SubKeyWithAmounts, WithAmounts } from "~/servers/types";
+import type { EntityType } from "../../../shared/types";
+import type { EntityDataWithSubKey, WithAmounts } from "~/servers/types";
 import { useTranslation } from "react-i18next";
 
 type SubRowProps = {
-  titleKey: string;
-  amounts: WithAmounts;
-};
+  subkey: string;
+} & WithAmounts;
 
 type RowProps = {
   titleKey: string;
@@ -16,8 +14,6 @@ type RowProps = {
   subRows?: Array<SubRowProps>;
   indent?: boolean;
 };
-
-type Entry = [string, SubKeyWithAmounts];
 
 const formatContent = (currentValue: Number, oldValue: Number) => {
   if (!Number.isNaN(currentValue)) {
@@ -64,40 +60,10 @@ const ContentRow = ({
         </td>
       </tr>
       {subRows.map((rowProps) => (
-        <ContentRow key={rowProps.titleKey} {...rowProps} indent={true} />
+        <ContentRow key={rowProps.subkey} titleKey={rowProps.subkey} amounts={rowProps} indent={true} />
       ))}
     </>
   ) : null;
-};
-
-const sortEntries = (entries: Array<Entry>) => 
-  entries.sort((entry1, entry2) => (entry1[0] > entry2[0] ? 1 : -1));
-
-const sortSubEntries = (entries: Array<Entry>) => 
-  entries.sort((entry1, entry2) => {
-    if (entry1[0].toLowerCase()?.includes("muu")) {
-      //return 1;
-    }
-    return entry1[0] > entry2[0] ? 1 : -1;
-  });
-
-const useDataRows = (v: SubKeyWithAmounts) => {
-  return useMemo(() => {
-    const subEntries = Object.entries(v).filter(
-      (ss) => !ss?.[0]?.endsWith("_amount") && !ss?.[0]?.endsWith("_old")
-    ) as Array<Entry>;
-    return sortSubEntries(subEntries).map(([k, v]) => ({
-      titleKey: k,
-      amounts: v
-    }));
-  }, [v]);
-};
-
-const EntryRow = ({ entry }: { entry: Entry }) => {
-  const [k, v] = entry;
-  const subRows = useDataRows(v);
-
-  return <ContentRow titleKey={k} amounts={v} subRows={subRows} />;
 };
 
 const JoistaHeading = styled(Typography)`
@@ -112,9 +78,6 @@ export const EntityTable = ({
   data: EntityDataWithSubKey;
   entity: EntityType;
 }) => {
-  const childEntries = Object.entries(
-    data.by_hakutapa ? data.by_hakutapa : data.by_tyyppi
-  );
   const { t } = useTranslation();
 
   return (
@@ -135,8 +98,8 @@ export const EntityTable = ({
             </tr>
           </thead>
           <tbody>
-            {sortEntries(childEntries).map((entry) => (
-              <EntryRow key={entry[0]} entry={entry} />
+            {data.items.map((entry) => (
+              <ContentRow key={entry.subkey} titleKey={entry.subkey} amounts={entry} subRows={entry.items}/>
             ))}
           </tbody>
           <tfoot>

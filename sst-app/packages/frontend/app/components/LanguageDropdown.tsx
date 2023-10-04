@@ -5,7 +5,7 @@ import { Select, MenuItem, InputBase, Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
 import { LANGUAGES_BY_CODE } from "~/constants";
-import { SUPPORTED_LANGUAGES } from "../../../../../cdk/shared/constants"
+import { SUPPORTED_LANGUAGES } from "../../../shared/constants"
 import { useTranslation } from "react-i18next";
 import { useFetcher } from "@remix-run/react";
 

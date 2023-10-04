@@ -1,4 +1,4 @@
-import { ENTITY_TYPES, SUPPORTED_LANGUAGES } from "./constants";
+import type { ENTITY_TYPES, SUPPORTED_LANGUAGES } from "./constants";
 
 export type EntityType = typeof ENTITY_TYPES[number];
 

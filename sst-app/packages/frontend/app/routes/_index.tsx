@@ -1,7 +1,7 @@
 import { Box, Paper, Typography, styled } from "@mui/material";
 import { EntityTable } from "~/components/EntityTable";
 import { Header } from "~/components/Header";
-import type { EntityType } from "../../../../../cdk/shared/types";
+import type { EntityType } from "../../../shared/types";
 import type { EntityDataWithSubKey } from "~/servers/types";
 import { ICONS } from "~/constants";
 import { type LoaderFunction, type ActionFunction, type LinksFunction, redirect } from "@remix-run/node";
@@ -10,7 +10,7 @@ import { useFetcher, useLoaderData } from "@remix-run/react";
 import mainStylesUrl from "~/styles/index.css";
 import tableStylesUrl from "~/styles/table.css";
 import { useTranslation } from "react-i18next";
-import { CURRENT_DATE_TIME, HistorySearchSection, PULSSI_START_DATE_TIME } from "~/components/HistorySearchSection";
+import { HistorySearchSection } from "~/components/HistorySearchSection";
 import { useState } from "react";
 import { P, match } from "ts-pattern";
 

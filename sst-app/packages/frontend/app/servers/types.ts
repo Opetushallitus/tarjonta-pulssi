@@ -5,19 +5,14 @@ export type WithAmounts = {
   arkistoitu_amount_old?: number;
 };
 
-export type SubKeyWithAmounts = {
-  [key in string]?: SubKeyWithAmounts;
-} & WithAmounts;
-
 export type EntitySubKey = "by_tyyppi" | "by_hakutapa";
 
-type OneKey<K extends string, V = unknown> = {
-  [P in K]: Record<P, V> & Partial<Record<Exclude<K, P>, never>> extends infer O
-    ? { [Q in keyof O]: O[Q] }
-    : never;
-}[K];
+export type SubKeyWithAmounts = {
+  subkey: string;
+  items?: Array<SubKeyWithAmounts>;
+} & WithAmounts;
 
-export type EntityDataWithSubKey<K extends EntitySubKey = EntitySubKey> = {
+export type EntityDataWithSubKey = {
   by_tila: WithAmounts & {
     julkaistu_jotpa_amount?: number;
     julkaistu_jotpa_amount_old?: number;
@@ -31,17 +26,53 @@ export type EntityDataWithSubKey<K extends EntitySubKey = EntitySubKey> = {
     julkaistu_tyovoimakoulutus_amount_old?: number;
     arkistoitu_tyovoimakoulutus_amount?: number;
     arkistoitu_tyovoimakoulutus_amount_old?: number;
-  };
-} & OneKey<
-  K,
-  {
-    [key in string]: SubKeyWithAmounts;
-  }
->;
+  },
+  items: Array<SubKeyWithAmounts>;
+}
 
 export type PulssiData = {
-  koulutukset: EntityDataWithSubKey<"by_tyyppi">;
-  toteutukset: EntityDataWithSubKey<"by_tyyppi">;
-  hakukohteet: EntityDataWithSubKey<"by_tyyppi">;
-  haut: EntityDataWithSubKey<"by_hakutapa">;
+  koulutukset: EntityDataWithSubKey;
+  toteutukset: EntityDataWithSubKey;
+  hakukohteet: EntityDataWithSubKey;
+  haut: EntityDataWithSubKey;
+}
+
+export type SubEntityField = "hakutapa" | "tyyppi_path";
+export type SubEntityTila = "julkaistu" | "arkistoitu";
+export type EntityPlural = "koulutukset" | "toteutukset" | "hakukohteet" | "haut"
+
+export type SubEntitiesByEntities = {
+  koulutukset: Array<string>,
+  toteutukset: Array<string>,
+  hakukohteet: Array<string>,
+  haut: Array<string>
+}
+
+export type SubEntityAmounts = {
+  julkaistu: Array<string>,
+  arkistoitu: Array<string>,
+};
+
+export type SubEntitiesByEntitiesByTila = {
+  koulutukset: SubEntityAmounts,
+  toteutukset: SubEntityAmounts,
+  hakukohteet: SubEntityAmounts,
+  haut: SubEntityAmounts
+}
+
+export type DatabaseRow = {
+  sub_entity: string,
+  tila: SubEntityTila,
+  start_timestamp: string,
+  amount: number,
+  jotpa_amount?: number,
+  taydennyskoulutus_amount?: number,
+  tyovoimakoulutus_amount?: number,
+}
+
+export const EMPTY_DATABASE_RESULTS = {
+  koulutukset: [],
+  toteutukset: [],
+  hakukohteet: [],
+  haut: []
 };
