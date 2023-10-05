@@ -7,3 +7,5 @@ node_modules
 /packages/frontend/build
 /packages/frontend/public/build
 .env
+cdk.context.json
+cdk.out

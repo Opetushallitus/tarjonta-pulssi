@@ -92,6 +92,7 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
 // Other Lambdas to assist with managing the static content deployments
 // (clears other resources from the bucket and does CloudFront Cache Invalidations)
   const site = new RemixSite(stack, "site", {
+    path: "packages/frontend",
     bind: [dbApi],
     customDomain: {
       domainName: OPHdomainName, 
@@ -107,7 +108,7 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
   );
 
   const PostgreSQLSG = SecurityGroup.fromSecurityGroupId(
-    this,
+    stack,
     "PostgreSqlsSecurityGroup",
     PostgreSQLSGId
   );
