@@ -1,8 +1,16 @@
 import type { StackContext} from "sst/constructs";
 import { RemixSite, Api } from "sst/constructs";
 import { Vpc, SubnetType, SecurityGroup, Port } from "aws-cdk-lib/aws-ec2";
-import { Fn, Token } from "aws-cdk-lib";
+import { Fn, Token, Duration } from "aws-cdk-lib";
 import { PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
+import { NodejsFunction, OutputFormat } from "aws-cdk-lib/aws-lambda-nodejs";
+import { Rule, Schedule } from "aws-cdk-lib/aws-events";
+import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
+import {
+  Runtime,
+  Architecture,
+} from "aws-cdk-lib/aws-lambda";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 
 export function TARJONTAPULSSI({ stack }: StackContext) {
@@ -100,6 +108,67 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
     }
   });
 
+//  SST does not support externalModules for nodejs packages, 
+//  therefore using pure CDK to create TarjontaPulssiUpdater Lambda and schedule
+
+  const tarjontaPulssiUpdaterSg = new SecurityGroup(stack, "TarjontaPulssiUpdaterLambdaSecurityGroup", { vpc: ophVpc })
+
+  const tarjontaPulssiUpdaterLambda = new NodejsFunction(
+    stack,
+    "TarjontaPulssiUpdaterLambda",
+    {
+      entry: "packages/functions/src/pulssiUpdater.ts",
+      handler: "main",
+      runtime: Runtime.NODEJS_16_X,
+      logRetention: RetentionDays.ONE_YEAR,
+      architecture: Architecture.ARM_64,
+      timeout: Duration.seconds(10),
+      vpc: ophVpc,
+      vpcSubnets: {
+        subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+      },
+      securityGroups: [tarjontaPulssiUpdaterSg],
+      environment: {
+        KOUTA_POSTGRES_RO_USER: `/${stack.stage}/postgresqls/kouta/readonly-user-name`,
+        KOUTA_POSTGRES_RO_PASSWORD: `/${stack.stage}/postgresqls/kouta/readonly-user-password`,
+        PUBLICHOSTEDZONE: OPHhostedZone,
+        TARJONTAPULSSI_POSTGRES_APP_USER: `/${stack.stage}/postgresqls/tarjontapulssi/app-user-name`,
+        TARJONTAPULSSI_POSTGRES_APP_PASSWORD: `/${stack.stage}/postgresqls/tarjontapulssi/app-user-password`,
+        KOUTA_ELASTIC_URL_WITH_CREDENTIALS: `/${stack.stage}/services/kouta-indeksoija/kouta-indeksoija-elastic7-url-with-credentials`,
+      },
+      initialPolicy: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          resources: [
+            `arn:aws:ssm:eu-west-1:*:parameter/${stack.stage}/postgresqls/kouta/readonly-user-name`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${stack.stage}/postgresqls/kouta/readonly-user-password`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${stack.stage}/postgresqls/tarjontapulssi/app-user-name`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${stack.stage}/postgresqls/tarjontapulssi/app-user-password`,
+            `arn:aws:ssm:eu-west-1:*:parameter/${stack.stage}/services/kouta-indeksoija/kouta-indeksoija-elastic7-url-with-credentials`,
+          ],
+          actions: ["ssm:GetParameter"],
+        }),
+      ],
+      bundling: {
+        // pg-native is not available and won't be used. This is letting the
+        // bundler (esbuild) know pg-native won't be included in the bundled JS
+        // file.
+        externalModules: ["aws-sdk", "pg-native"],
+        // https://github.com/aws/aws-sdk-js-v3/issues/3023
+        sourcesContent: false,
+        mainFields: ["module", "main"],
+        format: OutputFormat.ESM,
+        banner:
+          "import {createRequire} from 'module';const require = createRequire(import.meta.url)",
+      },
+    }
+  );
+  
+    const scheduleRule = new Rule(stack, "scheduleRule", {
+      schedule: Schedule.rate(Duration.minutes(10)),
+    });
+    scheduleRule.addTarget(new LambdaFunction(tarjontaPulssiUpdaterLambda));
+
 // Security group rules so that api can talk to the necessary database on TCP/IP level
 // The databases & elastic search are defined in cloud-base, so their security groups
 // must be first imported.
@@ -115,19 +184,20 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
 
   PostgreSQLSG.connections.allowFrom(siteSg, Port.tcp(3306))
 
-// In case Elastic Search access is needed later on  
-//  const ElasticSearchEndpointSGId = Token.asString(
-//    Fn.importValue(`${stack.stage}-ElasticsearchSG`)
-//  );
-  
-//  const ElasticSearchEndpointSG = SecurityGroup.fromSecurityGroupId(
-//    this,
-//    "ElasticSearchEndpointSecurityGroup",
-//    ElasticSearchEndpointSGId
-//  );
+// Security Group rules so that TarjontaPulssi Updater Lambda can talk to Elastic Search endpoint & Tarjonta-pulssi Postgresql
+const ElasticSearchEndpointSGId = Token.asString(
+  Fn.importValue(`${stack.stage}-ElasticsearchSG`)
+);
 
-//  ElasticSearchEndpointSG.connections.allowFrom(siteSg, Port.tcp(9243))
-//  ElasticSearchEndpointSG.connections.allowFrom(siteSg, Port.tcp(443)) 
+const ElasticSearchEndpointSG = SecurityGroup.fromSecurityGroupId(
+  stack,
+  "ElasticSearchEndpointSecurityGroup",
+  ElasticSearchEndpointSGId
+);
+
+ElasticSearchEndpointSG.connections.allowFrom(tarjontaPulssiUpdaterSg, Port.tcp(9243));
+ElasticSearchEndpointSG.connections.allowFrom(tarjontaPulssiUpdaterSg, Port.tcp(443));
+PostgreSQLSG.connections.allowFrom(tarjontaPulssiUpdaterSg, Port.tcp(3306));
     
 
 
