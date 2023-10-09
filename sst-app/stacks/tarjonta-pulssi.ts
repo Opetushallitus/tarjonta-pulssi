@@ -108,6 +108,10 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
     }
   });
 
+  site.attachPermissions([
+    dbApi
+  ]);
+
 //  SST does not support externalModules for nodejs packages, 
 //  therefore using pure CDK to create TarjontaPulssiUpdater Lambda and schedule
 
