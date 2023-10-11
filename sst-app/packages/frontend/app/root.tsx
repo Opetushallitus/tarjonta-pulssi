@@ -19,8 +19,8 @@ export const meta: V2_MetaFunction = ({data}) => {
 
 export const loader = async ({request}: LoaderArgs) => {
   let t = await i18next.getFixedT(request);
-  let title = t("sivu_otsikko");
   let locale = await i18next.getLocale(request);
+  let title = t(`sivu_otsikko.${locale}`);
   return json({ title, locale });
 };
 

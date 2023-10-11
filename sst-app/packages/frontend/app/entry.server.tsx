@@ -44,7 +44,7 @@ export default async function handleRequest(
           lng, // The locale we detected above
           ns, // The namespaces the routes about to render wants to use
           backend: { 
-            loadPath: resolve("./public/locales/{{lng}}/translations.json")
+            loadPath: resolve("./public/locales/translation.json")
           },
         });  
     return new Promise((resolve, reject) => {

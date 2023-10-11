@@ -1,7 +1,7 @@
 import { Umzug } from "umzug";
 import fs from "fs";
 import path from "path";
-import { ClientBase } from "pg";
+import type { ClientBase } from "pg";
 
 const MIGRATIONS_TABLE_NAME = "umzug_migrations";
 

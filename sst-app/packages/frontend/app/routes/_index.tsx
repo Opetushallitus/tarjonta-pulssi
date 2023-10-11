@@ -1,18 +1,28 @@
 import { Box, Paper, Typography, styled } from "@mui/material";
 import { EntityTable } from "~/components/EntityTable";
+import type { URLData } from "~/components/Header";
 import { Header } from "~/components/Header";
-import type { EntityType } from "../../../shared/types";
-import type { EntityDataWithSubKey } from "~/servers/types";
+import type { EntityType, EntityDataWithSubKey, PulssiData } from "../../../shared/types";
 import { ICONS } from "~/constants";
-import { type LoaderFunction, type ActionFunction, type LinksFunction, redirect } from "@remix-run/node";
-import { getCurrentAmountDataFromDb, getAmountDataFromTestFile } from "~/servers/amount.server";
+import {
+  type LoaderFunction,
+  type ActionFunction,
+  type LinksFunction,
+  redirect,
+} from "@remix-run/node";
+import {
+  getCurrentAmountData,
+  getHistoryAmountData,
+} from "~/servers/amount.server";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import mainStylesUrl from "~/styles/index.css";
 import tableStylesUrl from "~/styles/table.css";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "~/hooks/useTranslation";
 import { HistorySearchSection } from "~/components/HistorySearchSection";
 import { useState } from "react";
 import { P, match } from "ts-pattern";
+import { format, parse } from "date-fns";
+import { DATETIME_FORMAT } from "../../../shared/constants";
 
 const StyledEntitySection = styled(Paper)`
   border: 1px solid rgba(0, 0, 0, 0.15);
@@ -48,7 +58,7 @@ const SectionHeading = styled(Typography)`
 
 const EntitySection = ({
   entity,
-  data
+  data,
 }: {
   entity: EntityType;
   data: EntityDataWithSubKey;
@@ -67,24 +77,44 @@ const EntitySection = ({
   );
 };
 
-export const loader: LoaderFunction = async ({request}) => {
+type ServerSideData = {
+  data: PulssiData;
+  currentUrl: URLData;
+}
+
+export const loader: LoaderFunction = async ({ request }) => {
   const url = new URL(request.url);
+  const currentUrl: URLData = { protocol: url.protocol, host: url.host};
   const start = url.searchParams.get("start");
   const end = url.searchParams.get("end");
-  return await getAmountDataFromTestFile(start !== null || end !== null);
+  if (start && end) {
+    const referenceDate = new Date();
+    const data = await getHistoryAmountData(
+      start !== "undefined"
+        ? parse(start, DATETIME_FORMAT, referenceDate)
+        : null,
+      end !== "undefined" ? parse(end, DATETIME_FORMAT, referenceDate) : null
+    );
+    return { data, currentUrl };
+  }
+  return { data: await getCurrentAmountData(), currentUrl };
 };
 
-const setSearchParameter = (paramName: string, formData: FormData, searchParameters: URLSearchParams) => {
+const setSearchParameter = (
+  paramName: string,
+  formData: FormData,
+  searchParameters: URLSearchParams
+) => {
   const paramValue = formData.get(paramName);
   if (paramValue) {
     searchParameters.set(paramName, paramValue.toString());
   }
-}
+};
 
-export const action: ActionFunction = async ({request}) => {
-  const formData = await request.formData()
+export const action: ActionFunction = async ({ request }) => {
+  const formData = await request.formData();
   const url = new URL(request.url);
-  const newUrl = new URL(url)
+  const newUrl = new URL(url);
   const newSearchParams = new URLSearchParams(url.search);
   setSearchParameter("lng", formData, newSearchParams);
   setSearchParameter("start", formData, newSearchParams);
@@ -95,17 +125,20 @@ export const action: ActionFunction = async ({request}) => {
   }
   newUrl.search = newSearchParams.toString();
   return redirect(newUrl.toString());
-}
+};
 
 export const links: LinksFunction = () => {
-  return [{ rel: "stylesheet", href: mainStylesUrl }, { rel: "stylesheet", href: tableStylesUrl }];
+  return [
+    { rel: "stylesheet", href: mainStylesUrl },
+    { rel: "stylesheet", href: tableStylesUrl },
+  ];
 };
 
 export default function Index() {
-  const {koulutukset, toteutukset, hakukohteet, haut} = useLoaderData();
+  const { data, currentUrl } = useLoaderData<ServerSideData>();
   const [historyOpen, showHistory] = useState(false);
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const fetcher = useFetcher();
 
   const toggleHistory = () => {
@@ -113,35 +146,47 @@ export default function Index() {
     if (!historyOpen) {
       executeHistoryQuery(startDate, endDate);
     } else {
-      fetcher.submit({showCurrent: "true"}, {method: "POST"});
+      fetcher.submit({ showCurrent: "true" }, { method: "POST" });
     }
   };
 
-  const executeHistoryQuery = (start: Date | null, end: Date | null) => {
+  const executeHistoryQuery = (start: Date | null, end: Date | null) => {
     setStartDate(start);
     setEndDate(end);
 
     const searchParams = match([start, end])
-      .with([P.not(null), P.not(null)], ([startVal, endVal]) => 
-        ({ start: startVal.toISOString(), end: endVal.toISOString()}))
-      .with([P.not(null), null], ([startVal, _]) => 
-        ({start: startVal.toISOString(), end: "undefined"}))
-      .with([null, P.not(null)], ([_, endVal]) => 
-        ({start: "undefined", end: endVal.toISOString()}))
-      .otherwise(() => 
-        ({start: "undefined", end: "undefined"}));
-    
-    fetcher.submit( searchParams, {method: "POST"});
-  }
+      .with([P.not(null), P.not(null)], ([startVal, endVal]) => ({
+        start: format(startVal, DATETIME_FORMAT),
+        end: format(endVal, DATETIME_FORMAT),
+      }))
+      .with([P.not(null), null], ([startVal, _]) => ({
+        start: format(startVal, DATETIME_FORMAT),
+        end: "undefined",
+      }))
+      .with([null, P.not(null)], ([_, endVal]) => ({
+        start: "undefined",
+        end: format(endVal, DATETIME_FORMAT),
+      }))
+      .otherwise(() => ({ start: "undefined", end: "undefined" }));
 
-  return <div className="App">
-      <Header historyOpen={historyOpen} toggleHistory={toggleHistory}/>
-      <HistorySearchSection isOpen={historyOpen} start={startDate} end={endDate} onSearchRangeChange={executeHistoryQuery}/>
+    fetcher.submit(searchParams, { method: "POST" });
+  };
+
+  return (
+    <div className="App">
+      <Header historyOpen={historyOpen} toggleHistory={toggleHistory} currentUrl={currentUrl}/>
+      <HistorySearchSection
+        isOpen={historyOpen}
+        start={startDate}
+        end={endDate}
+        onSearchRangeChange={executeHistoryQuery}
+      />
       <div className="Content">
-        <EntitySection entity="koulutus" data={koulutukset} />
-        <EntitySection entity="toteutus" data={toteutukset} />
-        <EntitySection entity="hakukohde" data={hakukohteet} />
-        <EntitySection entity="haku" data={haut} />
+        <EntitySection entity="koulutus" data={data.koulutukset} />
+        <EntitySection entity="toteutus" data={data.toteutukset} />
+        <EntitySection entity="hakukohde" data={data.hakukohteet} />
+        <EntitySection entity="haku" data={data.haut} />
       </div>
-    </div>;
+    </div>
+  );
 }

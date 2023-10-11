@@ -62,7 +62,7 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
 
   const dbApi = new Api(stack, "api", {
     defaults: {
-      authorizer: "iam",
+      //authorizer: "iam",
       function: {
         environment: {
         //   KOUTA_POSTGRES_RO_USER: `/${stack.stage}/postgresqls/kouta/readonly-user-name`,
@@ -102,6 +102,9 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
   const site = new RemixSite(stack, "site", {
     path: "packages/frontend",
     bind: [dbApi],
+    environment: { 
+      DB_API_URL: dbApi.url
+    },
     customDomain: {
       domainName: OPHdomainName, 
       hostedZone: OPHhostedZone,

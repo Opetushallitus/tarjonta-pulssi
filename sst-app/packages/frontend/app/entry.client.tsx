@@ -15,19 +15,19 @@ async function hydrate() {
     .use(initReactI18next) // Tell i18next to use the react-i18next plugin
     .use(LanguageDetector) // Setup a client-side language detector
     .use(Backend) // Setup your backend
+    //.services
     .init({
       ...i18n, // spread the configuration
       // This function detects the namespaces your routes rendered while SSR use
       ns: getInitialNamespaces(),
       backend: { 
-        loadPath: "/locales/{{lng}}/translations.json"
+        loadPath: "/locales/translation.json"
       },
       detection: {
         // Here only enable htmlTag detection, we'll detect the language only
         // server-side with remix-i18next, by using the `<html lang>` attribute
         // we can communicate to the client the language detected server-side
-        order: ["queryString", "htmlTag"],
-        lookupQuerystring: 'lng',
+        order: ["htmlTag"],
         // Because we only use htmlTag, there's no reason to cache the language
         // on the browser, so we disable it
         caches: [],

@@ -1,10 +1,11 @@
+import type {
+  ApiResponse} from "@elastic/elasticsearch";
 import {
-  ApiResponse,
   Client as ElasticSearchClient,
 } from "@elastic/elasticsearch";
 import type { Client as IElasticSearchClient } from "@elastic/elasticsearch/api/new";
 
-import {
+import type {
   AggregationsBuckets,
   AggregationsStringTermsAggregate,
   AggregationsStringTermsBucket,
@@ -12,7 +13,7 @@ import {
   MsearchResponse,
 } from "@elastic/elasticsearch/api/types";
 import { ENTITY_TYPES } from "./constants";
-import { EntityType, Row } from "./types";
+import type { EntityType, Row } from "./types";
 import { getSSMParam } from "./awsUtils";
 
 export const connectElastic = async () => {

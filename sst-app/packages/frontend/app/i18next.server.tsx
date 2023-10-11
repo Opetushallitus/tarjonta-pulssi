@@ -13,7 +13,7 @@ let i18next = new RemixI18Next({
   i18next: {
     ...i18n,
     backend: {
-      loadPath: resolve("./public/locales/{{lng}}/translations.json")
+      loadPath: resolve("./public/locales/translation.json")
     },
   },
   // The backend you want to use to load the translations

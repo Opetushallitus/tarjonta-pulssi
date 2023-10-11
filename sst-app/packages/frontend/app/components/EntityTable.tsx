@@ -1,8 +1,7 @@
 import ArrowRightIcon from "@mui/icons-material/ArrowRightOutlined";
 import { Box, styled, Typography } from "@mui/material";
-import type { EntityType } from "../../../shared/types";
-import type { EntityDataWithSubKey, WithAmounts } from "~/servers/types";
-import { useTranslation } from "react-i18next";
+import type { EntityType, EntityDataWithSubKey, WithAmounts } from "../../../shared/types";
+import { useTranslation } from "../hooks/useTranslation";
 
 type SubRowProps = {
   subkey: string;

@@ -1,71 +1,131 @@
 {
   "koulutukset": {
-    "by_tila": { "julkaistu_amount": 275, "arkistoitu_amount": 212 },
-    "by_tyyppi": {
-      "kk-muu": {
-        "julkaistu_amount": 111,
-        "arkistoitu_amount": 90,
-        "ope-pedag-opinnot": {
+    "by_tila": { "julkaistu_amount": 276, "arkistoitu_amount": 213 },
+    "items": [{
+      "subkey": "kk-muu",
+      "julkaistu_amount": 104,
+      "arkistoitu_amount": 85,
+      "items": [
+        {
+          "subkey": "ope-pedag-opinnot",
           "julkaistu_amount": 18,
           "arkistoitu_amount": 15
         },
-        "kk-opintojakso": { "julkaistu_amount": 12, "arkistoitu_amount": 9 },
-        "kk-opintojakso-avoin": {
+        {
+          "subkey": "kk-opintojakso",
+          "julkaistu_amount": 12, 
+          "arkistoitu_amount": 9 
+        },
+        {
+          "subkey": "kk-opintojakso-avoin",
           "julkaistu_amount": 13,
           "arkistoitu_amount": 10
         },
-        "kk-opintokokonaisuus-avoin": {
+        {
+          "subkey": "kk-opintokokonaisuus-avoin",
           "julkaistu_amount": 15,
           "arkistoitu_amount": 12
         },
-        "kk-opintokokonaisuus": {
+        {
+          "subkey": "kk-opintokokonaisuus",
           "julkaistu_amount": 14,
           "arkistoitu_amount": 11
         },
-        "erikoistumiskoulutus": {
+        {
+          "subkey": "erikoistumiskoulutus",
           "julkaistu_amount": 17,
           "arkistoitu_amount": 14
         },
-        "erikoislaakari": { "julkaistu_amount": 16, "arkistoitu_amount": 13 }
+        {
+          "subkey": "erikoislaakari",
+          "julkaistu_amount": 16, 
+          "arkistoitu_amount": 13 
+        }]
       },
-      "tuva": { "julkaistu_amount": 21, "arkistoitu_amount": 18 },
-      "vapaa-sivistystyo": { "julkaistu_amount": 20, "arkistoitu_amount": 17 },
-      "amm-tutkintoon-johtamaton": {
-        "julkaistu_amount": 29,
-        "arkistoitu_amount": 17,
-        "amm-tutkinnon-osa": { "julkaistu_amount": 7, "arkistoitu_amount": 4 },
-        "amm-osaamisala": { "julkaistu_amount": 6, "arkistoitu_amount": 3 },
-        "telma": { "julkaistu_amount": 5, "arkistoitu_amount": 2 },
-        "amm-muu": { "julkaistu_amount": 8, "arkistoitu_amount": 5 }
+      {
+        "subkey": "tuva",
+        "julkaistu_amount": 21, 
+        "arkistoitu_amount": 18 
       },
-      "aikuisten-perusopetus": {
+      {
+        "subkey": "vapaa-sivistystyo", 
+        "julkaistu_amount": 20, 
+        "arkistoitu_amount": 17 
+      },
+      {
+        "subkey": "amm-tutkintoon-johtamaton",
+        "julkaistu_amount": 24,
+        "arkistoitu_amount": 12,
+        "items": [
+          {
+            "subkey": "amm-tutkinnon-osa",
+            "julkaistu_amount": 7, 
+            "arkistoitu_amount": 4 
+          },
+          {
+            "subkey": "amm-osaamisala", 
+            "julkaistu_amount": 6, 
+            "arkistoitu_amount": 3 
+          },
+          {
+            "subkey": "telma", 
+            "julkaistu_amount": 5, 
+            "arkistoitu_amount": 2 
+          },
+          {
+            "subkey": "amm-muu", 
+            "julkaistu_amount": 8, 
+            "arkistoitu_amount": 5 
+          }]
+      },
+      {
+        "subkey": "aikuisten-perusopetus",
         "julkaistu_amount": 4,
         "arkistoitu_amount": 1
       },
-      "amm-ope-erityisope-ja-opo": {
+      {
+        "subkey": "amm-ope-erityisope-ja-opo",
         "julkaistu_amount": 11,
         "arkistoitu_amount": 8
       },
-      "taiteen-perusopetus": {
+      {
+        "subkey": "taiteen-perusopetus",
         "julkaistu_amount": 22,
         "arkistoitu_amount": 19
       },
-      "kk": {
-        "julkaistu_amount": 20,
-        "arkistoitu_amount": 14,
-        "amk": { "julkaistu_amount": 9, "arkistoitu_amount": 6 },
-        "yo": { "julkaistu_amount": 10, "arkistoitu_amount": 7 }
+      {
+        "subkey": "kk",
+        "julkaistu_amount": 19,
+        "arkistoitu_amount": 13,
+        "items": [
+          {
+            "subkey": "amk", 
+            "julkaistu_amount": 9, 
+            "arkistoitu_amount": 6 
+          },
+          {
+            "subkey": "yo", 
+            "julkaistu_amount": 10, 
+            "arkistoitu_amount": 7 
+          }]
       },
-      "amm": {
+      {
+        "subkey": "amm",
         "julkaistu_amount": 9,
         "arkistoitu_amount": 3,
-        "muu-amm-tutkintoon-johtava": {
-          "julkaistu_amount": 9,
-          "arkistoitu_amount": 3
-        }
+        "items": [
+          {
+            "subkey": "muu-amm-tutkintoon-johtava",
+            "julkaistu_amount": 9,
+            "arkistoitu_amount": 3
+          }]
       },
-      "lk": { "julkaistu_amount": 19, "arkistoitu_amount": 16 }
-    }
+      {
+        "subkey": "lk", 
+        "julkaistu_amount": 19, 
+        "arkistoitu_amount": 16 
+      }
+    ]
   },
   "toteutukset": {
     "by_tila": {
@@ -78,143 +138,295 @@
       "julkaistu_tyovoimakoulutus_amount": 21,
       "arkistoitu_tyovoimakoulutus_amount": 18
     },
-    "by_tyyppi": {
-      "kk-muu": {
-        "julkaistu_amount": 111,
-        "arkistoitu_amount": 90,
-        "kk-opintokokonaisuus-avoin": {
-          "julkaistu_amount": 15,
-          "arkistoitu_amount": 12
-        },
-        "erikoislaakari": { "julkaistu_amount": 16, "arkistoitu_amount": 13 },
-        "erikoistumiskoulutus": {
-          "julkaistu_amount": 17,
-          "arkistoitu_amount": 14
-        },
-        "kk-opintojakso-avoin": {
-          "julkaistu_amount": 13,
-          "arkistoitu_amount": 10
-        },
-        "kk-opintokokonaisuus": {
-          "julkaistu_amount": 14,
-          "arkistoitu_amount": 11
-        },
-        "kk-opintojakso": { "julkaistu_amount": 12, "arkistoitu_amount": 9 },
-        "ope-pedag-opinnot": { "julkaistu_amount": 18, "arkistoitu_amount": 15 }
+    "items": [
+      {
+        "subkey": "kk-muu",
+        "julkaistu_amount": 105,
+        "arkistoitu_amount": 84,
+        "items": [
+          {
+            "subkey": "kk-opintokokonaisuus-avoin",
+            "julkaistu_amount": 15,
+            "arkistoitu_amount": 12
+          },
+          {
+            "subkey": "erikoislaakari", 
+            "julkaistu_amount": 16, 
+            "arkistoitu_amount": 13 
+          },
+          {
+            "subkey": "erikoistumiskoulutus",
+            "julkaistu_amount": 17,
+            "arkistoitu_amount": 14
+          },
+          {
+            "subkey": "kk-opintojakso-avoin",
+            "julkaistu_amount": 13,
+            "arkistoitu_amount": 10
+          },
+          {
+            "subkey": "kk-opintokokonaisuus",
+            "julkaistu_amount": 14,
+            "arkistoitu_amount": 11
+          },
+          {
+            "subkey": "kk-opintojakso", 
+            "julkaistu_amount": 12, 
+            "arkistoitu_amount": 9 
+          },
+          {
+            "subkey": "ope-pedag-opinnot", 
+            "julkaistu_amount": 18, 
+            "arkistoitu_amount": 15 
+          }]
       },
-      "aikuisten-perusopetus": {
+      {
+        "subkey": "aikuisten-perusopetus",
         "julkaistu_amount": 4,
         "arkistoitu_amount": 1
       },
-      "tuva": { "julkaistu_amount": 21, "arkistoitu_amount": 18 },
-      "vapaa-sivistystyo": { "julkaistu_amount": 20, "arkistoitu_amount": 17 },
-      "kk": {
-        "julkaistu_amount": 20,
-        "arkistoitu_amount": 14,
-        "yo": { "julkaistu_amount": 10, "arkistoitu_amount": 7 },
-        "amk": { "julkaistu_amount": 9, "arkistoitu_amount": 6 }
+      {
+        "subkey": "tuva", 
+        "julkaistu_amount": 21, 
+        "arkistoitu_amount": 18 
       },
-      "amm-ope-erityisope-ja-opo": {
+      {
+        "subkey": "vapaa-sivistystyo", 
+        "julkaistu_amount": 20, 
+        "arkistoitu_amount": 17 
+      },
+      {
+        "subkey": "kk",
+        "julkaistu_amount": 19,
+        "arkistoitu_amount": 15,
+        "items": [
+          {
+            "subkey": "yo", 
+            "julkaistu_amount": 10, 
+            "arkistoitu_amount": 8 
+          },
+          {
+            "subkey": "amk", 
+            "julkaistu_amount": 9, 
+            "arkistoitu_amount": 7 
+          }]
+      },
+      {
+        "subkey": "amm-ope-erityisope-ja-opo",
         "julkaistu_amount": 11,
         "arkistoitu_amount": 8
       },
-      "amm-tutkintoon-johtamaton": {
-        "julkaistu_amount": 29,
-        "arkistoitu_amount": 17,
-        "amm-tutkinnon-osa": { "julkaistu_amount": 7, "arkistoitu_amount": 4 },
-        "amm-osaamisala": { "julkaistu_amount": 6, "arkistoitu_amount": 3 },
-        "telma": { "julkaistu_amount": 5, "arkistoitu_amount": 2 },
-        "amm-muu": { "julkaistu_amount": 8, "arkistoitu_amount": 5 }
+      {
+        "subkey": "amm-tutkintoon-johtamaton",
+        "julkaistu_amount": 26,
+        "arkistoitu_amount": 14,
+        "items": [
+          {
+            "subkey": "amm-tutkinnon-osa", 
+            "julkaistu_amount": 7, 
+            "arkistoitu_amount": 4 
+          },
+          {
+            "subkey": "amm-osaamisala", 
+            "julkaistu_amount": 6, 
+            "arkistoitu_amount": 3 
+          },
+          {
+            "subkey": "telma", 
+            "julkaistu_amount": 5, 
+            "arkistoitu_amount": 2 
+          },
+          {
+            "subkey": "amm-muu", 
+            "julkaistu_amount": 8, 
+            "arkistoitu_amount": 5 
+          }]
       },
-      "amm": {
+      {
+        "subkey": "amm",
         "julkaistu_amount": 9,
         "arkistoitu_amount": 3,
-        "muu-amm-tutkintoon-johtava": {
-          "julkaistu_amount": 9,
-          "arkistoitu_amount": 3
-        }
+        "items": [
+          {
+            "subkey": "muu-amm-tutkintoon-johtava",
+            "julkaistu_amount": 9,
+            "arkistoitu_amount": 3
+          }]
       },
-      "lk": { "julkaistu_amount": 19, "arkistoitu_amount": 16 },
-      "taiteen-perusopetus": { "julkaistu_amount": 22, "arkistoitu_amount": 19 }
-    }
+      {
+        "subkey": "lk", 
+        "julkaistu_amount": 19, 
+        "arkistoitu_amount": 16 
+      },
+      {
+        "subkey": "taiteen-perusopetus", 
+        "julkaistu_amount": 22, 
+        "arkistoitu_amount": 19 
+      }
+    ]
   },
   "hakukohteet": {
-    "by_tila": { "julkaistu_amount": 275, "arkistoitu_amount": 212 },
-    "by_tyyppi": {
-      "kk-muu": {
-        "julkaistu_amount": 111,
-        "arkistoitu_amount": 90,
-        "ope-pedag-opinnot": {
-          "julkaistu_amount": 18,
-          "arkistoitu_amount": 15
-        },
-        "kk-opintojakso": { "julkaistu_amount": 12, "arkistoitu_amount": 9 },
-        "kk-opintojakso-avoin": {
-          "julkaistu_amount": 13,
-          "arkistoitu_amount": 10
-        },
-        "kk-opintokokonaisuus-avoin": {
-          "julkaistu_amount": 15,
-          "arkistoitu_amount": 12
-        },
-        "kk-opintokokonaisuus": {
-          "julkaistu_amount": 14,
-          "arkistoitu_amount": 11
-        },
-        "erikoistumiskoulutus": {
-          "julkaistu_amount": 17,
-          "arkistoitu_amount": 14
-        },
-        "erikoislaakari": { "julkaistu_amount": 16, "arkistoitu_amount": 13 }
+    "by_tila": { "julkaistu_amount": 277, "arkistoitu_amount": 214 },
+    "items": [
+      {
+        "subkey": "kk-muu",
+        "julkaistu_amount": 119,
+        "arkistoitu_amount": 98,
+        "items": [
+          {
+            "subkey": "ope-pedag-opinnot",
+            "julkaistu_amount": 20,
+            "arkistoitu_amount": 17
+          },
+          {
+            "subkey": "kk-opintojakso", 
+            "julkaistu_amount": 14, 
+            "arkistoitu_amount": 11 
+          },
+          {
+            "subkey": "kk-opintojakso-avoin",
+            "julkaistu_amount": 15,
+            "arkistoitu_amount": 12
+          },
+          {
+            "subkey": "kk-opintokokonaisuus-avoin",
+            "julkaistu_amount": 17,
+            "arkistoitu_amount": 14
+          },
+          {
+            "subkey": "kk-opintokokonaisuus",
+            "julkaistu_amount": 16,
+            "arkistoitu_amount": 13
+          },
+          {
+            "subkey": "erikoistumiskoulutus",
+            "julkaistu_amount": 19,
+            "arkistoitu_amount": 16
+          },
+          {
+            "subkey": "erikoislaakari", 
+            "julkaistu_amount": 18, 
+            "arkistoitu_amount": 15 
+          }]
       },
-      "tuva": { "julkaistu_amount": 21, "arkistoitu_amount": 18 },
-      "vapaa-sivistystyo": { "julkaistu_amount": 20, "arkistoitu_amount": 17 },
-      "amm-tutkintoon-johtamaton": {
-        "julkaistu_amount": 29,
+      {
+        "subkey": "tuva", 
+        "julkaistu_amount": 23, 
+        "arkistoitu_amount": 20 
+      },
+      {
+        "subkey": "vapaa-sivistystyo", 
+        "julkaistu_amount": 22, 
+        "arkistoitu_amount": 19 
+      },
+      {
+        "subkey": "amm-tutkintoon-johtamaton",
+        "julkaistu_amount": 34,
+        "arkistoitu_amount": 22,
+        "items": [
+          {
+            "subkey": "amm-tutkinnon-osa", 
+            "julkaistu_amount": 9, 
+            "arkistoitu_amount": 6 
+          },
+          {
+            "subkey": "amm-osaamisala", 
+            "julkaistu_amount": 8, 
+            "arkistoitu_amount": 5 
+          },
+          {
+            "subkey": "telma", 
+            "julkaistu_amount": 7, 
+            "arkistoitu_amount": 4 
+          },
+          {
+            "subkey": "amm-muu", 
+            "julkaistu_amount": 10, 
+            "arkistoitu_amount": 7 
+          }]
+      },
+      {
+        "subkey": "aikuisten-perusopetus",
+        "julkaistu_amount": 6,
+        "arkistoitu_amount": 3
+      },
+      {
+        "subkey": "amm-ope-erityisope-ja-opo",
+        "julkaistu_amount": 13,
+        "arkistoitu_amount": 10
+      },
+      {
+        "subkey": "taiteen-perusopetus",
+        "julkaistu_amount": 24,
+        "arkistoitu_amount": 21
+      },
+      {
+        "subkey": "kk",
+        "julkaistu_amount": 23,
         "arkistoitu_amount": 17,
-        "amm-tutkinnon-osa": { "julkaistu_amount": 7, "arkistoitu_amount": 4 },
-        "amm-osaamisala": { "julkaistu_amount": 6, "arkistoitu_amount": 3 },
-        "telma": { "julkaistu_amount": 5, "arkistoitu_amount": 2 },
-        "amm-muu": { "julkaistu_amount": 8, "arkistoitu_amount": 5 }
+        "items": [
+          {
+            "subkey": "amk", 
+            "julkaistu_amount": 11, 
+            "arkistoitu_amount": 8 
+          },
+          {
+            "subkey": "yo", 
+            "julkaistu_amount": 12, 
+            "arkistoitu_amount": 9 
+          }]
       },
-      "aikuisten-perusopetus": {
-        "julkaistu_amount": 4,
-        "arkistoitu_amount": 1
-      },
-      "amm-ope-erityisope-ja-opo": {
+      {
+        "subkey": "amm",
         "julkaistu_amount": 11,
-        "arkistoitu_amount": 8
+        "arkistoitu_amount": 5,
+        "items": [
+          {
+            "subkey": "muu-amm-tutkintoon-johtava",
+            "julkaistu_amount": 11,
+            "arkistoitu_amount": 5
+          }]
       },
-      "taiteen-perusopetus": {
-        "julkaistu_amount": 22,
-        "arkistoitu_amount": 19
-      },
-      "kk": {
-        "julkaistu_amount": 20,
-        "arkistoitu_amount": 14,
-        "amk": { "julkaistu_amount": 9, "arkistoitu_amount": 6 },
-        "yo": { "julkaistu_amount": 10, "arkistoitu_amount": 7 }
-      },
-      "amm": {
-        "julkaistu_amount": 9,
-        "arkistoitu_amount": 3,
-        "muu-amm-tutkintoon-johtava": {
-          "julkaistu_amount": 9,
-          "arkistoitu_amount": 3
-        }
-      },
-      "lk": { "julkaistu_amount": 19, "arkistoitu_amount": 16 }
-    }
+      {
+        "subkey": "lk", 
+        "julkaistu_amount": 21, 
+        "arkistoitu_amount": 18 
+      }
+    ]
   },
   "haut": {
-    "by_tila": { "julkaistu_amount": 20, "arkistoitu_amount": 15 },
-    "by_hakutapa": {
-      "hakutapa_02": { "julkaistu_amount": 1, "arkistoitu_amount": 0 },
-      "hakutapa_06": { "julkaistu_amount": 5, "arkistoitu_amount": 4 },
-      "hakutapa_01": { "julkaistu_amount": 0, "arkistoitu_amount": 0 },
-      "hakutapa_03": { "julkaistu_amount": 2, "arkistoitu_amount": 1 },
-      "hakutapa_04": { "julkaistu_amount": 3, "arkistoitu_amount": 2 },
-      "hakutapa_05": { "julkaistu_amount": 4, "arkistoitu_amount": 3 }
-    }
+    "by_tila": { "julkaistu_amount": 22, "arkistoitu_amount": 17 },
+    "items": [
+      {
+        "subkey": "hakutapa_02", 
+        "julkaistu_amount": 3, 
+        "arkistoitu_amount": 2 
+      },
+      {
+        "subkey": "hakutapa_06", 
+        "julkaistu_amount": 7, 
+        "arkistoitu_amount": 6 
+      },
+      {
+        "subkey": "hakutapa_01", 
+        "julkaistu_amount": 2, 
+        "arkistoitu_amount": 2 
+      },
+      {
+        "subkey": "hakutapa_03", 
+        "julkaistu_amount": 4, 
+        "arkistoitu_amount": 3 
+      },
+      {
+        "subkey": "hakutapa_04", 
+        "julkaistu_amount": 5, 
+        "arkistoitu_amount": 4 
+      },
+      {
+        "subkey": "hakutapa_05", 
+        "julkaistu_amount": 6, 
+        "arkistoitu_amount": 5 
+      }
+    ]
   }
 }

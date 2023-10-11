@@ -1,26 +1,44 @@
-import type { EntityType } from "../../../shared/types";
+import { P, match } from "ts-pattern";
 import type {
   DatabaseRow,
   EntityDataWithSubKey,
+  EntityType,
   PulssiData,
   SubEntitiesByEntities,
   SubEntityAmounts,
-  SubEntityField,
-  SubEntityTila,
+  Julkaisutila,
   SubKeyWithAmounts,
 } from "./types";
 import { findLastIndex, update } from "lodash";
+import { parse, isAfter } from "date-fns";
+import { DATETIME_FORMAT_TZ } from "./constants";
 
-const rowAmount = (row: DatabaseRow, amountFieldName: keyof DatabaseRow, maxTimestamp: string | null = null) =>
-  maxTimestamp && row.start_timestamp && row.start_timestamp > maxTimestamp
+export const EMPTY_DATABASE_RESULTS = {
+  koulutukset: [],
+  toteutukset: [],
+  hakukohteet: [],
+  haut: []
+};
+
+const rowAmount = (
+  row: DatabaseRow,
+  amountFieldName: keyof DatabaseRow,
+  maxTimestamp: Date | null = null
+) =>
+  maxTimestamp &&
+  row.start_timestamp &&
+  isAfter(
+    parse(row.start_timestamp, DATETIME_FORMAT_TZ, maxTimestamp),
+    maxTimestamp
+  )
     ? Number(-1)
     : Number(row[amountFieldName]);
 
 const sumBy = (
   rows: Array<DatabaseRow>,
-  tilaFilterValue: SubEntityTila,
+  tilaFilterValue: Julkaisutila,
   amountFieldName: keyof DatabaseRow,
-  maxTimestamp: string | null = null
+  maxTimestamp: Date | null = null
 ) => {
   return rows.reduce((result, row) => {
     const amountValue = rowAmount(row, amountFieldName, maxTimestamp);
@@ -53,7 +71,7 @@ const sortSubEntities = (subEntities: Array<SubKeyWithAmounts>) => {
 export const dbQueryResultToPulssiData = (
   rows: Array<DatabaseRow>,
   entity: EntityType,
-  maxTimestamp: string | null = null
+  maxTimestamp: Date | null = null
 ) => {
   const countsBySubKey = rows.reduce((result, row) => {
     const amountField =
@@ -71,9 +89,7 @@ export const dbQueryResultToPulssiData = (
       if (subEntityIdx == -1) {
         targetObject = {
           subkey: ktParts[idx],
-          items: thisIsParentLevel
-            ? new Array<SubKeyWithAmounts>()
-            : undefined,
+          items: thisIsParentLevel ? new Array<SubKeyWithAmounts>() : undefined,
         };
         parentArray.push(targetObject);
       } else {
@@ -84,7 +100,12 @@ export const dbQueryResultToPulssiData = (
         row.tila === "julkaistu"
           ? targetObject.julkaistu_amount ?? 0
           : targetObject.arkistoitu_amount ?? 0;
-      targetObject[amountField] = currentAmount + rowAmount(row, "amount", maxTimestamp);
+      const addedAmount = rowAmount(row, "amount", maxTimestamp);
+      targetObject[amountField] = match([currentAmount, addedAmount])
+        .with([P.number.lte(0), -1], () => -1)
+        .with([P.number.gt(0), -1], () => currentAmount)
+        .with([P.number.lt(0), P.number.gte(0)], () => addedAmount)
+        .otherwise(() => currentAmount + addedAmount);
 
       parentArray = targetObject.items ? targetObject.items : parentArray;
     }
@@ -100,13 +121,23 @@ export const dbQueryResultToPulssiData = (
       arkistoitu_amount: sumBy(rows, "arkistoitu", "amount", maxTimestamp),
       ...(entity === "toteutus"
         ? {
-            julkaistu_jotpa_amount: sumBy(rows, "julkaistu", "jotpa_amount", maxTimestamp),
-            arkistoitu_jotpa_amount: sumBy(rows, "arkistoitu", "jotpa_amount", maxTimestamp),
+            julkaistu_jotpa_amount: sumBy(
+              rows,
+              "julkaistu",
+              "jotpa_amount",
+              maxTimestamp
+            ),
+            arkistoitu_jotpa_amount: sumBy(
+              rows,
+              "arkistoitu",
+              "jotpa_amount",
+              maxTimestamp
+            ),
             julkaistu_taydennyskoulutus_amount: sumBy(
               rows,
               "julkaistu",
               "taydennyskoulutus_amount",
-              maxTimestamp  
+              maxTimestamp
             ),
             arkistoitu_taydennyskoulutus_amount: sumBy(
               rows,
@@ -135,42 +166,25 @@ export const dbQueryResultToPulssiData = (
   };
 };
 
-const findFromSubEntityDbResults = (
-  subEntities: Array<any>,
-  subEntityField: SubEntityField,
-  subEntityValue: string,
-  tila: SubEntityTila
-) =>
-  subEntities.find(
-    (sub) => sub[subEntityField] === subEntityValue && sub.tila === tila
-  );
-
 const resolveMissingAmountsOfEntity = (
   expectedSubentities: Array<string>,
-  subEntities: Array<any>,
-  subEntityField: SubEntityField
+  subEntities: Array<DatabaseRow>
 ) => {
   return expectedSubentities.reduce(
-    (result, subEntity) => {
+    (result, searched) => {
       if (
-        !findFromSubEntityDbResults(
-          subEntities,
-          subEntityField,
-          subEntity,
-          "julkaistu"
+        !subEntities.find(
+          (sub) => sub.sub_entity === searched && sub.tila === "julkaistu"
         )
       ) {
-        result.julkaistu.push(subEntity);
+        result.julkaistu.push(searched);
       }
       if (
-        !findFromSubEntityDbResults(
-          subEntities,
-          subEntityField,
-          subEntity,
-          "arkistoitu"
+        !subEntities.find(
+          (sub) => sub.sub_entity === searched && sub.tila === "arkistoitu"
         )
       ) {
-        result.arkistoitu.push(subEntity);
+        result.arkistoitu.push(searched);
       }
       return result;
     },
@@ -180,63 +194,52 @@ const resolveMissingAmountsOfEntity = (
 
 export const resolveMissingAmounts = (
   allSubentitiesByEntities: SubEntitiesByEntities,
-  foundKoulutukset: Array<any>,
-  foundToteutukset: Array<any>,
-  foundHakukohteet: Array<any>,
-  foundHaut: Array<any>
+  foundKoulutukset: Array<DatabaseRow>,
+  foundToteutukset: Array<DatabaseRow>,
+  foundHakukohteet: Array<DatabaseRow>,
+  foundHaut: Array<DatabaseRow>
 ) => {
   return {
     koulutukset: resolveMissingAmountsOfEntity(
       allSubentitiesByEntities.koulutukset,
-      foundKoulutukset,
-      "tyyppi_path"
+      foundKoulutukset
     ),
     toteutukset: resolveMissingAmountsOfEntity(
       allSubentitiesByEntities.toteutukset,
-      foundToteutukset,
-      "tyyppi_path"
+      foundToteutukset
     ),
     hakukohteet: resolveMissingAmountsOfEntity(
       allSubentitiesByEntities.hakukohteet,
-      foundHakukohteet,
-      "tyyppi_path"
+      foundHakukohteet
     ),
     haut: resolveMissingAmountsOfEntity(
       allSubentitiesByEntities.haut,
-      foundHaut,
-      "hakutapa"
+      foundHaut
     ),
   };
 };
 
 export const findMissingHistoryAmountsForEntity = (
-  entity: EntityType,
   missingSubentityAmounts: SubEntityAmounts,
-  currentDbData: Array<any>
-) => {
-  const subEntityField = entity === "haku" ? "hakutapa" : "tyyppi_path";
-  return missingSubentityAmounts.julkaistu
-    .map((sub) =>
-      findFromSubEntityDbResults(
-        currentDbData,
-        subEntityField,
-        sub,
-        "julkaistu"
-      )
-    )
-    .filter((sub) => sub)
-    .concat(
-      missingSubentityAmounts.arkistoitu
-        .map((sub) =>
-          findFromSubEntityDbResults(
-            currentDbData,
-            subEntityField,
-            sub,
-            "arkistoitu"
-          )
-        )
-        .filter((sub) => sub)
+  currentDbData: Array<DatabaseRow>
+): Array<DatabaseRow> => {
+  const returnValue = new Array<DatabaseRow>();
+  const pickFromDataByTila = (searched: string, tila: Julkaisutila) => {
+    const data = currentDbData.find(
+      (data) => data.sub_entity === searched && data.tila === tila
     );
+    if (data) {
+      returnValue.push(data);
+    }
+  };
+
+  missingSubentityAmounts.julkaistu.forEach((sub) =>
+    pickFromDataByTila(sub, "julkaistu")
+  );
+  missingSubentityAmounts.arkistoitu.forEach((sub) =>
+    pickFromDataByTila(sub, "arkistoitu")
+  );
+  return returnValue;
 };
 
 const setCombinedSubentityData = (
@@ -269,7 +272,7 @@ const setCombinedEntityHistoryData = (
   targetData: PulssiData
 ) => {
   Object.entries(entityData.by_tila).forEach((entry) =>
-    update(targetData, `${path}.${entry[0]}_old`, (_) => entry[1])
+    update(targetData, `${path}.by_tila.${entry[0]}_old`, (_) => entry[1])
   );
   setCombinedSubentityData(`${path}`, entityData.items, targetData);
 };

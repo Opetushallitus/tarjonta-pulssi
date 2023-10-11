@@ -1,13 +1,15 @@
 import { getSSMParam } from "./awsUtils";
-import { Pool, PoolClient } from "pg";
-import { EntityType, Julkaisutila, ToteutusRow } from "./types";
-import {
+import type { PoolClient } from "pg";
+import { Pool } from "pg";
+import type { EntityType, Julkaisutila, ToteutusRow } from "./types";
+import type {
   AggregationsFilterAggregate,
 } from "@elastic/elasticsearch/api/types";
+import type {
+  SearchResultsByEntity} from "./elasticUtils";
 import {
   bucketsAsArr,
-  getSubBuckets,
-  SearchResultsByEntity,
+  getSubBuckets
 } from "./elasticUtils";
 
 export const DEFAULT_DB_POOL_PARAMS = {
@@ -30,7 +32,7 @@ export type DbRowBase = {
   arkistoitu_tyovoimakoulutus_amount?: number;
 };
 
-export const createPulssiDbPool = async () => {
+export const createPulssiDbPool = async (additionalParams: Record<string, string | number> = {}) => {
   const pulssiDbUser = await getSSMParam(
     process.env.TARJONTAPULSSI_POSTGRES_APP_USER
   );
@@ -46,6 +48,7 @@ export const createPulssiDbPool = async () => {
     database: "tarjontapulssi",
     user: pulssiDbUser,
     password: pulssiDbPassword,
+    ...additionalParams,
   });
 };
 

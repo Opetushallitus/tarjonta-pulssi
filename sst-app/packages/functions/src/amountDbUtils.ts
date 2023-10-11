@@ -1,14 +1,13 @@
 import type { Pool } from "pg";
-import type { EntityType } from "../../../shared/types";
-import { dbQueryResultToPulssiData } from "./amountDataUtils";
-import type { DatabaseRow, SubEntitiesByEntities, SubEntityTila } from "./types";
+import { dbQueryResultToPulssiData } from "../../shared/amountDataUtils";
+import type { DatabaseRow, EntityType, Julkaisutila } from "../../shared/types";
 
 const handleResults = (rows: Array<any>): Array<DatabaseRow> => {
   const asOptionalNumber = (rowValue: any) =>
     rowValue ? Number(rowValue) : undefined;
   return rows.map((row) => ({
     sub_entity: String(row["sub_entity"]),
-    tila: String(row["tila"]) as SubEntityTila,
+    tila: String(row["tila"]) as Julkaisutila,
     start_timestamp: String(row["start_timestamp"]),
     amount: Number(row["amount"]),
     jotpa_amount: asOptionalNumber(row["jotpa_amount"]),
@@ -35,23 +34,23 @@ export const queryPulssiAmounts = async (
         ].join(", ")
       : asAmountField("amount");
   const dbResult = await pulssiDbPool.query(
-    `select ${primaryColName} as sub_entity, tila, to_char(min(lower(system_time)), 'DD.MM.YYYY HH24:MI') as start_timestamp, ${amountFields}
+    `select ${primaryColName} as sub_entity, tila, to_char(min(lower(system_time)), 'DD.MM.YYYY HH24:MI TZH') as start_timestamp, ${amountFields}
     from ${entity}_amounts group by ${primaryColName}, tila order by sub_entity`
   );
   return handleResults(dbResult.rows);
 };
 
-export const queryMeasuredSubEntityTypesByEntityTypes = async (
+export const queryAllSubentityTypesByEntityTypes = async (
   pulssiDbPool: Pool
-): Promise<SubEntitiesByEntities> => {
+) => {
   const dbResult = await pulssiDbPool.query(
-    `select distinct tyyppi_path as entity_item, 'koulutus' as entity_type from koulutus_amounts
+    `select distinct tyyppi_path as entity_item, 'koulutukset' as entity_type from koulutus_amounts
       union all
-    select distinct tyyppi_path as entity_item, 'toteutus' as entity_type from toteutus_amounts
+    select distinct tyyppi_path as entity_item, 'toteutukset' as entity_type from toteutus_amounts
       union all
-    select distinct tyyppi_path as entity_item, 'hakukohde' as entity_type from hakukohde_amounts
+    select distinct tyyppi_path as entity_item, 'hakukohteet' as entity_type from hakukohde_amounts
       union all
-    select distinct hakutapa as entity_item, 'haku' as entity_type from haku_amounts;`
+    select distinct hakutapa as entity_item, 'haut' as entity_type from haku_amounts;`
   );
 
   return dbResult.rows.reduce((result, row) => {
@@ -75,18 +74,20 @@ export const getCurrentPulssiAmounts = async (
 export const queryPulssiAmountsAtCertainMoment = async (
   pulssiDbPool: Pool,
   entity: EntityType,
-  timeStamp: string
+  timeStampInUtc: string | null
 ) => {
   const amountFields =
     entity === "toteutus"
       ? "amount, jotpa_amount, taydennyskoulutus_amount, tyovoimakoulutus_amount"
       : "amount";
   const subEntityField = entity === "haku" ? "hakutapa" : "tyyppi_path";
+  const timeLimitCondition = timeStampInUtc ? `where upper(system_time) >= to_timestamp('${timeStampInUtc}','DD.MM.YYYY HH24:MI TZH')`: "";
 
   const sql = `select ${subEntityField} as sub_entity, tila, to_char(lower(system_time), 'DD.MM.YYYY HH24:MI') as start_timestamp, ${amountFields} 
     from ${entity}_amounts_history where (${subEntityField}, tila, upper(system_time)) in (
       select ${subEntityField}, tila, min(upper(system_time)) from ${entity}_amounts_history
-      where upper(system_time) >= to_timestamp(${timeStamp},'DD.MM.YYYY HH24:MI') group by ${subEntityField}, tila)`;
+      ${timeLimitCondition}
+      group by ${subEntityField}, tila) order by sub_entity`;
 
   const dbResult = await pulssiDbPool.query(sql);
   return handleResults(dbResult.rows);

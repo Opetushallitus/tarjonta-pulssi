@@ -5,12 +5,12 @@ import fi from 'date-fns/locale/fi';
 import { parse, addDays, addMonths, isAfter, differenceInCalendarDays, differenceInCalendarMonths, format } from 'date-fns'
 import { match, P } from "ts-pattern";
 import { sortBy, castArray } from "lodash";
+import { DATETIME_FORMAT } from "../../../shared/constants";
 
-const DATE_TIME_FORMAT = "dd.MM.yyyy HH:mm";
 const TIME_FORMAT = "HH:mm";
 const REFERENCE_DATE = new Date();
-export const PULSSI_START_DATE_TIME = parse("26.10.2022 00:00", DATE_TIME_FORMAT, REFERENCE_DATE);
-export const CURRENT_DATE_TIME = parse("23:59", TIME_FORMAT, REFERENCE_DATE);
+export const PULSSI_START_DATE_TIME = parse("26.10.2022 00:00", DATETIME_FORMAT, REFERENCE_DATE);
+export const CURRENT_DATE_TIME = parse("23:59", TIME_FORMAT, REFERENCE_DATE); // nykyinen päivä, 23:59
 const DEFAULT_START_TIME = parse("00:00", TIME_FORMAT, REFERENCE_DATE);
 const DEFAULT_END_TIME = parse("23:59", TIME_FORMAT, REFERENCE_DATE);
 const DATE_FORMAT = "dd.MM.yyyy";
@@ -54,9 +54,11 @@ const resolveSliderMarks = (endDate: Date) => {
       return Math.ceil(nbrOfMonths / monthsInMaxNbrOfSteps) * 12;
     });
 
+  // Käytettäessä yhden tai kahden kk:n väliä, aloitetaan merkit 1.11.2022, muussa tapauksessa vuoden 2023 alusta
+  const referenceDate = new Date();
   let markIteratorDate = stepLengthInMonths < 3 
-    ? parse("1.11.2022", DATE_FORMAT, REFERENCE_DATE) 
-    : parse("1.1.2023", DATE_FORMAT, REFERENCE_DATE);
+    ? parse("1.11.2022", DATE_FORMAT, referenceDate) 
+    : parse("1.1.2023", DATE_FORMAT, referenceDate);
   const marks = [{value: 0, label: ''}];
   while (isAfter(endDate, markIteratorDate)) {
     marks.push({ value: differenceInCalendarDays(markIteratorDate, PULSSI_START_DATE_TIME), label: format(markIteratorDate, SLIDER_MARK_FORMAT)});  
@@ -109,32 +111,36 @@ type SelectProps = {
   dateLabel: string,
   timeLabel: string,
   defaultDate: Date | null,
+  defaultTimeValue: Date,
   onDateChange: (date: Date | null) => void,
 }
 const DateTimeSelect = (props: SelectProps) => {
-  const { dateLabel, timeLabel, defaultDate, onDateChange } = props;
+  const { dateLabel, timeLabel, defaultDate, defaultTimeValue, onDateChange } = props;
   const timeChanged = (time: Date | null) => {
     const newTime = match([defaultDate, time ])
-      .with([P._, P.not(null)], () => time)
-      .with([P.not(null), P.nullish], ([date, _]) => combineDateTime(date, DEFAULT_START_TIME)) // => 00:00
-      .otherwise(() => null);
+      .with([P.nullish, P._], () => null)
+      .with([P.not(null), P.nullish], ([date, _]) => combineDateTime(date, defaultTimeValue)) // => 00:00 tai 23:59
+      .otherwise(() => time);
     onDateChange(newTime);
   }
-  const valueToKey = (dateVal : Date | null) => dateVal !== null ? dateVal.getTime.toString() : "null";
-  // TODO aika-arvon täytyisi tulla voimaan vasta kun kentästä on poistuttu
-  //      Kentät täytyisi pystyä tyhjentämään (=> null)
+  const valueToKey = (dateVal : Date | null, postFix: string) => `${dateVal !== null ? dateVal.getTime.toString() : "null"}_${postFix}`;
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fi} key={valueToKey(defaultDate)}>
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fi}>
       <DatePicker
+        key={valueToKey(defaultDate, "day")}
         label={dateLabel} 
         defaultValue={defaultDate} 
         onAccept={onDateChange}
         sx={{ marginRight: '15px'}}
+        slotProps={{ field: { clearable: true, onClear: () => onDateChange(null)}}}
       />
-      <TimeField 
+      <TimeField
+        key={valueToKey(defaultDate, "time")}
         label={timeLabel}
-        defaultValue={defaultDate} 
+        defaultValue={defaultDate ? combineDateTime(defaultDate, defaultTimeValue) : null} 
         onChange={timeChanged}
+        clearable={true}
+        onClear={() => timeChanged(null)}
       /> 
     </LocalizationProvider> 
   )
@@ -153,8 +159,8 @@ export const HistorySearchSection = (props: HistoryProps) => {
   const onEndDateChange = (date: Date | null) => onSearchRangeChange(start, date)
   
   const onSliderValueCommit = (sliderStart: Date | null, sliderEnd: Date | null) => {
-    const newStart = sliderStart !== null ? combineDateTime(sliderStart, start || DEFAULT_START_TIME) : null;
-    const newEnd = sliderEnd !== null ? combineDateTime(sliderEnd, end || DEFAULT_END_TIME) : null;
+    const newStart = sliderStart !== null ? combineDateTime(sliderStart, start || DEFAULT_START_TIME) : null;
+    const newEnd = sliderEnd !== null ? combineDateTime(sliderEnd, end || DEFAULT_END_TIME) : null;
     onSearchRangeChange(newStart, newEnd);
   }
 
@@ -172,13 +178,15 @@ export const HistorySearchSection = (props: HistoryProps) => {
           dateLabel="alkupäivä" 
           timeLabel="alkuaika" 
           defaultDate={start} 
+          defaultTimeValue={DEFAULT_START_TIME}
           onDateChange={onStartDateChange}
         />  
         <span style={{ marginLeft: '15px', marginRight: '15px', fontWeight: 600 }}>-</span>
         <DateTimeSelect 
           dateLabel="loppupäivä" 
           timeLabel="loppuaika" 
-          defaultDate={end} 
+          defaultDate={end}
+          defaultTimeValue={DEFAULT_END_TIME}
           onDateChange={onEndDateChange}
         />  
         <HistorySearchSlider values={[start, end]} onChangeCommitted={onSliderValueCommit}/>
