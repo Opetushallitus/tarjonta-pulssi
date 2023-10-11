@@ -189,7 +189,7 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
     PostgreSQLSGId
   );
 
-  PostgreSQLSG.connections.allowFrom(siteSg, Port.tcp(3306))
+  PostgreSQLSG.connections.allowFrom(siteSg, Port.tcp(5432))
 
 // Security Group rules so that TarjontaPulssi Updater Lambda can talk to Elastic Search endpoint & Tarjonta-pulssi Postgresql
 const ElasticSearchEndpointSGId = Token.asString(
@@ -204,7 +204,7 @@ const ElasticSearchEndpointSG = SecurityGroup.fromSecurityGroupId(
 
 ElasticSearchEndpointSG.connections.allowFrom(tarjontaPulssiUpdaterSg, Port.tcp(9243));
 ElasticSearchEndpointSG.connections.allowFrom(tarjontaPulssiUpdaterSg, Port.tcp(443));
-PostgreSQLSG.connections.allowFrom(tarjontaPulssiUpdaterSg, Port.tcp(3306));
+PostgreSQLSG.connections.allowFrom(tarjontaPulssiUpdaterSg, Port.tcp(5432));
     
 
 
