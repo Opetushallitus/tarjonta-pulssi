@@ -2,6 +2,7 @@ import ArrowRightIcon from "@mui/icons-material/ArrowRightOutlined";
 import { Box, styled, Typography } from "@mui/material";
 import type { EntityType, EntityDataWithSubKey, WithAmounts } from "../../../shared/types";
 import { useTranslation } from "../hooks/useTranslation";
+import { match, P } from "ts-pattern";
 
 type SubRowProps = {
   subkey: string;
@@ -37,9 +38,12 @@ const ContentRow = ({
   const arkistoituAmountOld = Number(amounts?.arkistoitu_amount_old ?? -1);
   const totalAmount =
     Number(amounts?.arkistoitu_amount) + julkaistuAmount;
-  const totalAmountOld = julkaistuAmountOld !== -1 || arkistoituAmountOld !== -1 
-    ? Number(amounts?.arkistoitu_amount_old) + Number(amounts?.julkaistu_amount_old) 
-    : Number(-1);
+  const totalAmountOld = match([julkaistuAmountOld, arkistoituAmountOld])
+    .with([-1, -1], () => -1)
+    .with([P.number.gt(-1), -1], () => julkaistuAmountOld)
+    .with([-1, P.number.gt(-1)], () => arkistoituAmountOld)
+    .otherwise(() => julkaistuAmountOld + arkistoituAmountOld);
+  
   const rowHasData = julkaistuAmount !== 0 || totalAmount !== 0;
 
   return rowHasData ? (

@@ -11,11 +11,11 @@ module.exports = { up, down }`.trimStart();
 
 export const createMigrator = (
   client: ClientBase,
-  migrationsPath = "db/migrations"
+  migrationsPath = "packages/shared/db/migrations"
 ) =>
   new Umzug({
     migrations: {
-      glob: `${migrationsPath}/*.{js,up.sql}`,
+      glob: `${migrationsPath}/*.{cjs,up.sql}`,
       resolve(params) {
         return params.path?.endsWith(".sql")
           ? {
@@ -59,10 +59,10 @@ export const createMigrator = (
     },
     logger: console,
     create: {
-      folder: "db/migrations",
+      folder: "packages/shared/db/migrations",
       template(filepath: string): Array<[string, string]> {
         const ext = path.extname(filepath);
-        if (ext === ".js") {
+        if (ext === ".cjs") {
           return [[filepath, JS_MIGRATION_TEMPLATE]];
         } else if (ext === ".sql") {
           return [

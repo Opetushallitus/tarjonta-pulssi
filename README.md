@@ -4,9 +4,10 @@ Tarjonta-pulssi on palvelu, joka koostaa koulutustarjontaan (kouta/konfo) liitty
 
 ## Arkkitehtuuri
 
-Palvelu koostuu karkeasti kuvattuna kolmesta AWS-lambdasta, PostgreSQL-tietokannasta ja yhdestä S3-ämpäristä. 
-Ensimmäinen lambda-funktio (updater) hakee lukumääriä ElasticSearch:ista ja tallentaa niitä palvelun omaan PostgreSQL-tietokantaan. Tämän jälkeen lambda-funktio käynnistää toisen lambda-funktion (publisher).
-Toinen lambda-funktio (publisher) hakee luvut tietokannasta ja muotoilee ne sopivaan JSON-formaattiin, joka tallennetaan s3-ämpäriin nimellä `pulssi.json`. JSON-tiedoston lisäksi s3-ämpäriin tallennetaan palvelun deployn yhteydessä front-end-sovelluksen tiedostot (app-hakemisto).
+Palvelu on rakennettu SST- ja Remix -frameworkeja käyttäen. Palvelu koostuu karkeasti kuvattuna Remix-site -constructista, kolmesta erillisestä AWS-lambdasta ja PostgreSQL-tietokannasta.
+Remix-site koostaa varsinaisen Tarjonta-pulssi frontend-sovelluksen AWS:n sisällä: Tallentaa sovelluksen staattiset tiedostot S3 -ämpäriin, josta ne tarjoillaan käyttäjälle CloudFront:in (CDN) kautta. Sisältää myös
+sovelluksen Remix NodeJS Lambda-backendin.
+Ensimmäinen lambda-funktio (updater) hakee lukumääriä ElasticSearch:ista ja tallentaa niitä palvelun omaan PostgreSQL-tietokantaan. Toinen lambda / API (dbApi) tarjoaa sovellukselle rajapinnan datan hakemiseen tietokannasta.
 Kolmas lambda-funktio on tietokantamigraatioiden ajamista varten ja suoritetaan deployn yhteydessä.
 
 ## CDK, lambdat ja tietokantamigraatiot

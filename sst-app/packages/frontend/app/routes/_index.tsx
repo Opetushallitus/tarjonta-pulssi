@@ -88,13 +88,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   const start = url.searchParams.get("start");
   const end = url.searchParams.get("end");
   if (start && end) {
-    const referenceDate = new Date();
-    const data = await getHistoryAmountData(
-      start !== "undefined"
-        ? parse(start, DATETIME_FORMAT, referenceDate)
-        : null,
-      end !== "undefined" ? parse(end, DATETIME_FORMAT, referenceDate) : null
-    );
+    const data = await getHistoryAmountData(start, end);
     return { data, currentUrl };
   }
   return { data: await getCurrentAmountData(), currentUrl };

@@ -3,7 +3,7 @@ import { getCurrentPulssiAmounts, queryPulssiAmounts, queryPulssiAmountsAtCertai
 import { EMPTY_DATABASE_RESULTS, dbQueryResultToPulssiData, findMissingHistoryAmountsForEntity, getCombinedHistoryData, resolveMissingAmounts } from "../../shared/amountDataUtils";
 import type { DatabaseRow, EntityPlural, EntityType, SubEntitiesByEntitiesByTila, SubEntityAmounts } from "../../shared/types";
 import { DATETIME_FORMAT } from "../../shared/constants";
-import { format, add } from "date-fns";
+import { format, parse, add } from "date-fns";
 
 
 export const getCurrentAmountDataFromDb = async (dbPool: Pool) => {
@@ -28,9 +28,12 @@ const getCurrentAmountDataForMissingHistoryAmounts = async (dbPool: Pool, missin
   }
 }
 
-const toUtcString = (date: Date | null) => date ? format(add(date, { hours: (date.getTimezoneOffset() / 60)}), DATETIME_FORMAT) : null;
+const toUtcString = (date: Date | null) => 
+  date !== null ? format(add(date, { hours: (date.getTimezoneOffset() / 60)}), DATETIME_FORMAT) : null;
 
-export const getHistoryDataFromDb = async (dbPool: Pool, start: Date | null, end: Date | null) => {
+export const getHistoryDataFromDb = async (dbPool: Pool, startStr: string, endStr: string) => {
+  const referenceData = new Date();
+  const start = startStr !== "undefined" ? parse(startStr, DATETIME_FORMAT, referenceData) : null;
   const dbStartTime = toUtcString(start);
   let koulutukset = await queryPulssiAmountsAtCertainMoment(dbPool, "koulutus", dbStartTime);
   let toteutukset = await queryPulssiAmountsAtCertainMoment(dbPool, "toteutus", dbStartTime);
@@ -48,6 +51,7 @@ export const getHistoryDataFromDb = async (dbPool: Pool, start: Date | null, en
     haut: dbQueryResultToPulssiData(haut.concat(findMissingHistoryAmountsForEntity(missingHistoryAmounts.haut, currentAmountData.haut)), "haku", start),
   };
 
+  const end = endStr !== "undefined" ? parse(endStr, DATETIME_FORMAT, referenceData) : null;
   const dbEndTime = toUtcString(end); // Jos loppuaikaa ei ole annettu, haetaan lukemat current datasta
   koulutukset = dbEndTime ? await queryPulssiAmountsAtCertainMoment(dbPool, "koulutus", dbEndTime) : [];
   toteutukset = dbEndTime ? await queryPulssiAmountsAtCertainMoment(dbPool, "toteutus", dbEndTime) : [];

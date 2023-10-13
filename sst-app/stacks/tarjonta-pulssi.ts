@@ -91,7 +91,7 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
       }
     },
     routes: {
-      "GET /": "packages/functions/src/time.handler",
+      "GET /": "packages/functions/src/pulssiDataFetcher.handler",
     },
   });
 

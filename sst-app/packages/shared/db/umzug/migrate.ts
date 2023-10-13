@@ -1,7 +1,8 @@
 /* eslint @typescript-eslint/no-var-requires: off */
-const { Client } = require("pg");
-const { createMigrator } = require("./umzug.ts");
+import pkg from "pg";
+import { createMigrator } from './umzug.ts';
 
+const { Client } = pkg;
 const client = new Client({
   host: "localhost",
   port: 5432,
