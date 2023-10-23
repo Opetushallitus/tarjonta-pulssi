@@ -52,35 +52,6 @@ export const createPulssiDbPool = async (additionalParams: Record<string, string
   });
 };
 
-export const createTilaAmountCol = (entity: EntityType, tila: Julkaisutila) => {
-  let col = `coalesce(sum(amount) filter(where tila = '${tila}'), 0) as ${tila}_amount`;
-  if (entity === "toteutus") {
-    col += `, coalesce(sum(jotpa_amount) filter(where tila = '${tila}'), 0) as ${tila}_jotpa_amount`;
-    col += `, coalesce(sum(taydennyskoulutus_amount) filter(where tila = '${tila}'), 0) as ${tila}_taydennyskoulutus_amount`;
-    col += `, coalesce(sum(tyovoimakoulutus_amount) filter(where tila = '${tila}'), 0) as ${tila}_tyovoimakoulutus_amount`;
-  }
-  return col;
-};
-
-export const queryPulssiAmounts = async (
-  pulssiDbPool: Pool,
-  entity: EntityType
-) => {
-  const primaryColName = entity === "haku" ? "hakutapa" : "tyyppi_path";
-
-  return pulssiDbPool.query(
-    `select ${primaryColName}, ${createTilaAmountCol(
-      entity,
-      "julkaistu"
-    )}, ${createTilaAmountCol(
-      entity,
-      "arkistoitu"
-    )} from ${entity}_amounts group by ${primaryColName} ${
-      entity === "toteutus" ? ", jotpa_amount, taydennyskoulutus_amount, tyovoimakoulutus_amount" : ""
-    }`
-  );
-};
-
 export const toteutusRowHasChanged = (existingRow: ToteutusRow, newRow: ToteutusRow) => {
   return Number(existingRow.amount) !== newRow.amount || 
     Number(existingRow.jotpa_amount) !== newRow.jotpa_amount || 
