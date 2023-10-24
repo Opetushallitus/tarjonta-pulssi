@@ -15,10 +15,10 @@ jobs:
         with:
           node-version: 16
           cache: 'npm'
-          cache-dependency-path: cdk/package-lock.json
+          cache-dependency-path: sst-app/package-lock.json
       - name: Run tests
         run: |
-          cd cdk
+          cd sst-app
           npm ci --no-audit --prefer-offline
           npm run test
 

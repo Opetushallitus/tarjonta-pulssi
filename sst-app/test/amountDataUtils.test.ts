@@ -1,4 +1,4 @@
-import type { DatabaseRow, SubEntityAmounts, SubKeyWithAmounts } from '../packages/frontend/app/servers/types';
+import type { DatabaseRow, SubEntityAmounts, SubKeyWithAmounts } from '../packages/shared/types';
 import { dbQueryResultToPulssiData, findMissingHistoryAmountsForEntity, getCombinedHistoryData, resolveMissingAmounts } from '../packages/shared/amountDataUtils'
 import { merge } from "lodash";
 import { parse } from "date-fns";
