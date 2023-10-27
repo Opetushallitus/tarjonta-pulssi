@@ -9,6 +9,8 @@ import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import {
   Runtime,
   Architecture,
+  Code,
+  LayerVersion,
 } from "aws-cdk-lib/aws-lambda";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
@@ -175,6 +177,74 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
       schedule: Schedule.rate(Duration.minutes(10)),
     });
     scheduleRule.addTarget(new LambdaFunction(tarjontaPulssiUpdaterLambda));
+
+// Database migrations
+
+    const dbMigrationsLayer = new LayerVersion(stack, "db-migrations-layer", {
+      compatibleRuntimes: [Runtime.NODEJS_16_X],
+      code: Code.fromAsset("packages/shared/db/migrations"),
+      description: "umzug db migration files",
+    });
+
+    const tarjontaPulssiDbMigratorLambda = new NodejsFunction(
+      stack,
+      "TarjontaPulssiDbMigratorLambda",
+      {
+        entry: "packages/functions/src/pulssiDbMigrator.ts",
+        handler: "main",
+        runtime: Runtime.NODEJS_16_X,
+        logRetention: RetentionDays.ONE_YEAR,
+        architecture: Architecture.ARM_64,
+        timeout: Duration.minutes(2),
+        vpc: ophVpc,
+        vpcSubnets: {
+          subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+        },
+        securityGroups: [siteSg],
+        environment: {
+          PUBLICHOSTEDZONE: OPHhostedZone,
+          TARJONTAPULSSI_POSTGRES_APP_USER: `/${stack.stage}/postgresqls/tarjontapulssi/app-user-name`,
+          TARJONTAPULSSI_POSTGRES_APP_PASSWORD: `/${stack.stage}/postgresqls/tarjontapulssi/app-user-password`,
+        },
+        initialPolicy: [
+          new PolicyStatement({
+            effect: Effect.ALLOW,
+            resources: [
+              `arn:aws:ssm:eu-west-1:*:parameter/${stack.stage}/postgresqls/tarjontapulssi/app-user-name`,
+              `arn:aws:ssm:eu-west-1:*:parameter/${stack.stage}/postgresqls/tarjontapulssi/app-user-password`,
+            ],
+            actions: ["ssm:GetParameter"],
+          }),
+        ],
+        bundling: {
+          // pg-native is not available and won't be used. This is letting the
+          // bundler (esbuild) know pg-native won't be included in the bundled JS
+          // file.
+          externalModules: ["aws-sdk", "pg-native"],
+          // https://github.com/aws/aws-sdk-js-v3/issues/3023
+          sourcesContent: false,
+          mainFields: ["module", "main"],
+          format: OutputFormat.ESM,
+          banner:
+            "import {createRequire} from 'module';const require = createRequire(import.meta.url)",
+        },
+        layers: [dbMigrationsLayer],
+      }
+    );
+
+    // Trigger db migration Lambda on CloudFormation CREATE_COMPLETE & UPDATE_COMPLETE
+    const stackChangeRule = new Rule(stack, "stackChangeRule", {
+      eventPattern: {
+        source: ["aws.cloudformation"],
+        resources: [stack.stackId],
+        detail: {
+          "status-details.status": ["CREATE_COMPLETE", "UPDATE_COMPLETE"],
+        },
+      },
+    });
+    stackChangeRule.addTarget(
+      new LambdaFunction(tarjontaPulssiDbMigratorLambda)
+    );
 
 // Security group rules so that api can talk to the necessary database on TCP/IP level
 // The databases & elastic search are defined in cloud-base, so their security groups
