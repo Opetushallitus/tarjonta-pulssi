@@ -18,74 +18,76 @@ import Backend from "i18next-fs-backend";
 import i18n from "./i18n";
 import { ThemeProvider } from "@mui/material";
 import theme from "./theme";
+import { getTranslationsForLanguage } from "./translations";
 
 const ABORT_DELAY = 5_000;
 
 export default async function handleRequest(
-    request: Request,
-    responseStatusCode: number,
-    responseHeaders: Headers,
-    remixContext: EntryContext
-  ) 
-  {
-    let callbackName = isbot(request.headers.get("user-agent"))
-      ? "onAllReady"
-      : "onShellReady";
-  
-    let instance = createInstance();
-    let lng = await i18next.getLocale(request);
-    let ns = i18next.getRouteNamespaces(remixContext);
-    
-    await instance
-      .use(initReactI18next) // Tell our instance to use react-i18next
-      .use(Backend) // Setup our backend
-        .init({
-          ...i18n, // spread the configuration
-          lng, // The locale we detected above
-          ns, // The namespaces the routes about to render wants to use
-          backend: { 
-            loadPath: resolve("./public/locales/translation.json")
-          },
-        });  
-    return new Promise((resolve, reject) => {
-      let didError = false;
-  
-      const { pipe, abort } = renderToPipeableStream(
-        <I18nextProvider i18n={instance}>
-          <ThemeProvider theme={theme}>
-            <RemixServer
-              context={remixContext}
-              url={request.url}
-              abortDelay={ABORT_DELAY}
-            />
-          </ThemeProvider>
-        </I18nextProvider>,
-        {
-          [callbackName]: () => {
-            const body = new PassThrough();
-  
-            responseHeaders.set("Content-Type", "text/html");
-  
-            resolve(
-              new Response(body, {
-                headers: responseHeaders,
-                status: didError ? 500 : responseStatusCode,
-              })
-            );
-  
-            pipe(body);
-          },
-          onShellError(error: unknown) {
-            reject(error);
-          },
-          onError(error: unknown) {
-            didError = true;
-            console.error(error);
-          },
-        }
-      );
-  
-      setTimeout(abort, ABORT_DELAY);
+  request: Request,
+  responseStatusCode: number,
+  responseHeaders: Headers,
+  remixContext: EntryContext
+) {
+  let callbackName = isbot(request.headers.get("user-agent"))
+    ? "onAllReady"
+    : "onShellReady";
+
+  let instance = createInstance();
+  let lng = await i18next.getLocale(request);
+  let ns = i18next.getRouteNamespaces(remixContext);
+
+  await instance
+    .use(initReactI18next) // Tell our instance to use react-i18next
+    .use(Backend) // Setup our backend
+    .init({
+      ...i18n, // spread the configuration
+      lng, // The locale we detected above
+      ns, // The namespaces the routes about to render wants to use
+      resources: {
+        fi: getTranslationsForLanguage("fi"),
+        sv: getTranslationsForLanguage("sv"),
+        en: getTranslationsForLanguage("en"),
+      },
+      //debug: true,
     });
-  }
-  
+  return new Promise((resolve, reject) => {
+    let didError = false;
+
+    const { pipe, abort } = renderToPipeableStream(
+      <I18nextProvider i18n={instance}>
+        <ThemeProvider theme={theme}>
+          <RemixServer
+            context={remixContext}
+            url={request.url}
+            abortDelay={ABORT_DELAY}
+          />
+        </ThemeProvider>
+      </I18nextProvider>,
+      {
+        [callbackName]: () => {
+          const body = new PassThrough();
+
+          responseHeaders.set("Content-Type", "text/html");
+
+          resolve(
+            new Response(body, {
+              headers: responseHeaders,
+              status: didError ? 500 : responseStatusCode,
+            })
+          );
+
+          pipe(body);
+        },
+        onShellError(error: unknown) {
+          reject(error);
+        },
+        onError(error: unknown) {
+          didError = true;
+          console.error(error);
+        },
+      }
+    );
+
+    setTimeout(abort, ABORT_DELAY);
+  });
+}

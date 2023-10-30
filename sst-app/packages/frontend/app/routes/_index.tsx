@@ -17,11 +17,11 @@ import {
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import mainStylesUrl from "~/styles/index.css";
 import tableStylesUrl from "~/styles/table.css";
-import { useTranslation } from "~/hooks/useTranslation";
+import { useTranslation } from "react-i18next";
 import { HistorySearchSection } from "~/components/HistorySearchSection";
 import { useState } from "react";
 import { P, match } from "ts-pattern";
-import { format, parse } from "date-fns";
+import { format } from "date-fns";
 import { DATETIME_FORMAT } from "../../../shared/constants";
 
 const StyledEntitySection = styled(Paper)`

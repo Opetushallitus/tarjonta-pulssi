@@ -1,8 +1,9 @@
 import ArrowRightIcon from "@mui/icons-material/ArrowRightOutlined";
 import { Box, styled, Typography } from "@mui/material";
 import type { EntityType, EntityDataWithSubKey, WithAmounts } from "../../../shared/types";
-import { useTranslation } from "../hooks/useTranslation";
+import { useTranslation } from "react-i18next";
 import { match, P } from "ts-pattern";
+import { sumUp } from "../../../shared/amountDataUtils";
 
 type SubRowProps = {
   subkey: string;
@@ -15,9 +16,18 @@ type RowProps = {
   indent?: boolean;
 };
 
+const totalAmount = (julkaistuAmount: number, arkistoituAmount: number) => {
+  return match([julkaistuAmount, arkistoituAmount])
+    .with([NaN, NaN], () => NaN)
+    .with([P.number.gte(0), NaN], () => julkaistuAmount)
+    .with([NaN, P.number.gte(0)], () => arkistoituAmount)
+    .otherwise(() => julkaistuAmount + arkistoituAmount)
+
+}
+
 const formatContent = (currentValue: Number, oldValue: Number) => {
   if (!Number.isNaN(currentValue)) {
-    if (!Number.isNaN(oldValue) && oldValue !== -1 && oldValue !== currentValue) {
+    if (!Number.isNaN(oldValue) && oldValue !== currentValue) {
       return `${oldValue}...${currentValue}`;
     }
     return `${currentValue}`;
@@ -34,15 +44,9 @@ const ContentRow = ({
   const { t } = useTranslation();
 
   const julkaistuAmount = Number(amounts?.julkaistu_amount);
-  const julkaistuAmountOld = Number(amounts?.julkaistu_amount_old ?? -1);
-  const arkistoituAmountOld = Number(amounts?.arkistoitu_amount_old ?? -1);
-  const totalAmount =
-    Number(amounts?.arkistoitu_amount) + julkaistuAmount;
-  const totalAmountOld = match([julkaistuAmountOld, arkistoituAmountOld])
-    .with([-1, -1], () => -1)
-    .with([P.number.gt(-1), -1], () => julkaistuAmountOld)
-    .with([-1, P.number.gt(-1)], () => arkistoituAmountOld)
-    .otherwise(() => julkaistuAmountOld + arkistoituAmountOld);
+  const julkaistuAmountOld = Number(amounts?.julkaistu_amount_old);
+  const totalAmount = Number(sumUp(amounts?.julkaistu_amount, amounts?.arkistoitu_amount));
+  const totalAmountOld = Number(sumUp(amounts?.julkaistu_amount_old, amounts?.arkistoitu_amount_old));
   
   const rowHasData = julkaistuAmount !== 0 || totalAmount !== 0;
 
@@ -101,8 +105,8 @@ export const EntityTable = ({
             </tr>
           </thead>
           <tbody>
-            {data.items.map((entry) => (
-              <ContentRow key={entry.subkey} titleKey={entry.subkey} amounts={entry} subRows={entry.items}/>
+            {data?.items.map((entry) => (
+              <ContentRow key={entry.subkey} titleKey={entry.subkey} amounts={entry} subRows={entry.items || []}/>
             ))}
           </tbody>
           <tfoot>

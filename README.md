@@ -87,11 +87,10 @@ Elasticsearch käynnistetään komennolla:
 ##### Elasticsearch-dumppien kopiointi
 
 Tarjontapulssin testidata generoidaan kouta-indeksoijan tuottamien Elasticsearch-dumppien perusteella. (kts. kouta-indeksoija README, Mock-datan generointi).
-Päivitetyt dump-tiedostot kopioidaan kouta-indeksoijan `elasticdump/tarjonta-pulssi` -hakemistosta tarjonta-pulssin `cdk/test/resources/elasticdump` -hakemistoon.
+Päivitetyt dump-tiedostot kopioidaan kouta-indeksoijan `elasticdump/tarjonta-pulssi` -hakemistosta tarjonta-pulssin `sst-app/test/resources/elasticdump` -hakemistoon.
 
 ##### Elasticsearch-dumppien lataaminen lokaaliin Elasticsearchiin
 `npm run elasticdump`
-
 
 ##### Lambda-funktioiden ajaminen lokaalisti
 `npm run preparetest`

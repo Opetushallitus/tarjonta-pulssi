@@ -9,6 +9,7 @@ import Backend from "i18next-http-backend";
 import { getInitialNamespaces } from "remix-i18next";
 import { ThemeProvider } from "@mui/material";
 import theme from "./theme";
+import { getTranslationsForLanguage } from "./translations";
 
 async function hydrate() {
   await i18next
@@ -20,8 +21,10 @@ async function hydrate() {
       ...i18n, // spread the configuration
       // This function detects the namespaces your routes rendered while SSR use
       ns: getInitialNamespaces(),
-      backend: { 
-        loadPath: "/locales/translation.json"
+      resources: {
+        fi: getTranslationsForLanguage("fi"),
+        sv: getTranslationsForLanguage("sv"),
+        en: getTranslationsForLanguage("en"),
       },
       detection: {
         // Here only enable htmlTag detection, we'll detect the language only

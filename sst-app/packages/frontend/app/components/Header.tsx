@@ -16,7 +16,7 @@ import { Box } from "@mui/system";
 import opintopolku_logo_header_fi from "~/assets/opintopolku_logo_header_fi.svg";
 import opintopolku_logo_header_en from "~/assets/opintopolku_logo_header_en.svg";
 import opintopolku_logo_header_sv from "~/assets/opintopolku_logo_header_sv.svg";
-import { useTranslation } from "~/hooks/useTranslation";
+import { useTranslation } from "react-i18next";
 import SVG from "react-inlinesvg";
 
 const classes = {

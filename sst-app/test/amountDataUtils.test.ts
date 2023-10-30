@@ -85,7 +85,7 @@ test("Amounts by tila should be parsed correctly", () => {
 });
 
 test("Db query results parsed correctly when some results excluded by timestamp", () => {
-  const expected = expectedItems.map(sub => sub.subkey === "eee" ? { subkey: "eee", julkaistu_amount: -1, arkistoitu_amount: -1} : sub);
+  const expected = expectedItems.map(sub => sub.subkey === "eee" ? { subkey: "eee", julkaistu_amount: undefined, arkistoitu_amount: undefined} : sub);
   expect(dbQueryResultToPulssiData(dbResults, "koulutus", parse("15.9.2023 16:01", DATETIME_FORMAT, referenceDate)).items).toMatchObject(expected);
 });
 

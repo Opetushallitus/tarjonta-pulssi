@@ -1,15 +1,15 @@
 const up = async ({ context: pg }) => {
   await pg.query(`
- ALTER TABLE toteutus_amounts ADD COLUMN taydennyskoulutus_amount bigint default 0; 
+ ALTER TABLE toteutus_amounts ADD COLUMN IF NOT EXISTS taydennyskoulutus_amount bigint default 0; 
   `);
   await pg.query(`
- ALTER TABLE toteutus_amounts ADD COLUMN tyovoimakoulutus_amount bigint default 0; 
+ ALTER TABLE toteutus_amounts ADD COLUMN IF NOT EXISTS tyovoimakoulutus_amount bigint default 0; 
   `);
   await pg.query(`
- ALTER TABLE toteutus_amounts_history ADD COLUMN taydennyskoulutus_amount bigint default 0; 
+ ALTER TABLE toteutus_amounts_history ADD COLUMN IF NOT EXISTS taydennyskoulutus_amount bigint default 0; 
    `);
   await pg.query(`
- ALTER TABLE toteutus_amounts_history ADD COLUMN tyovoimakoulutus_amount bigint default 0; 
+ ALTER TABLE toteutus_amounts_history ADD COLUMN IF NOT EXISTS tyovoimakoulutus_amount bigint default 0; 
    `);
 
   await pg.query(`

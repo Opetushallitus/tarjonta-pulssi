@@ -31,7 +31,7 @@ const rowAmount = (
     parse(row.start_timestamp, DATETIME_FORMAT_TZ, maxTimestamp),
     maxTimestamp
   )
-    ? Number(-1)
+    ? undefined
     : Number(row[amountFieldName]);
 
 const sumBy = (
@@ -43,9 +43,17 @@ const sumBy = (
   return rows.reduce((result, row) => {
     const amountValue = rowAmount(row, amountFieldName, maxTimestamp);
     const addedValue =
-      row.tila === tilaFilterValue && amountValue !== -1 ? amountValue : 0;
+      row.tila === tilaFilterValue && amountValue ? amountValue : 0;
     return result + addedValue;
   }, 0);
+};
+
+export const sumUp = (number1: number | undefined, number2: number | undefined) => {
+  return match([number1, number2])
+    .with([P.not(P.nullish), P.not(P.nullish)], ([curVal, addVal]) => curVal + addVal)
+    .with([P.not(P.nullish), P.nullish], () => number1)
+    .with([P.nullish, P.not(P.nullish)], () => number2)
+    .otherwise(() => undefined);
 };
 
 const EMPTY_ITEMS = new Array<SubKeyWithAmounts>();
@@ -98,15 +106,10 @@ export const dbQueryResultToPulssiData = (
 
       const currentAmount =
         row.tila === "julkaistu"
-          ? targetObject.julkaistu_amount ?? 0
-          : targetObject.arkistoitu_amount ?? 0;
+          ? targetObject.julkaistu_amount
+          : targetObject.arkistoitu_amount;
       const addedAmount = rowAmount(row, "amount", maxTimestamp);
-      targetObject[amountField] = match([currentAmount, addedAmount])
-        .with([P.number.lte(0), -1], () => -1)
-        .with([P.number.gt(0), -1], () => currentAmount)
-        .with([P.number.lt(0), P.number.gte(0)], () => addedAmount)
-        .otherwise(() => currentAmount + addedAmount);
-
+      targetObject[amountField] = sumUp(currentAmount, addedAmount); 
       parentArray = targetObject.items ? targetObject.items : parentArray;
     }
     return result;

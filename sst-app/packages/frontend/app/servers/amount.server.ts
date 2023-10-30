@@ -24,7 +24,6 @@ export const getCurrentAmountData = async() => {
     default:
       const results = await fetch(process.env.DB_API_URL || "");
       const jsonResult = await results.json();
-      console.log(jsonResult.koulutukset.items);
       return jsonResult;
   }
 }
