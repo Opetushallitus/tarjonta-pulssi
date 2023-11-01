@@ -2,7 +2,11 @@ import { Box, Paper, Typography, styled } from "@mui/material";
 import { EntityTable } from "~/components/EntityTable";
 import type { URLData } from "~/components/Header";
 import { Header } from "~/components/Header";
-import type { EntityType, EntityDataWithSubKey, PulssiData } from "../../../shared/types";
+import type {
+  EntityType,
+  EntityDataWithSubKey,
+  PulssiData,
+} from "../../../shared/types";
 import { ICONS } from "~/constants";
 import {
   type LoaderFunction,
@@ -19,10 +23,10 @@ import mainStylesUrl from "~/styles/index.css";
 import tableStylesUrl from "~/styles/table.css";
 import { useTranslation } from "react-i18next";
 import { HistorySearchSection } from "~/components/HistorySearchSection";
-import { useState } from "react";
-import { P, match } from "ts-pattern";
 import { format } from "date-fns";
 import { DATETIME_FORMAT } from "../../../shared/constants";
+import { parseDate } from "../../../shared/amountDataUtils";
+import { useMemo } from "react";
 
 const StyledEntitySection = styled(Paper)`
   border: 1px solid rgba(0, 0, 0, 0.15);
@@ -80,18 +84,24 @@ const EntitySection = ({
 type ServerSideData = {
   data: PulssiData;
   currentUrl: URLData;
-}
+  showHistory?: boolean;
+  historyStart?: string;
+  historyEnd?: string;
+};
 
 export const loader: LoaderFunction = async ({ request }) => {
   const url = new URL(request.url);
-  const currentUrl: URLData = { protocol: url.protocol, host: url.host};
-  const start = url.searchParams.get("start");
-  const end = url.searchParams.get("end");
-  if (start && end) {
-    const data = await getHistoryAmountData(start, end);
-    return { data, currentUrl };
+  const currentUrl: URLData = { protocol: url.protocol, host: url.host };
+  const showHistoryVal = url.searchParams.get("showHistory");
+  const showHistory =
+    showHistoryVal !== null && showHistoryVal.toLowerCase() !== "false";
+  const historyStart = url.searchParams.get("start");
+  const historyEnd = url.searchParams.get("end");
+  if (showHistory || historyStart || historyEnd) {
+    const data = await getHistoryAmountData(historyStart, historyEnd);
+    return { data, currentUrl, showHistory: true, historyStart, historyEnd };
   }
-  return { data: await getCurrentAmountData(), currentUrl };
+  return { data: await getCurrentAmountData(), currentUrl, showHistory: false };
 };
 
 const setSearchParameter = (
@@ -111,9 +121,15 @@ export const action: ActionFunction = async ({ request }) => {
   const newUrl = new URL(url);
   const newSearchParams = new URLSearchParams(url.search);
   setSearchParameter("lng", formData, newSearchParams);
-  setSearchParameter("start", formData, newSearchParams);
-  setSearchParameter("end", formData, newSearchParams);
-  if (formData.has("showCurrent")) {
+  const showHistory =
+    formData.has("showHistory") &&
+    formData.get("showHistory")?.toString() === "true";
+  if (showHistory) {
+    newSearchParams.set("showHistory", "true");
+    setSearchParameter("start", formData, newSearchParams);
+    setSearchParameter("end", formData, newSearchParams);
+  } else {
+    newSearchParams.delete("showHistory");
     newSearchParams.delete("start");
     newSearchParams.delete("end");
   }
@@ -129,48 +145,48 @@ export const links: LinksFunction = () => {
 };
 
 export default function Index() {
-  const { data, currentUrl } = useLoaderData<ServerSideData>();
-  const [historyOpen, showHistory] = useState(false);
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const { data, currentUrl, showHistory, historyStart, historyEnd } =
+    useLoaderData<ServerSideData>();
   const fetcher = useFetcher();
 
+  const { startDate, endDate } = useMemo(() => {
+    const referenceDate = new Date();
+    return {
+      startDate: parseDate(historyStart, referenceDate),
+      endDate: parseDate(historyEnd, referenceDate),
+    };
+  }, [historyStart, historyEnd]);
+
   const toggleHistory = () => {
-    showHistory(!historyOpen);
-    if (!historyOpen) {
+    if (!showHistory) {
       executeHistoryQuery(startDate, endDate);
     } else {
-      fetcher.submit({ showCurrent: "true" }, { method: "POST" });
+      fetcher.submit({ showHistory: "false" }, { method: "POST" });
     }
   };
 
   const executeHistoryQuery = (start: Date | null, end: Date | null) => {
-    setStartDate(start);
-    setEndDate(end);
-
-    const searchParams = match([start, end])
-      .with([P.not(null), P.not(null)], ([startVal, endVal]) => ({
-        start: format(startVal, DATETIME_FORMAT),
-        end: format(endVal, DATETIME_FORMAT),
-      }))
-      .with([P.not(null), null], ([startVal, _]) => ({
-        start: format(startVal, DATETIME_FORMAT),
-        end: "undefined",
-      }))
-      .with([null, P.not(null)], ([_, endVal]) => ({
-        start: "undefined",
-        end: format(endVal, DATETIME_FORMAT),
-      }))
-      .otherwise(() => ({ start: "undefined", end: "undefined" }));
-
+    let searchParams = { showHistory: "true" };
+    searchParams =
+      start !== null
+        ? Object.assign(searchParams, { start: format(start, DATETIME_FORMAT) })
+        : searchParams;
+    searchParams =
+      end !== null
+        ? Object.assign(searchParams, { end: format(end, DATETIME_FORMAT) })
+        : searchParams;
     fetcher.submit(searchParams, { method: "POST" });
   };
 
   return (
     <div className="App">
-      <Header historyOpen={historyOpen} toggleHistory={toggleHistory} currentUrl={currentUrl}/>
+      <Header
+        historyOpen={showHistory || false}
+        toggleHistory={toggleHistory}
+        currentUrl={currentUrl}
+      />
       <HistorySearchSection
-        isOpen={historyOpen}
+        isOpen={showHistory || false}
         start={startDate}
         end={endDate}
         onSearchRangeChange={executeHistoryQuery}

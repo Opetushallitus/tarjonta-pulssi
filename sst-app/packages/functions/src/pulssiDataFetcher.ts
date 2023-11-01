@@ -27,7 +27,8 @@ export const handler = ApiHandler(async (evt) => {
   //const result = await pulssiDbPool.query("select to_char(now(), 'DD.MM.YYYY HH24:MI TZH')");
   const startTimestamp = evt.queryStringParameters?.start;
   const endTimestamp = evt.queryStringParameters?.end;
-  const result = startTimestamp && endTimestamp ? await getHistoryDataFromDb(pulssiDbPool, startTimestamp, endTimestamp) : await getCurrentAmountDataFromDb(pulssiDbPool);
+  const historyParam = evt.queryStringParameters?.history;
+  const result = historyParam ? await getHistoryDataFromDb(pulssiDbPool, startTimestamp, endTimestamp) : await getCurrentAmountDataFromDb(pulssiDbPool);
   return {
     statusCode: 200,
     body: JSON.stringify(result),

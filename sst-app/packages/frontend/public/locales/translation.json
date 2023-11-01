@@ -4,6 +4,16 @@
     "sv": "Grundläggande utbildning för vuxna",
     "en": "Adult comprehensive education"
   },
+  "alkuaika": {
+    "fi": "alkuaika",
+    "sv": "alkuaika",
+    "en": "alkuaika"
+  },
+  "alkupaiva": {
+    "fi": "alkupäivä",
+    "sv": "alkupäivä",
+    "en": "alkupäivä"
+  },
   "amk": {
     "fi": "Ammattikorkeakoulutus",
     "sv": "Yrkeshögskoleutbildning",
@@ -158,6 +168,16 @@
     "fi": "Lukiokoulutus",
     "sv": "Gymnasieutbildning",
     "en": "General upper secondary education"
+  },
+  "loppuaika": {
+    "fi": "loppuaika",
+    "sv": "loppuaika",
+    "en": "loppuaika"
+  },
+  "loppupaiva": {
+    "fi": "loppupäivä",
+    "sv": "loppupäivä",
+    "en": "loppupäivä"
   },
   "molemmat_tilat_otsikko": {
     "fi": "Julkaistut + Arkistoidut",

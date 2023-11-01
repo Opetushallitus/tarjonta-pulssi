@@ -128,7 +128,7 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
     {
       entry: "packages/functions/src/pulssiUpdater.ts",
       handler: "main",
-      runtime: Runtime.NODEJS_16_X,
+      runtime: Runtime.NODEJS_18_X,
       logRetention: RetentionDays.ONE_YEAR,
       architecture: Architecture.ARM_64,
       timeout: Duration.seconds(10),
@@ -181,7 +181,7 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
 // Database migrations
 
     const dbMigrationsLayer = new LayerVersion(stack, "db-migrations-layer", {
-      compatibleRuntimes: [Runtime.NODEJS_16_X],
+      compatibleRuntimes: [Runtime.NODEJS_18_X],
       code: Code.fromAsset("packages/shared/db/migrations"),
       description: "umzug db migration files",
     });
@@ -192,7 +192,7 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
       {
         entry: "packages/functions/src/pulssiDbMigrator.ts",
         handler: "main",
-        runtime: Runtime.NODEJS_16_X,
+        runtime: Runtime.NODEJS_18_X,
         logRetention: RetentionDays.ONE_YEAR,
         architecture: Architecture.ARM_64,
         timeout: Duration.minutes(2),

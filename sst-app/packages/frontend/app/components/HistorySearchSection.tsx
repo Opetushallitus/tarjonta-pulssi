@@ -1,11 +1,12 @@
 import { Box, Divider, Slider, styled } from "@mui/material";
-import { DatePicker, LocalizationProvider, TimeField } from "@mui/x-date-pickers";
+import { DatePicker, LocalizationProvider, TimeField, TimePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import fi from 'date-fns/locale/fi';
 import { parse, addDays, addMonths, isAfter, differenceInCalendarDays, differenceInCalendarMonths, format } from 'date-fns'
 import { match, P } from "ts-pattern";
 import { sortBy, castArray } from "lodash";
 import { DATETIME_FORMAT } from "../../../shared/constants";
+import { useTranslation } from "react-i18next";
 
 const TIME_FORMAT = "HH:mm";
 const REFERENCE_DATE = new Date();
@@ -110,50 +111,53 @@ const combineDateTime = (date: Date, time: Date) => {
 type SelectProps = {
   dateLabel: string,
   timeLabel: string,
-  defaultDate: Date | null,
+  dateTimeValue: Date | null,
   defaultTimeValue: Date,
   onDateChange: (date: Date | null) => void,
 }
 const DateTimeSelect = (props: SelectProps) => {
-  const { dateLabel, timeLabel, defaultDate, defaultTimeValue, onDateChange } = props;
+  const { dateLabel, timeLabel, dateTimeValue, defaultTimeValue, onDateChange } = props;
   const timeChanged = (time: Date | null) => {
-    const newTime = match([defaultDate, time ])
+    const newTime = match([dateTimeValue, time ])
       .with([P.nullish, P._], () => null)
-      .with([P.not(null), P.nullish], ([date, _]) => combineDateTime(date, defaultTimeValue)) // => 00:00 tai 23:59
+      .with([P.not(P.nullish), P.nullish], ([date, _]) => combineDateTime(date, defaultTimeValue)) // => 00:00 tai 23:59
       .otherwise(() => time);
     onDateChange(newTime);
   }
+
   const valueToKey = (dateVal : Date | null, postFix: string) => `${dateVal !== null ? dateVal.getTime.toString() : "null"}_${postFix}`;
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fi}>
       <DatePicker
-        key={valueToKey(defaultDate, "day")}
+        key={valueToKey(dateTimeValue, "day")}
         label={dateLabel} 
-        defaultValue={defaultDate} 
+        value={dateTimeValue}
+        onChange={onDateChange}
         onAccept={onDateChange}
         sx={{ marginRight: '15px'}}
         slotProps={{ field: { clearable: true, onClear: () => onDateChange(null)}}}
       />
-      <TimeField
-        key={valueToKey(defaultDate, "time")}
+      <TimePicker
         label={timeLabel}
-        defaultValue={defaultDate ? combineDateTime(defaultDate, defaultTimeValue) : null} 
+        value={dateTimeValue}
         onChange={timeChanged}
-        clearable={true}
-        onClear={() => timeChanged(null)}
+        onAccept={timeChanged}
+        timeSteps={{ hours: 1, minutes: 1}}
+        slotProps={{ field: { clearable: true, onClear: () => timeChanged(null)}}}
       /> 
     </LocalizationProvider> 
   )
 }
 export type HistoryProps = {
   isOpen: boolean,
-  start: Date | null,
-  end: Date | null,
-  onSearchRangeChange: (start: Date | null, end: Date | null) => void
+  start: Date | null,
+  end: Date | null,
+  onSearchRangeChange: (start: Date | null, end: Date | null) => void
 }
 
 export const HistorySearchSection = (props: HistoryProps) => {
   const { isOpen, start, end, onSearchRangeChange } = props;
+  const { t } = useTranslation();
 
   const onStartDateChange = (date: Date | null) => onSearchRangeChange(date, end)
   const onEndDateChange = (date: Date | null) => onSearchRangeChange(start, date)
@@ -175,17 +179,17 @@ export const HistorySearchSection = (props: HistoryProps) => {
         marginTop="30px"
         marginBottom="15px">
         <DateTimeSelect 
-          dateLabel="alkupäivä" 
-          timeLabel="alkuaika" 
-          defaultDate={start} 
+          dateLabel={t("alkupaiva")} 
+          timeLabel={t("alkuaika")} 
+          dateTimeValue={start} 
           defaultTimeValue={DEFAULT_START_TIME}
           onDateChange={onStartDateChange}
         />  
         <span style={{ marginLeft: '15px', marginRight: '15px', fontWeight: 600 }}>-</span>
         <DateTimeSelect 
-          dateLabel="loppupäivä" 
-          timeLabel="loppuaika" 
-          defaultDate={end}
+          dateLabel={t("loppupaiva")} 
+          timeLabel={t("loppuaika")} 
+          dateTimeValue={end}
           defaultTimeValue={DEFAULT_END_TIME}
           onDateChange={onEndDateChange}
         />  

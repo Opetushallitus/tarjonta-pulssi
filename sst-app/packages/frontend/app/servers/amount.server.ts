@@ -5,6 +5,7 @@ import { DEFAULT_DB_POOL_PARAMS } from '../../../shared/dbUtils';
 import { Pool } from "pg";
 import { getCurrentAmountDataFromDb, getHistoryDataFromDb } from '../../../functions/src/pulssiDbAccessor'
 import { getCombinedHistoryData } from '../../../shared/amountDataUtils';
+import { P, match } from 'ts-pattern';
 
 
 const localPulssiDbPool = new Pool({
@@ -28,14 +29,17 @@ export const getCurrentAmountData = async() => {
   }
 }
 
-export const getHistoryAmountData = async (startStr: string, endStr: string) => {
+export const getHistoryAmountData = async (startStr: string | null, endStr: string | null) => {
   switch(process.env.DATABASE) {
     case "file":
       return getCombinedHistoryData(data_old as unknown as PulssiData, data_current as unknown as PulssiData )
     case "local":
       return await getHistoryDataFromDb(localPulssiDbPool, startStr, endStr);
     default:
-      const url = `${process.env.DB_API_URL || ""}?${new URLSearchParams({ start: startStr, end: endStr}).toString()}`;
+      let params = { history: "true "};
+      params = startStr !== null ? Object.assign(params, { start: startStr}) : params;
+      params = endStr !== null ? Object.assign(params, { end: endStr}) : params;
+      const url = `${process.env.DB_API_URL || ""}?${new URLSearchParams(params).toString()}`;
       const results = await fetch(url);
       return await results.json();
   }

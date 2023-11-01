@@ -11,7 +11,7 @@ import type {
 } from "./types";
 import { findLastIndex, update } from "lodash";
 import { parse, isAfter } from "date-fns";
-import { DATETIME_FORMAT_TZ } from "./constants";
+import { DATETIME_FORMAT, DATETIME_FORMAT_TZ } from "./constants";
 
 export const EMPTY_DATABASE_RESULTS = {
   koulutukset: [],
@@ -54,6 +54,14 @@ export const sumUp = (number1: number | undefined, number2: number | undefined
     .with([P.not(P.nullish), P.nullish], () => number1)
     .with([P.nullish, P.not(P.nullish)], () => number2)
     .otherwise(() => undefined);
+};
+
+export const parseDate = (dateStr: string | null | undefined, referenceData: Date = new Date()) => {
+  try {
+    return dateStr !== null && dateStr !== undefined ? parse(dateStr, DATETIME_FORMAT, referenceData) : null;
+  } catch (e) {
+    return null;
+  }
 };
 
 const EMPTY_ITEMS = new Array<SubKeyWithAmounts>();

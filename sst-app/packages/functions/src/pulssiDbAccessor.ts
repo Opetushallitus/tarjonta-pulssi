@@ -1,6 +1,6 @@
 import type { Pool } from "pg";
 import { getCurrentPulssiAmounts, queryPulssiAmounts, queryPulssiAmountsAtCertainMoment, queryAllSubentityTypesByEntityTypes } from "./amountDbUtils";
-import { EMPTY_DATABASE_RESULTS, dbQueryResultToPulssiData, findMissingHistoryAmountsForEntity, getCombinedHistoryData, resolveMissingAmounts } from "../../shared/amountDataUtils";
+import { EMPTY_DATABASE_RESULTS, dbQueryResultToPulssiData, findMissingHistoryAmountsForEntity, getCombinedHistoryData, parseDate, resolveMissingAmounts } from "../../shared/amountDataUtils";
 import type { DatabaseRow, EntityPlural, EntityType, SubEntitiesByEntitiesByTila, SubEntityAmounts } from "../../shared/types";
 import { DATETIME_FORMAT } from "../../shared/constants";
 import { format, parse, add } from "date-fns";
@@ -28,12 +28,12 @@ const getCurrentAmountDataForMissingHistoryAmounts = async (dbPool: Pool, missin
   }
 }
 
-const toUtcString = (date: Date | null) => 
+const toUtcString = (date: Date | null) => 
   date !== null ? format(add(date, { hours: (date.getTimezoneOffset() / 60)}), DATETIME_FORMAT) : null;
 
-export const getHistoryDataFromDb = async (dbPool: Pool, startStr: string, endStr: string) => {
+export const getHistoryDataFromDb = async (dbPool: Pool, startStr: string | null, endStr: string |null) => {
   const referenceData = new Date();
-  const start = startStr !== "undefined" ? parse(startStr, DATETIME_FORMAT, referenceData) : null;
+  const start = parseDate(startStr, referenceData);
   const dbStartTime = toUtcString(start);
   let koulutukset = await queryPulssiAmountsAtCertainMoment(dbPool, "koulutus", dbStartTime);
   let toteutukset = await queryPulssiAmountsAtCertainMoment(dbPool, "toteutus", dbStartTime);
@@ -51,7 +51,7 @@ export const getHistoryDataFromDb = async (dbPool: Pool, startStr: string, endSt
     haut: dbQueryResultToPulssiData(haut.concat(findMissingHistoryAmountsForEntity(missingHistoryAmounts.haut, currentAmountData.haut)), "haku", start),
   };
 
-  const end = endStr !== "undefined" ? parse(endStr, DATETIME_FORMAT, referenceData) : null;
+  const end = parseDate(endStr, referenceData);
   const dbEndTime = toUtcString(end); // Jos loppuaikaa ei ole annettu, haetaan lukemat current datasta
   koulutukset = dbEndTime ? await queryPulssiAmountsAtCertainMoment(dbPool, "koulutus", dbEndTime) : [];
   toteutukset = dbEndTime ? await queryPulssiAmountsAtCertainMoment(dbPool, "toteutus", dbEndTime) : [];
