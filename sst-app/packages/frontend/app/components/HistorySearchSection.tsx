@@ -11,7 +11,6 @@ import { useTranslation } from "react-i18next";
 const TIME_FORMAT = "HH:mm";
 const REFERENCE_DATE = new Date();
 export const PULSSI_START_DATE_TIME = parse("26.10.2022 00:00", DATETIME_FORMAT, REFERENCE_DATE);
-export const CURRENT_DATE_TIME = parse("23:59", TIME_FORMAT, REFERENCE_DATE); // nykyinen päivä, 23:59
 const DEFAULT_START_TIME = parse("00:00", TIME_FORMAT, REFERENCE_DATE);
 const DEFAULT_END_TIME = parse("23:59", TIME_FORMAT, REFERENCE_DATE);
 const DATE_FORMAT = "dd.MM.yyyy";
@@ -19,7 +18,7 @@ const SLIDER_MARK_FORMAT = "MM/yyyy";
 
 type SliderProps = {
   values: Array<Date | null>,
-   onChangeCommitted: (sliderStart: Date | null, sliderEnd: Date | null) => void
+   onChangeCommitted: (sliderStart: Date | null, sliderEnd: Date | null) => void
 }
 
 const StyledSlider = styled(Slider)(({theme}) => ({
@@ -71,8 +70,9 @@ const resolveSliderMarks = (endDate: Date) => {
 const formatSliderLabel = (dayNumber: number) => format(addDays(PULSSI_START_DATE_TIME, dayNumber), DATE_FORMAT);
 
 const HistorySearchSlider = (props: SliderProps) => {
-  const values = [ props.values[0] ?? PULSSI_START_DATE_TIME, props.values[1] ?? CURRENT_DATE_TIME];
-  const maxValue = differenceInCalendarDays(CURRENT_DATE_TIME, PULSSI_START_DATE_TIME);
+  const currentDate = new Date();
+  const values = [ props.values[0] ?? PULSSI_START_DATE_TIME, props.values[1] ?? currentDate];
+  const maxValue = differenceInCalendarDays(currentDate, PULSSI_START_DATE_TIME);
   const sliderValues = values.map(dateVal => differenceInCalendarDays(dateVal, PULSSI_START_DATE_TIME));
   const valueToKey = (value: Array<number>) => `${value[0]},${value[1]}`;
   const handleSliderValueCommit = (
@@ -91,7 +91,7 @@ const HistorySearchSlider = (props: SliderProps) => {
       key={valueToKey(sliderValues)}
       min={0}
       max={maxValue}
-      marks={resolveSliderMarks(CURRENT_DATE_TIME)}
+      marks={resolveSliderMarks(currentDate)}
       defaultValue={sliderValues}
       step={1}
       valueLabelDisplay="auto"

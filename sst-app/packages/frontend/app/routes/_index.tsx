@@ -112,6 +112,8 @@ const setSearchParameter = (
   const paramValue = formData.get(paramName);
   if (paramValue) {
     searchParameters.set(paramName, paramValue.toString());
+  } else {
+    searchParameters.delete(paramName);
   }
 };
 
