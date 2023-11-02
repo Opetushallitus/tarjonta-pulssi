@@ -1,12 +1,13 @@
-import { Box, Divider, Slider, styled } from "@mui/material";
+import { Box, Divider, Slider, debounce, styled } from "@mui/material";
 import { DatePicker, LocalizationProvider, TimeField, TimePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import fi from 'date-fns/locale/fi';
-import { parse, addDays, addMonths, isAfter, differenceInCalendarDays, differenceInCalendarMonths, format } from 'date-fns'
+import { parse, addDays, addMonths, isAfter, isBefore, isEqual, differenceInCalendarDays, differenceInCalendarMonths, format } from 'date-fns'
 import { match, P } from "ts-pattern";
 import { sortBy, castArray } from "lodash";
 import { DATETIME_FORMAT } from "../../../shared/constants";
 import { useTranslation } from "react-i18next";
+import { useMemo } from "react";
 
 const TIME_FORMAT = "HH:mm";
 const REFERENCE_DATE = new Date();
@@ -113,10 +114,33 @@ type SelectProps = {
   timeLabel: string,
   dateTimeValue: Date | null,
   defaultTimeValue: Date,
+  minDate?: Date | undefined,
+  maxDate?: Date | undefined,
   onDateChange: (date: Date | null) => void,
 }
+
+const isValidDate = (date: Date | null, params: SelectProps) => {
+  if (date !== null) {
+    if (isBefore(date, PULSSI_START_DATE_TIME) || isAfter(date, new Date())) {
+      return false;
+    }
+    if (params.maxDate && isAfter(date, params.maxDate)) {
+      return false;
+    }
+    if (params.minDate && isBefore(date, params.minDate)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 const DateTimeSelect = (props: SelectProps) => {
-  const { dateLabel, timeLabel, dateTimeValue, defaultTimeValue, onDateChange } = props;
+  const { dateLabel, timeLabel, dateTimeValue, defaultTimeValue, onDateChange, minDate, maxDate } = props;
+  const dateChanged = (date: Date | null) => {
+    if (isValidDate(date, props)) {
+      onDateChange(date);
+    }
+  }
   const timeChanged = (time: Date | null) => {
     const newTime = match([dateTimeValue, time ])
       .with([P.nullish, P._], () => null)
@@ -125,22 +149,38 @@ const DateTimeSelect = (props: SelectProps) => {
     onDateChange(newTime);
   }
 
+  const setDateDebounced = useMemo(
+    () => debounce(dateChanged, 300),
+    [dateChanged]
+  );
+
+  const setTimeDebounced = useMemo(
+    () => debounce(timeChanged, 300),
+    [timeChanged]
+  );
+  
+
   const valueToKey = (dateVal : Date | null, postFix: string) => `${dateVal !== null ? dateVal.getTime.toString() : "null"}_${postFix}`;
+  const dateBeforePulssiStartDate = (date: Date) => isBefore(date, PULSSI_START_DATE_TIME);
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fi}>
       <DatePicker
         key={valueToKey(dateTimeValue, "day")}
         label={dateLabel} 
         value={dateTimeValue}
-        onChange={onDateChange}
+        onChange={setDateDebounced}
         onAccept={onDateChange}
         sx={{ marginRight: '15px'}}
         slotProps={{ field: { clearable: true, onClear: () => onDateChange(null)}}}
+        shouldDisableDate={dateBeforePulssiStartDate}
+        minDate={minDate}
+        maxDate={maxDate}
+        disableFuture={true}
       />
       <TimePicker
         label={timeLabel}
         value={dateTimeValue}
-        onChange={timeChanged}
+        onChange={setTimeDebounced}
         onAccept={timeChanged}
         timeSteps={{ hours: 1, minutes: 1}}
         slotProps={{ field: { clearable: true, onClear: () => timeChanged(null)}}}
@@ -182,6 +222,7 @@ export const HistorySearchSection = (props: HistoryProps) => {
           dateLabel={t("alkupaiva")} 
           timeLabel={t("alkuaika")} 
           dateTimeValue={start} 
+          maxDate={end || undefined}
           defaultTimeValue={DEFAULT_START_TIME}
           onDateChange={onStartDateChange}
         />  
@@ -190,6 +231,7 @@ export const HistorySearchSection = (props: HistoryProps) => {
           dateLabel={t("loppupaiva")} 
           timeLabel={t("loppuaika")} 
           dateTimeValue={end}
+          minDate={start || undefined}
           defaultTimeValue={DEFAULT_END_TIME}
           onDateChange={onEndDateChange}
         />  
