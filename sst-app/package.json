@@ -12,7 +12,9 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "umzug": "ts-node --esm ./packages/shared/db/umzug/migrate.ts",
-    "database": "./test/tools/start_postgresql && npm run umzug up"
+    "database": "./test/tools/start_postgresql && npm run umzug up",
+    "import-db-dumps": "./test/tools/import_db_dumps.sh",
+    "prepare-test-env": "npm run database && npm run import-db-dumps"
   },
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.427.0",
