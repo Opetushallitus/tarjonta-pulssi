@@ -90,7 +90,7 @@ export const Header = (props: HeaderProps) => {
 
   const theme = useTheme();
 
-  const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
+  const isSmallDisplay = useMediaQuery(theme.breakpoints.down("sm"));
 
   const VisuallyHidden: React.FC<{ children: string }> = ({ children }) => (
     <span style={visuallyHidden}>{children}</span>
@@ -106,7 +106,7 @@ export const Header = (props: HeaderProps) => {
     <PulssiAppBar>
       <Box
         display="flex"
-        flexDirection={isSmall ? "column" : "row"}
+        flexDirection={isSmallDisplay ? "column" : "row"}
         flexWrap="wrap"
         justifyContent="flex-start"
         alignItems="center"

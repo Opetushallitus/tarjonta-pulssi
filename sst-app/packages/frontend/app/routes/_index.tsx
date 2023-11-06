@@ -107,12 +107,13 @@ export const loader: LoaderFunction = async ({ request }) => {
 const setSearchParameter = (
   paramName: string,
   formData: FormData,
-  searchParameters: URLSearchParams
+  searchParameters: URLSearchParams,
+  deleteNonExisting: boolean = false
 ) => {
   const paramValue = formData.get(paramName);
   if (paramValue) {
     searchParameters.set(paramName, paramValue.toString());
-  } else {
+  } else if (deleteNonExisting) {
     searchParameters.delete(paramName);
   }
 };
@@ -128,8 +129,8 @@ export const action: ActionFunction = async ({ request }) => {
     formData.get("showHistory")?.toString() === "true";
   if (showHistory) {
     newSearchParams.set("showHistory", "true");
-    setSearchParameter("start", formData, newSearchParams);
-    setSearchParameter("end", formData, newSearchParams);
+    setSearchParameter("start", formData, newSearchParams, true);
+    setSearchParameter("end", formData, newSearchParams, true);
   } else {
     newSearchParams.delete("showHistory");
     newSearchParams.delete("start");

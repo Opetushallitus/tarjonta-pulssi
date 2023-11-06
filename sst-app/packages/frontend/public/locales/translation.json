@@ -6,13 +6,8 @@
   },
   "alkuaika": {
     "fi": "alkuaika",
-    "sv": "alkuaika",
-    "en": "alkuaika"
-  },
-  "alkupaiva": {
-    "fi": "alkupäivä",
-    "sv": "alkupäivä",
-    "en": "alkupäivä"
+    "sv": "begynnelsetid",
+    "en": "starting time"
   },
   "amk": {
     "fi": "Ammattikorkeakoulutus",
@@ -61,8 +56,8 @@
   },
   "avaa-sulje-muutoshistoria": {
     "fi": "Avaa tai sulje muutoshistoria",
-    "sv": "Avaa tai sulje muutoshistoria",
-    "en": "Avaa tai sulje muutoshistoria"
+    "sv": "Öppna eller stäng ändringshistorik",
+    "en": "Open or close change history"
   },
   "avoin-amk": {
     "fi": "Avoin ammattikorkeakoulu",
@@ -171,13 +166,8 @@
   },
   "loppuaika": {
     "fi": "loppuaika",
-    "sv": "loppuaika",
-    "en": "loppuaika"
-  },
-  "loppupaiva": {
-    "fi": "loppupäivä",
-    "sv": "loppupäivä",
-    "en": "loppupäivä"
+    "sv": "sluttid",
+    "en": "ending time"
   },
   "molemmat_tilat_otsikko": {
     "fi": "Julkaistut + Arkistoidut",
@@ -191,8 +181,8 @@
   },
   "nayta_muutoshistoria": {
     "fi": "Näytä muutoshistoria",
-    "sv": "Näytä muutoshistoria",
-    "en": "Näytä muutoshistoria"
+    "sv": "Visa ändringshistorik",
+    "en": "Show change history"
   },
   "sivu_otsikko": {
     "fi": "Tarjonta-pulssi",
@@ -201,8 +191,8 @@
   },
   "sulje_muutoshistoria": {
     "fi": "Sulje muutoshistoria",
-    "sv": "Sulje muutoshistoria",
-    "en": "Sulje muutoshistoria"
+    "sv": "Stäng ändringshistorik",
+    "en": "Close change history"
   },
   "telma": {
     "en": "Preparatory education for work and independent living (TELMA)",
