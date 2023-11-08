@@ -14,7 +14,6 @@ import {
 } from "aws-cdk-lib/aws-lambda";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
-
 export function TARJONTAPULSSI({ stack }: StackContext) {
   
 // Environment specific configurations
@@ -43,8 +42,7 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
   }
   else
   {
-    OPHhostedZone = undefined
-    OPHdomainName = undefined
+    throw Error(`Unknown stack environment (stage) \"${stack.stage}\"!`)
   }
 
 // Couple helpful debugs for environment logic

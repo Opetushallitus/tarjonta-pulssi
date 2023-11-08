@@ -31,7 +31,7 @@ const getCurrentAmountDataForMissingHistoryAmounts = async (dbPool: Pool, missin
 const toUtcString = (date: Date | null) => 
   date !== null ? format(add(date, { hours: (date.getTimezoneOffset() / 60)}), DATETIME_FORMAT) : null;
 
-export const getHistoryDataFromDb = async (dbPool: Pool, startStr: string | null, endStr: string |null) => {
+export const getHistoryDataFromDb = async (dbPool: Pool, startStr: string | undefined, endStr: string | undefined) => {
   const referenceData = new Date();
   const start = parseDate(startStr, referenceData);
   const dbStartTime = toUtcString(start);
