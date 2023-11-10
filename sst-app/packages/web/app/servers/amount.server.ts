@@ -34,7 +34,7 @@ export const getHistoryAmountData = async (startStr: string | null, endStr: stri
     case "file":
       return getCombinedHistoryData(data_old as unknown as PulssiData, data_current as unknown as PulssiData )
     case "local":
-      return await getHistoryDataFromDb(localPulssiDbPool, startStr, endStr);
+      return await getHistoryDataFromDb(localPulssiDbPool, startStr ?? undefined, endStr ?? undefined);
     default:
       let params = { history: "true "};
       params = startStr !== null ? Object.assign(params, { start: startStr}) : params;

@@ -1,5 +1,5 @@
-import { json, type LoaderArgs } from "@remix-run/node";
-import type { V2_MetaFunction } from "@remix-run/react";
+import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import type { MetaFunction } from "@remix-run/react";
 import {
   Links,
   LiveReload,
@@ -14,10 +14,10 @@ import { useTranslation } from "react-i18next";
 import { useChangeLanguage } from "./hooks/useChangeLanguage";
 import { Box, CircularProgress } from "@mui/material";
 
-export const meta: V2_MetaFunction = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
     {
-      title: data.title,
+      title: data?.title,
     },
     { charSet: "utf-8" },
     {
@@ -27,7 +27,7 @@ export const meta: V2_MetaFunction = ({ data }) => {
   ];
 };
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   let t = await i18next.getFixedT(request);
   let locale = await i18next.getLocale(request);
   let title = t(`sivu_otsikko`);
