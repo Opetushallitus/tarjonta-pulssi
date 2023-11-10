@@ -17,7 +17,6 @@ import opintopolku_logo_header_fi from "~/assets/opintopolku_logo_header_fi.svg"
 import opintopolku_logo_header_en from "~/assets/opintopolku_logo_header_en.svg";
 import opintopolku_logo_header_sv from "~/assets/opintopolku_logo_header_sv.svg";
 import { useTranslation } from "react-i18next";
-import SVG from "react-inlinesvg";
 
 const classes = {
   historyButtonSection: "historyButtonSection",
@@ -113,14 +112,10 @@ export const Header = (props: HeaderProps) => {
         width="100%"
       >
         <Link href={getOpintopolkuUrl()} sx={{ paddingRight: 3 }}>
-          <SVG
+          <img
             src={getOpintopolkuHeaderLogoSrc(i18n.language)}
-            fontSize="inherit"
-            fill="currentColor"
-            focusable="false"
             aria-hidden="true"
             height="26px"
-            width="auto"
           />
           <VisuallyHidden>{t("siirry_opintopolkuun")}</VisuallyHidden>
         </Link>
