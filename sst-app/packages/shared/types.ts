@@ -64,6 +64,7 @@ export type PulssiData = {
   toteutukset: EntityDataWithSubKey;
   hakukohteet: EntityDataWithSubKey;
   haut: EntityDataWithSubKey;
+  minAikaleima?: string;
 }
 
 export type SubEntitiesByEntities = {
@@ -88,7 +89,7 @@ export type SubEntitiesByEntitiesByTila = {
 export type DatabaseRow = {
   sub_entity: string,
   tila: Julkaisutila,
-  start_timestamp: string,
+  start_timestamp: Date,
   amount: number,
   jotpa_amount?: number,
   taydennyskoulutus_amount?: number,

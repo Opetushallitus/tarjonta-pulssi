@@ -3,9 +3,9 @@ node_modules
 /.sst
 /.cache
 /build
-/packages/frontend/.cache
-/packages/frontend/build
-/packages/frontend/public/build
+/packages/web/.cache
+/packages/web/build
+/packages/web/public/build
 .env
 cdk.context.json
 cdk.out

@@ -11,6 +11,7 @@ th.row {
 th.col {
   border-right: 1px solid rgba(0, 0, 0, 0.15);
   text-align: left;
+  word-break: break-word;
 }
 
 td,

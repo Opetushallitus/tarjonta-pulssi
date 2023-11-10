@@ -24,7 +24,7 @@ import tableStylesUrl from "~/styles/table.css";
 import { useTranslation } from "react-i18next";
 import { HistorySearchSection } from "~/components/HistorySearchSection";
 import { format } from "date-fns";
-import { DATETIME_FORMAT } from "../../../shared/constants";
+import { DATETIME_FORMAT, DATETIME_FORMAT_TZ } from "../../../shared/constants";
 import { parseDate } from "../../../shared/amountDataUtils";
 import { useMemo } from "react";
 
@@ -63,9 +63,11 @@ const SectionHeading = styled(Typography)`
 const EntitySection = ({
   entity,
   data,
+  showHistory,
 }: {
   entity: EntityType;
   data: EntityDataWithSubKey;
+  showHistory: boolean;
 }) => {
   const { t } = useTranslation();
 
@@ -76,7 +78,7 @@ const EntitySection = ({
         <IconComponent />
         <SectionHeading variant="h2">{t(`${entity}_otsikko`)}</SectionHeading>
       </StyledEntitySectionHeader>
-      <EntityTable data={data} entity={entity} />
+      <EntityTable data={data} entity={entity} showHistory={showHistory} />
     </StyledEntitySection>
   );
 };
@@ -124,17 +126,16 @@ export const action: ActionFunction = async ({ request }) => {
   const newUrl = new URL(url);
   const newSearchParams = new URLSearchParams(url.search);
   setSearchParameter("lng", formData, newSearchParams);
-  const showHistory =
-    formData.has("showHistory") &&
-    formData.get("showHistory")?.toString() === "true";
-  if (showHistory) {
-    newSearchParams.set("showHistory", "true");
-    setSearchParameter("start", formData, newSearchParams, true);
-    setSearchParameter("end", formData, newSearchParams, true);
-  } else {
-    newSearchParams.delete("showHistory");
-    newSearchParams.delete("start");
-    newSearchParams.delete("end");
+  if (formData.has("showHistory")) {
+    if (formData.get("showHistory")?.toString() === "true") {
+      newSearchParams.set("showHistory", "true");
+      setSearchParameter("start", formData, newSearchParams, true);
+      setSearchParameter("end", formData, newSearchParams, true);
+    } else {
+      newSearchParams.delete("showHistory");
+      newSearchParams.delete("start");
+      newSearchParams.delete("end");
+    }
   }
   newUrl.search = newSearchParams.toString();
   return redirect(newUrl.toString());
@@ -172,11 +173,11 @@ export default function Index() {
     let searchParams = { showHistory: "true" };
     searchParams =
       start !== null
-        ? Object.assign(searchParams, { start: format(start, DATETIME_FORMAT) })
+        ? Object.assign(searchParams, { start: format(start, DATETIME_FORMAT_TZ) })
         : searchParams;
     searchParams =
       end !== null
-        ? Object.assign(searchParams, { end: format(end, DATETIME_FORMAT) })
+        ? Object.assign(searchParams, { end: format(end, DATETIME_FORMAT_TZ) })
         : searchParams;
     fetcher.submit(searchParams, { method: "POST" });
   };
@@ -190,15 +191,16 @@ export default function Index() {
       />
       <HistorySearchSection
         isOpen={showHistory || false}
+        minDateTime={data.minAikaleima || ""}
         start={startDate}
         end={endDate}
         onSearchRangeChange={executeHistoryQuery}
       />
       <div className="Content">
-        <EntitySection entity="koulutus" data={data.koulutukset} />
-        <EntitySection entity="toteutus" data={data.toteutukset} />
-        <EntitySection entity="hakukohde" data={data.hakukohteet} />
-        <EntitySection entity="haku" data={data.haut} />
+        <EntitySection entity="koulutus" data={data.koulutukset} showHistory={showHistory || false} />
+        <EntitySection entity="toteutus" data={data.toteutukset} showHistory={showHistory || false} />
+        <EntitySection entity="hakukohde" data={data.hakukohteet} showHistory={showHistory || false} />
+        <EntitySection entity="haku" data={data.haut} showHistory={showHistory || false} />
       </div>
     </div>
   );

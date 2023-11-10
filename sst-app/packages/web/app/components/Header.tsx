@@ -109,7 +109,7 @@ export const Header = (props: HeaderProps) => {
         flexDirection={isSmallDisplay ? "column" : "row"}
         flexWrap="wrap"
         justifyContent="flex-start"
-        alignItems="center"
+        alignItems={isSmallDisplay ? "flex-start" : "center"}
         width="100%"
       >
         <Link href={getOpintopolkuUrl()} sx={{ paddingRight: 3 }}>

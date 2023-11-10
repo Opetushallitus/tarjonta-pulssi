@@ -1,17 +1,16 @@
-import { Box, Divider, Slider, debounce, styled, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Divider, Slider, styled, useMediaQuery, useTheme } from "@mui/material";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import fi from 'date-fns/locale/fi';
-import { parse, addDays, addMonths, isAfter, isBefore, differenceInCalendarDays, differenceInCalendarMonths, format } from 'date-fns'
+import { parse, set, addDays, addMonths, isAfter, isBefore, differenceInCalendarDays, differenceInCalendarMonths, format } from 'date-fns'
 import { match, P } from "ts-pattern";
 import { sortBy, castArray } from "lodash";
-import { DATETIME_FORMAT } from "../../../shared/constants";
+import { DATETIME_FORMAT_TZ } from "../../../shared/constants";
 import { useTranslation } from "react-i18next";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 
 const TIME_FORMAT = "HH:mm";
 const REFERENCE_DATE = new Date();
-export const PULSSI_START_DATE_TIME = parse("26.10.2022 00:00", DATETIME_FORMAT, REFERENCE_DATE);
 const DEFAULT_START_TIME = parse("00:00", TIME_FORMAT, REFERENCE_DATE);
 const DEFAULT_END_TIME = parse("23:59", TIME_FORMAT, REFERENCE_DATE);
 const DATE_FORMAT = "dd.MM.yyyy";
@@ -19,8 +18,9 @@ const SLIDER_MARK_FORMAT = "MM/yyyy";
 const SLIDER_MARK_FORMAT_SHORT = "MM/yy";
 
 type SliderProps = {
-  values: Array<Date | null>,
-   onChangeCommitted: (sliderStart: Date | null, sliderEnd: Date | null) => void
+  values: Array<Date | null>;
+  onChangeCommitted: (sliderStart: Date | null, sliderEnd: Date | null) => void;
+  minDate: Date;
 }
 
 const StyledSlider = styled(Slider)(({theme}) => ({
@@ -42,8 +42,8 @@ const MAX_NUMBER_OF_MARKS = 11;
 
 // Sliderin merkit päätellään kuukausien maksimimäärästä, siten että merkkejä maksimissaan 11.
 // Jos kuukausien määrä alle 63, lasketaan merkit suoraan kuukausina. Muuten merkit lasketaan vuosina.
-const resolveSliderMarks = (endDate: Date, isSmallDisplay: boolean = false) => {
-  const nbrOfMonths = differenceInCalendarMonths(endDate, PULSSI_START_DATE_TIME);
+const resolveSliderMarks = (startDate: Date, endDate: Date, isSmallDisplay: boolean = false) => {
+  const nbrOfMonths = differenceInCalendarMonths(endDate, startDate);
   const stepLengthInMonths = match(nbrOfMonths)
     .with(P.number.lt(11), () => 1)
     .with(P.number.lt(21), () => 2)
@@ -56,26 +56,24 @@ const resolveSliderMarks = (endDate: Date, isSmallDisplay: boolean = false) => {
       return Math.ceil(nbrOfMonths / monthsInMaxNbrOfSteps) * 12;
     });
 
-  // Käytettäessä yhden tai kahden kk:n väliä, aloitetaan merkit 1.11.2022, muussa tapauksessa vuoden 2023 alusta
+  // Aloitetaan merkit alkupäivästä laskien seuraavan kuukauden ensimmäisestä päivästä (tai alkupäivästä itsestään jos se on kuukauden 1. päivä)
   const referenceDate = new Date();
-  let markIteratorDate = stepLengthInMonths < 3 
-    ? parse("1.11.2022", DATE_FORMAT, referenceDate) 
-    : parse("1.1.2023", DATE_FORMAT, referenceDate);
+  let markIteratorDate = startDate.getDate() === 1 ? startDate : set(addMonths(startDate, 1), {date: 1});
   const marks = [{value: 0, label: ''}];
   while (isAfter(endDate, markIteratorDate)) {
-    marks.push({ value: differenceInCalendarDays(markIteratorDate, PULSSI_START_DATE_TIME), label: format(markIteratorDate, isSmallDisplay ? SLIDER_MARK_FORMAT_SHORT : SLIDER_MARK_FORMAT)});  
+    marks.push({ value: differenceInCalendarDays(markIteratorDate, startDate), label: format(markIteratorDate, isSmallDisplay ? SLIDER_MARK_FORMAT_SHORT : SLIDER_MARK_FORMAT)});  
     markIteratorDate = addMonths(markIteratorDate, stepLengthInMonths);
   }
   return marks;
 };
 
-const formatSliderLabel = (dayNumber: number) => format(addDays(PULSSI_START_DATE_TIME, dayNumber), DATE_FORMAT);
 
 const HistorySearchSlider = (props: SliderProps) => {
+  const { values, minDate, onChangeCommitted } = props;
   const currentDate = new Date();
-  const values = [ props.values[0] ?? PULSSI_START_DATE_TIME, props.values[1] ?? currentDate];
-  const maxValue = differenceInCalendarDays(currentDate, PULSSI_START_DATE_TIME);
-  const sliderValues = values.map(dateVal => differenceInCalendarDays(dateVal, PULSSI_START_DATE_TIME));
+  const completeValues = [ values[0] ?? minDate, values[1] ?? currentDate];
+  const maxValue = differenceInCalendarDays(currentDate, minDate);
+  const sliderValues = completeValues.map(dateVal => differenceInCalendarDays(dateVal, minDate));
   const valueToKey = (value: Array<number>) => `${value[0]},${value[1]}`;
   const handleSliderValueCommit = (
     _e: React.SyntheticEvent | Event,
@@ -83,10 +81,11 @@ const HistorySearchSlider = (props: SliderProps) => {
   ) => {
     const numVals = sortBy(Array.isArray(value) ? value : castArray(value));
     const dateValues = [ 
-      numVals[0] !== 0 ? addDays(PULSSI_START_DATE_TIME, numVals[0]) : null, 
-      numVals[1] !== maxValue ? addDays(PULSSI_START_DATE_TIME, numVals[1]) : null ];
-    props.onChangeCommitted(dateValues[0], dateValues[1]);
+      numVals[0] !== 0 ? addDays(minDate, numVals[0]) : null, 
+      numVals[1] !== maxValue ? addDays(minDate, numVals[1]) : null ];
+    onChangeCommitted(dateValues[0], dateValues[1]);
   };
+  const formatSliderLabel = (dayNumber: number) => format(addDays(minDate, dayNumber), DATE_FORMAT);
 
   const theme = useTheme();
   const isMediumDisplay = useMediaQuery(theme.breakpoints.down("md"));
@@ -97,7 +96,7 @@ const HistorySearchSlider = (props: SliderProps) => {
       key={valueToKey(sliderValues)}
       min={0}
       max={maxValue}
-      marks={isSmallDisplay ? undefined : resolveSliderMarks(currentDate, isMediumDisplay)}
+      marks={isSmallDisplay ? undefined : resolveSliderMarks(minDate, currentDate, isMediumDisplay)}
       defaultValue={sliderValues}
       step={1}
       valueLabelDisplay="auto"
@@ -117,70 +116,43 @@ const combineDateTime = (date: Date, time: Date) => {
 type SelectProps = {
   label: string,
   dateTimeValue: Date | null,
-  defaultTimeValue: Date,
-  minDateTime?: Date | undefined,
-  maxDateTime?: Date | undefined,
+  referenceDateTime: Date,
+  minDateTime: Date,
+  maxDateTime?: Date,
   onDateChange: (date: Date | null) => void,
 }
 
-const isValidDate = (date: Date | null, params: SelectProps) => {
-  if (date !== null) {
-    if (isBefore(date, PULSSI_START_DATE_TIME) || isAfter(date, new Date())) {
-      return false;
-    }
-    if (params.maxDateTime && isAfter(date, params.maxDateTime)) {
-      return false;
-    }
-    if (params.minDateTime && isBefore(date, params.minDateTime)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 const DateTimeSelect = (props: SelectProps) => {
-  const { label, dateTimeValue, defaultTimeValue, onDateChange, minDateTime, maxDateTime } = props;
-  const dateChanged = (date: Date | null) => {
-    if (isValidDate(date, props)) {
-      onDateChange(date);
-    }
-  }
-  const setDateDebounced = useMemo(
-    () => debounce(dateChanged, 300),
-    [dateChanged]
-  );
+  const { label, dateTimeValue, referenceDateTime, onDateChange, minDateTime, maxDateTime } = props;
 
-  const valueToKey = (dateVal : Date | null, postFix: string) => `${dateVal !== null ? dateVal.getTime.toString() : "null"}_${postFix}`;
-  const dateBeforePulssiStartDate = (date: Date) => isBefore(date, PULSSI_START_DATE_TIME);
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fi}>
       <DateTimePicker
-        key={valueToKey(dateTimeValue, "day")}
+        closeOnSelect={false}
         label={label} 
         value={dateTimeValue}
-        onChange={setDateDebounced}
         onAccept={onDateChange}
         sx={{ marginRight: '15px'}}
-        slotProps={{ field: { clearable: true, onClear: () => onDateChange(null)}}}
-        shouldDisableDate={dateBeforePulssiStartDate}
+        slotProps={{ field: { readOnly: true }}}
         minDateTime={minDateTime}
         maxDateTime={maxDateTime}
         disableFuture={true}
+        referenceDate={referenceDateTime}
         timeSteps={{ hours: 1, minutes: 1}}
-        referenceDate={defaultTimeValue}
       />
     </LocalizationProvider> 
   )
 }
 export type HistoryProps = {
   isOpen: boolean,
+  minDateTime: string,
   start: Date | null,
   end: Date | null,
   onSearchRangeChange: (start: Date | null, end: Date | null) => void
 }
 
 export const HistorySearchSection = (props: HistoryProps) => {
-  const { isOpen, start, end, onSearchRangeChange } = props;
+  const { isOpen, minDateTime, start, end, onSearchRangeChange } = props;
   const { t } = useTranslation();
 
   const onStartDateChange = (date: Date | null) => onSearchRangeChange(date, end)
@@ -192,6 +164,19 @@ export const HistorySearchSection = (props: HistoryProps) => {
     onSearchRangeChange(newStart, newEnd);
   }
 
+  const [ minDateTimeVal, setMinDateTimeVal] = useState<Date>(new Date());
+
+  useEffect(() => {
+    if (minDateTime !== "") {
+      const refDate = new Date();
+      const newDateval = parse(minDateTime, DATETIME_FORMAT_TZ, refDate);
+      if (isBefore(newDateval, minDateTimeVal)) {
+        setMinDateTimeVal(newDateval);
+      }
+    }
+  }, [minDateTime]
+  );
+
   return (
     <Box display={isOpen ? "flex": "none"} flexDirection="column" width="100%">
       <Box
@@ -201,24 +186,27 @@ export const HistorySearchSection = (props: HistoryProps) => {
         justifyContent="flex-start" 
         alignItems="center" 
         marginLeft="1%"
+        marginRight="2%"
         marginTop="30px"
-        marginBottom="15px">
+        marginBottom="15px"
+        rowGap="15px">
         <DateTimeSelect 
           label={t("alkuaika")} 
-          dateTimeValue={start} 
-          maxDateTime={end || undefined}
-          defaultTimeValue={DEFAULT_START_TIME}
+          dateTimeValue={start}
+          referenceDateTime={DEFAULT_START_TIME}
+          minDateTime={minDateTimeVal}
+          maxDateTime={end || undefined}
           onDateChange={onStartDateChange}
         />  
         <span style={{ marginLeft: '15px', marginRight: '15px', fontWeight: 600 }}>-</span>
         <DateTimeSelect 
           label={t("loppuaika")} 
           dateTimeValue={end}
-          minDateTime={start || undefined}
-          defaultTimeValue={DEFAULT_END_TIME}
+          referenceDateTime={DEFAULT_END_TIME}
+          minDateTime={start || minDateTimeVal}
           onDateChange={onEndDateChange}
         />  
-        <HistorySearchSlider values={[start, end]} onChangeCommitted={onSliderValueCommit}/>
+        <HistorySearchSlider minDate={minDateTimeVal} values={[start, end]} onChangeCommitted={onSliderValueCommit}/>
       </Box>
       <Divider />
     </Box>);

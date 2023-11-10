@@ -14,6 +14,7 @@ type RowProps = {
   amounts: WithAmounts;
   subRows?: Array<SubRowProps>;
   indent?: boolean;
+  formatAmounts: (curr: Number, old: Number) => string;
 };
 
 const totalAmount = (julkaistuAmount: number, arkistoituAmount: number) => {
@@ -25,21 +26,20 @@ const totalAmount = (julkaistuAmount: number, arkistoituAmount: number) => {
 
 }
 
-const formatContent = (currentValue: Number, oldValue: Number) => {
-  if (!Number.isNaN(currentValue)) {
-    if (!Number.isNaN(oldValue) && oldValue !== currentValue) {
-      return `${oldValue}...${currentValue}`;
-    }
-    return `${currentValue}`;
-  }
-  return "?";
-
+const formatSingleAmount = (amount: Number, _: Number = NaN) => Number.isNaN(amount) ? "?" : `${amount}`;
+const formatHistoryAmounts = (currentAmount: Number, oldAmount: Number) => {
+  const currValue = formatSingleAmount(currentAmount);
+  const oldValue = formatSingleAmount(oldAmount);
+  return currValue === oldValue ? currValue : `${oldValue}...${currValue}`;
 }
+
+
 const ContentRow = ({
   titleKey,
   amounts,
   subRows = [],
-  indent = false
+  indent = false,
+  formatAmounts,
 }: RowProps) => {
   const { t } = useTranslation();
 
@@ -60,14 +60,14 @@ const ContentRow = ({
           </div>
         </th>
         <td className="content">
-          {formatContent(julkaistuAmount, julkaistuAmountOld)}
+          {formatAmounts(julkaistuAmount, julkaistuAmountOld)}
         </td>
         <td className="content">
-          {formatContent(totalAmount, totalAmountOld)}
+          {formatAmounts(totalAmount, totalAmountOld)}
         </td>
       </tr>
       {subRows.map((rowProps) => (
-        <ContentRow key={rowProps.subkey} titleKey={rowProps.subkey} amounts={rowProps} indent={true} />
+        <ContentRow key={rowProps.subkey} titleKey={rowProps.subkey} amounts={rowProps} indent={true} formatAmounts={formatAmounts} />
       ))}
     </>
   ) : null;
@@ -80,10 +80,12 @@ const JoistaHeading = styled(Typography)`
 
 export const EntityTable = ({
   data,
-  entity
+  entity,
+  showHistory,
 }: {
   data: EntityDataWithSubKey;
   entity: EntityType;
+  showHistory: boolean;
 }) => {
   const { t } = useTranslation();
 
@@ -106,11 +108,11 @@ export const EntityTable = ({
           </thead>
           <tbody>
             {data?.items.map((entry) => (
-              <ContentRow key={entry.subkey} titleKey={entry.subkey} amounts={entry} subRows={entry.items || []}/>
+              <ContentRow key={entry.subkey} titleKey={entry.subkey} amounts={entry} subRows={entry.items || []} formatAmounts={showHistory ? formatHistoryAmounts : formatSingleAmount}/>
             ))}
           </tbody>
           <tfoot>
-            <ContentRow titleKey="yhteensa_otsikko" amounts={data?.by_tila} />
+            <ContentRow titleKey="yhteensa_otsikko" amounts={data?.by_tila} formatAmounts={showHistory ? formatHistoryAmounts : formatSingleAmount}/>
           </tfoot>
         </table>
       </Box>
@@ -144,6 +146,7 @@ export const EntityTable = ({
                     arkistoitu_amount: data?.by_tila?.arkistoitu_jotpa_amount,
                     arkistoitu_amount_old: data?.by_tila.arkistoitu_jotpa_amount_old
                   }}
+                  formatAmounts={showHistory ? formatHistoryAmounts : formatSingleAmount}
                 />
                 <ContentRow
                   titleKey="taydennyskoulutus_otsikko"
@@ -153,6 +156,7 @@ export const EntityTable = ({
                     arkistoitu_amount: data?.by_tila?.arkistoitu_taydennyskoulutus_amount,
                     arkistoitu_amount_old: data?.by_tila?.arkistoitu_taydennyskoulutus_amount_old
                   }}
+                  formatAmounts={showHistory ? formatHistoryAmounts : formatSingleAmount}
                 />
                 <ContentRow
                   titleKey="tyovoimakoulutus_otsikko"
@@ -162,6 +166,7 @@ export const EntityTable = ({
                     arkistoitu_amount: data?.by_tila?.arkistoitu_tyovoimakoulutus_amount,
                     arkistoitu_amount_old: data?.by_tila?.arkistoitu_tyovoimakoulutus_amount_old
                   }}
+                  formatAmounts={showHistory ? formatHistoryAmounts : formatSingleAmount}
                 />
               </tbody>
             </table>

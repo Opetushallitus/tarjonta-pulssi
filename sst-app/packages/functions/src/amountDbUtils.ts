@@ -8,7 +8,7 @@ const handleResults = (rows: Array<any>): Array<DatabaseRow> => {
   return rows.map((row) => ({
     sub_entity: String(row["sub_entity"]),
     tila: String(row["tila"]) as Julkaisutila,
-    start_timestamp: String(row["start_timestamp"]),
+    start_timestamp: row["start_timestamp"],
     amount: Number(row["amount"]),
     jotpa_amount: asOptionalNumber(row["jotpa_amount"]),
     taydennyskoulutus_amount: asOptionalNumber(row["taydennyskoulutus_amount"]),
@@ -34,7 +34,7 @@ export const queryPulssiAmounts = async (
         ].join(", ")
       : asAmountField("amount");
   const dbResult = await pulssiDbPool.query(
-    `select ${primaryColName} as sub_entity, tila, to_char(min(lower(system_time)), 'DD.MM.YYYY HH24:MI TZH') as start_timestamp, ${amountFields}
+    `select ${primaryColName} as sub_entity, tila, min(lower(system_time)) as start_timestamp, ${amountFields}
     from ${entity}_amounts group by ${primaryColName}, tila order by sub_entity`
   );
   return handleResults(dbResult.rows);
@@ -74,21 +74,21 @@ export const getCurrentPulssiAmounts = async (
 export const queryPulssiAmountsAtCertainMoment = async (
   pulssiDbPool: Pool,
   entity: EntityType,
-  timeStampInUtc: string | null
+  timeLimit: Date | null
 ) => {
   const amountFields =
     entity === "toteutus"
       ? "amount, jotpa_amount, taydennyskoulutus_amount, tyovoimakoulutus_amount"
       : "amount";
   const subEntityField = entity === "haku" ? "hakutapa" : "tyyppi_path";
-  const timeLimitCondition = timeStampInUtc ? `where upper(system_time) >= to_timestamp('${timeStampInUtc}','DD.MM.YYYY HH24:MI TZH')`: "";
+  const timeLimitCondition = timeLimit ? `where upper(system_time) >= $1`: "";
 
-  const sql = `select ${subEntityField} as sub_entity, tila, to_char(lower(system_time), 'DD.MM.YYYY HH24:MI') as start_timestamp, ${amountFields} 
+  const sql = `select ${subEntityField} as sub_entity, tila, lower(system_time) as start_timestamp, ${amountFields} 
     from ${entity}_amounts_history where (${subEntityField}, tila, upper(system_time)) in (
       select ${subEntityField}, tila, min(upper(system_time)) from ${entity}_amounts_history
       ${timeLimitCondition}
       group by ${subEntityField}, tila) order by sub_entity`;
 
-  const dbResult = await pulssiDbPool.query(sql);
+  const dbResult = timeLimit ? await pulssiDbPool.query(sql, [timeLimit]) : await pulssiDbPool.query(sql);
   return handleResults(dbResult.rows);
 };

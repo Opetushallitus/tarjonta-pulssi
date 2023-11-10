@@ -11,13 +11,13 @@ import type {
 } from "./types";
 import { findLastIndex, update } from "lodash";
 import { parse, isAfter } from "date-fns";
-import { DATETIME_FORMAT, DATETIME_FORMAT_TZ } from "./constants";
+import { DATETIME_FORMAT_TZ } from "./constants";
 
 export const EMPTY_DATABASE_RESULTS = {
   koulutukset: [],
   toteutukset: [],
   hakukohteet: [],
-  haut: []
+  haut: [],
 };
 
 const rowAmount = (
@@ -27,10 +27,7 @@ const rowAmount = (
 ) =>
   maxTimestamp &&
   row.start_timestamp &&
-  isAfter(
-    parse(row.start_timestamp, DATETIME_FORMAT_TZ, maxTimestamp),
-    maxTimestamp
-  )
+  isAfter(row.start_timestamp, maxTimestamp)
     ? undefined
     : Number(row[amountFieldName]);
 
@@ -48,17 +45,28 @@ const sumBy = (
   }, 0);
 };
 
-export const sumUp = (number1: number | undefined, number2: number | undefined) => {
+export const sumUp = (
+  number1: number | undefined,
+  number2: number | undefined
+) => {
   return match([number1, number2])
-    .with([P.not(P.nullish), P.not(P.nullish)], ([curVal, addVal]) => curVal + addVal)
+    .with(
+      [P.not(P.nullish), P.not(P.nullish)],
+      ([curVal, addVal]) => curVal + addVal
+    )
     .with([P.not(P.nullish), P.nullish], () => number1)
     .with([P.nullish, P.not(P.nullish)], () => number2)
     .otherwise(() => undefined);
 };
 
-export const parseDate = (dateStr: string | null | undefined, referenceData: Date = new Date()) => {
+export const parseDate = (
+  dateStr: string | null | undefined,
+  referenceData: Date = new Date()
+) => {
   try {
-    return dateStr !== null && dateStr !== undefined ? parse(dateStr, DATETIME_FORMAT, referenceData) : null;
+    return dateStr !== null && dateStr !== undefined
+      ? parse(dateStr, DATETIME_FORMAT_TZ, referenceData)
+      : null;
   } catch (e) {
     return null;
   }
@@ -117,7 +125,7 @@ export const dbQueryResultToPulssiData = (
           ? targetObject.julkaistu_amount
           : targetObject.arkistoitu_amount;
       const addedAmount = rowAmount(row, "amount", maxTimestamp);
-      targetObject[amountField] = sumUp(currentAmount, addedAmount); 
+      targetObject[amountField] = sumUp(currentAmount, addedAmount);
       parentArray = targetObject.items ? targetObject.items : parentArray;
     }
     return result;
@@ -291,7 +299,7 @@ const setCombinedEntityHistoryData = (
 export const getCombinedHistoryData = (
   startData: PulssiData,
   endData: PulssiData
-) => {
+): PulssiData => {
   const combined = JSON.parse(JSON.stringify(endData));
   setCombinedEntityHistoryData("koulutukset", startData.koulutukset, combined);
   setCombinedEntityHistoryData("toteutukset", startData.toteutukset, combined);

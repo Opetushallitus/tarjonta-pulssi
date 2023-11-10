@@ -24,7 +24,6 @@ const pulssiDbPool = new Pool({
 });
 
 export const handler = ApiHandler(async (evt) => {
-  //const result = await pulssiDbPool.query("select to_char(now(), 'DD.MM.YYYY HH24:MI TZH')");
   const startTimestamp = evt.queryStringParameters?.start;
   const endTimestamp = evt.queryStringParameters?.end;
   const historyParam = evt.queryStringParameters?.history;

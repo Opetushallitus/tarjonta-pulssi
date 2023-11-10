@@ -5,7 +5,7 @@ Tarjonta-pulssi on palvelu, joka koostaa koulutustarjontaan (kouta/konfo) liitty
 ## Arkkitehtuuri
 
 Palvelu on rakennettu [SST](https://docs.sst.dev/) ja [Remix](https://remix.run/) -framework:eja käyttäen. Palvelu koostuu karkeasti kuvattuna Remix-site -constructista, kolmesta erillisestä AWS-lambdasta ja PostgreSQL-tietokannasta.
-Remix-site koostaa varsinaisen Tarjonta-pulssi frontend-sovelluksen AWS:n sisällä: Tallentaa sovelluksen staattiset tiedostot S3 -ämpäriin, josta ne tarjoillaan käyttäjälle CloudFront:in (CDN) kautta. Sisältää myös
+Remix-site koostaa varsinaisen Tarjonta-pulssi web-sovelluksen AWS:n sisällä: Tallentaa sovelluksen staattiset tiedostot S3 -ämpäriin, josta ne tarjoillaan käyttäjälle CloudFront:in (CDN) kautta. Sisältää myös
 sovelluksen Remix NodeJS Lambda-backendin.
 Ensimmäinen lambda-funktio (updater) hakee lukumääriä ElasticSearch:ista ja tallentaa niitä palvelun omaan PostgreSQL-tietokantaan. Toinen lambda / API (dbApi) tarjoaa sovellukselle rajapinnan datan hakemiseen tietokannasta.
 Kolmas lambda-funktio on tietokantamigraatioiden ajamista varten ja suoritetaan deployn yhteydessä.
@@ -16,8 +16,8 @@ Tietojen esittämistä varten on toteutettu yhden sivun (SPA) sovellus, Remix -f
 
 * Sovelluksen infran määrittelytiedosto `tarjonta-pulssi.ts` löytyy hakemistosta `sst-app/stacks`. Määrittelyt (constructit) on toteutettu AWS CDK:lla.
 * Lambda-funktioden lähdekoodit löytyvät hakemistosta `sst-app/packages/functions/src`.
-* Frontend (Remix) -sovelluksen koodit löytyvät hakemistosta `sst-app/packages/frontend`.
-* Yhteiset, sekä lamdoissa että frontendissä käytettävät koodit löytyvät hakemistosta `sst-app/packages/shared`.
+* Web (Remix) -sovelluksen koodit löytyvät hakemistosta `sst-app/packages/web`.
+* Yhteiset, sekä lamdoissa että web-sovelluksessa käytettävät koodit löytyvät hakemistosta `sst-app/packages/shared`.
 * Tietokantamigraatiot löytyvät hakemistosta `sst-app/packages/shared/db/migrations`.
 
 ### Esivaatimukset
@@ -79,13 +79,13 @@ Kaikissa kolmessa tapauksessa sovellusta ajetaan osoitteessa `http://localhost:3
 
 #### Ajaminen staattista testidataa käyttäen
 
-Käynnistä sovellus lokaalisti komennolla `npm run dev:local` hakemistossa `sst-app/packages/frontend.` Tällöin sovellus lataa näytettävät lukemat tiedostoista `pulssi.json` ja `pulssi_old.json` hakemistosta `sst-app/packages/shared/testdata`.
+Käynnistä sovellus lokaalisti komennolla `npm run dev:local` hakemistossa `sst-app/packages/web.` Tällöin sovellus lataa näytettävät lukemat tiedostoista `pulssi.json` ja `pulssi_old.json` hakemistosta `sst-app/packages/shared/testdata`.
 Huom! Näytettävät lukemat ovat tässä tapauksessa aina samoja, ei sovellu tarkempaan historia-haun testaamiseen.
 
 #### Ajaminen lokaalia PostgreSQl -kantaa vasten
 
 Käynnistä ensin lokaali PostgreSql -kanta (kts. kaksi seuraavaa kappaletta).
-Käynnistä tämän jälkeen sovellus lokaalisti komennolla `npm run dev:localdb` hakemistossa `sst-app/packages/frontend.`
+Käynnistä tämän jälkeen sovellus lokaalisti komennolla `npm run dev:localdb` hakemistossa `sst-app/packages/web.`
 
 ##### PostgreSQL Kontti-imagen luonti (tarvitsee tehdä vain kerran):
 `cd postgresql`
@@ -98,7 +98,7 @@ Huom! Datan importointi saattaa kestää useita kymmeniä sekunteja. Importointi
 
 #### Ajaminen live-lambda moodissa
 
-Live-lambda tilassa sovellusta ajetaan testiympäristöä (untuva tai hahtuva) vasten niin että Frontend-sovellusta (Remix) sekä Lambda-funktioita ajetaan lokaalisti. 
+Live-lambda tilassa sovellusta ajetaan testiympäristöä (untuva tai hahtuva) vasten niin että Web-sovellusta (Remix) sekä Lambda-funktioita ajetaan lokaalisti. 
 Huom! tässä tapauksessa ko. testiympäristöä ajetaan dev -moodissa, eikä sovellusta voi käyttää testiympäristössä normaaliin tapaan.
 
 Ajaminen vaatii SSH -tunnelin ymäristön tietokantaan bastionin läpi. Myös VPN täytyy olla päällä.
@@ -107,7 +107,7 @@ Tämän jälkeen tunnelin voi avata komennolla `ssh -N -L 5432:tarjontapulssi.db
 
 Suositeltava tapa on käyttää kahta terminaali-ikkunaa käyttäen siten että toisessa ajetaan Live lambda -kehitysympäristöä ja toisessa Remix -sovellusta. Ainakin Remix -ikkunassa on suositeltavaa käynnistää ensin `aws-vault` -sessio, jolloin MFA -koodi tarvitsee syöttää ainoastaan kerran (muussa tapauksessa koodin syöttämistä vaaditaan säännöllisin väliajoin).
 Käynnistä ensin kehitysympäristö toisessa ikkunassa komennolla `npx sst dev --profile=oph-dev --stage=<ympäristö>` (hakemistossa `sst-app`), jossa ympäristö `untuva` tai `hahtuva`.
-Tämän jälkeen käynnistä Remix-sovellus toisessa ikkunassa komennolla `npm run dev` (hakemistossa `sst-app/packages/frontend`).
+Tämän jälkeen käynnistä Remix-sovellus toisessa ikkunassa komennolla `npm run dev` (hakemistossa `sst-app/packages/web`).
 
 ##### Aws-vaultin ajaminen
 
