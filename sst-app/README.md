@@ -9,30 +9,33 @@ The infrastructure stacks are defined in /stacks and the stacks are initialized 
 Suggested way of working with SST:
 
 First time setup, run
+
 ```sh
 npm install
 ```
 
 Install and configure aws-vault https://github.com/99designs/aws-vault (you can skip this step, but you will be asked for MFA every time you perform `npx sst deploy` for example)
 
-Open CLI session to the target environment using aws-vault 
+Open CLI session to the target environment using aws-vault
 
 ```sh
 aws-vault exec oph-dev
 ```
 
 Lambda live developement (https://docs.sst.dev/live-lambda-development):
+
 ```sh
 npx sst dev --profile=oph-dev --stage=untuva
 ```
 
 Deploying changes to the environment:
+
 ```sh
 npx sst deploy --profile=oph-dev --stage=untuva
 ```
 
-
 ## Remix default documentation
+
 - [Remix Docs](https://remix.run/docs)
 
 ## Development
@@ -69,4 +72,3 @@ Make sure to deploy the output of `remix build`
 
 - `build/`
 - `public/build/`
-

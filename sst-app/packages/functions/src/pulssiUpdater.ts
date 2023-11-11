@@ -1,15 +1,13 @@
 import { Handler } from "aws-lambda";
-import {
-  connectElastic,
-} from "../../shared/elasticUtils";
+
 import { createPulssiDbPool } from "../../shared/dbUtils";
+import { connectElastic } from "../../shared/elasticUtils";
 import { saveAmountsFromElasticToDb } from "../../shared/pulssiUpdaterUtils";
 
 const elasticClient = await connectElastic();
 const pulssiDbPool = await createPulssiDbPool();
 
-
-export const main: Handler = async (event, context, callback) => {
+export const main: Handler = async (event, context) => {
   // https://github.com/brianc/node-postgres/issues/930#issuecomment-230362178
   context.callbackWaitsForEmptyEventLoop = false; // !important to use pool
 

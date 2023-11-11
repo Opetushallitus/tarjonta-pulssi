@@ -1,10 +1,5 @@
-import type {
-  ApiResponse} from "@elastic/elasticsearch";
-import {
-  Client as ElasticSearchClient,
-} from "@elastic/elasticsearch";
-import type { Client as IElasticSearchClient } from "@elastic/elasticsearch/api/new";
-
+import { Client as ElasticSearchClient } from "@elastic/elasticsearch";
+import type { ApiResponse, Client as IElasticSearchClient } from "@elastic/elasticsearch/api/new";
 import type {
   AggregationsBuckets,
   AggregationsStringTermsAggregate,
@@ -12,9 +7,10 @@ import type {
   MsearchMultiSearchItem,
   MsearchResponse,
 } from "@elastic/elasticsearch/api/types";
+
+import { getSSMParam } from "./awsUtils";
 import { ENTITY_TYPES } from "./constants";
 import type { EntityType, Row } from "./types";
-import { getSSMParam } from "./awsUtils";
 
 export const connectElastic = async () => {
   const elasticUrlWithCredentials = await getSSMParam(
@@ -30,29 +26,22 @@ export const connectElastic = async () => {
 
 export type { Client as IElasticSearchClient } from "@elastic/elasticsearch/api/new";
 
-export type SearchResultsByEntity = Record<
-  EntityType,
-  PulssiSearchResponseItem | null
->;
+export type SearchResultsByEntity = Record<EntityType, PulssiSearchResponseItem | null>;
 
-export type PulssiAggregations = {
+export interface PulssiAggregations {
   by_tila: AggregationsStringTermsAggregate;
+}
+
+export type PulssiSearchResponseItem = MsearchMultiSearchItem<EntityDocument> & {
+  aggregations: PulssiAggregations;
 };
 
-export type PulssiSearchResponseItem =
-  MsearchMultiSearchItem<EntityDocument> & {
-    aggregations: PulssiAggregations;
-  };
+export type SearchApiResponse = ApiResponse<MsearchResponse<EntityDocument>, PulssiAggregations>;
 
-export type SearchApiResponse = ApiResponse<
-  MsearchResponse<EntityDocument>,
-  PulssiAggregations
->;
-
-export type EntityDocument = {
+export interface EntityDocument {
   koulutustyyppiPath?: string;
   hakutapa?: string;
-};
+}
 
 const DEFAULT_AGGS = {
   by_koulutustyyppi_path: {
@@ -92,7 +81,7 @@ const AGGS_BY_ENTITY: Record<EntityType, object> = {
               "metadata.isTyovoimakoulutus": true,
             },
           },
-        },      
+        },
       },
     },
   },
@@ -110,18 +99,10 @@ const AGGS_BY_ENTITY: Record<EntityType, object> = {
 export const bucketsAsArr = <T = unknown>(buckets?: AggregationsBuckets<T>) =>
   buckets ? (buckets as Array<T>) : [];
 
-export const getSubBuckets = (
-  bucket: AggregationsStringTermsBucket,
-  subAggName: string
-) =>
-  bucketsAsArr(
-    (bucket?.[subAggName] as AggregationsStringTermsAggregate | undefined)
-      ?.buckets
-  );
+export const getSubBuckets = (bucket: AggregationsStringTermsBucket, subAggName: string) =>
+  bucketsAsArr((bucket?.[subAggName] as AggregationsStringTermsAggregate | undefined)?.buckets);
 
-export const getAmountsFromElastic = async (
-  elasticClient: IElasticSearchClient
-) => {
+export const getAmountsFromElastic = async (elasticClient: IElasticSearchClient) => {
   return elasticClient.msearch<EntityDocument, PulssiAggregations>({
     body: ENTITY_TYPES.flatMap((entity) => [
       { index: `${entity}-kouta` },
@@ -150,9 +131,7 @@ const resetSubBucket = (
   subBuckets: AggregationsBuckets<AggregationsStringTermsBucket> | undefined,
   subAggKey: string
 ) => {
-  const subBucket = bucketsAsArr(subBuckets)?.find(
-    (v: { key: string }) => v.key === subAggKey
-  );
+  const subBucket = bucketsAsArr(subBuckets)?.find((v: { key: string }) => v.key === subAggKey);
   if (Array.isArray(subBuckets) && subBucket == null) {
     subBuckets.push({
       key: subAggKey,
@@ -171,9 +150,7 @@ export const initializeSubBuckets = (
   // Asetetaan nollaksi aggregaatioiden luvut, jotka löytyy kannasta, mutta ei elasticista.
   // Bucketteja voi kadota, jos entiteettejä muokataan. Tarvitsee nollata, jotta kantaan ei jää haamu-lukuja sotkemaan.
   rows.forEach((row) => {
-    let tilaBucket = tilaBuckets?.find(
-      (v: { key: string }) => v.key === row.tila
-    );
+    let tilaBucket = tilaBuckets?.find((v: { key: string }) => v.key === row.tila);
     // Luodaan uusi tila-bucket, jos sitä ei ole
     if (!tilaBucket) {
       tilaBucket = {

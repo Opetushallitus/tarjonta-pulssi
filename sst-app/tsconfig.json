@@ -1,10 +1,12 @@
 {
+  "root": true,
   "extends": "@tsconfig/node18/tsconfig.json",
   "exclude": ["packages/web"],
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Node",
     "esModuleInterop": true,
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   }
 }

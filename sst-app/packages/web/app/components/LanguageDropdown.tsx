@@ -1,25 +1,25 @@
-import React from "react";
-
 import LanguageIcon from "@mui/icons-material/Language";
-import { Select, MenuItem, InputBase, Box } from "@mui/material";
+import { Select, MenuItem, InputBase, Box, SelectChangeEvent } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { useFetcher } from "@remix-run/react";
+import React from "react";
+import { useTranslation } from "react-i18next";
 
 import { LANGUAGES_BY_CODE } from "~/constants";
-import { SUPPORTED_LANGUAGES } from "../../../shared/constants"
-import { useTranslation } from "react-i18next";
-import { useFetcher } from "@remix-run/react";
+
+import { SUPPORTED_LANGUAGES } from "../../../shared/constants";
 
 const CustomInput = styled(InputBase)({
-  color: "white"
+  color: "white",
 });
 
 export const LanguageDropdown = () => {
-  const {i18n} = useTranslation()
+  const { i18n } = useTranslation();
 
   const fetcher = useFetcher();
-  const onLanguageChange = (e: any) => {
-    fetcher.submit({lng: e.target.value}, {method: 'POST'})
-  }
+  const onLanguageChange = (e: SelectChangeEvent) => {
+    fetcher.submit({ lng: e.target.value }, { method: "POST" });
+  };
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => {
     setOpen(true);
@@ -38,11 +38,11 @@ export const LanguageDropdown = () => {
         sx={{
           textTransform: "uppercase",
           "& .MuiSelect-icon": {
-            fill: "white"
-          }
+            fill: "white",
+          },
         }}
         MenuProps={{
-          disableScrollLock: true
+          disableScrollLock: true,
         }}
         value={i18n.language}
         open={open}

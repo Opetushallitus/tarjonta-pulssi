@@ -11,6 +11,6 @@ const up = async ({ context: pg }) => {
   await pg.query(`
   CREATE INDEX IF NOT EXISTS haku_amounts_history_search_idx ON haku_amounts_history (hakutapa, tila, upper(system_time)); 
    `);
-}; 
+};
 
-module.exports = { up }
+module.exports = { up };

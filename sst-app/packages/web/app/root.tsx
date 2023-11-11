@@ -1,3 +1,4 @@
+import { CircularProgress } from "@mui/material";
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import type { MetaFunction } from "@remix-run/react";
 import {
@@ -9,10 +10,11 @@ import {
   useLoaderData,
   useNavigation,
 } from "@remix-run/react";
-import i18next from "~/i18next.server";
 import { useTranslation } from "react-i18next";
+
+import i18next from "~/i18next.server";
+
 import { useChangeLanguage } from "./hooks/useChangeLanguage";
-import { Box, CircularProgress } from "@mui/material";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
@@ -28,9 +30,9 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  let t = await i18next.getFixedT(request);
-  let locale = await i18next.getLocale(request);
-  let title = t(`sivu_otsikko`);
+  const t = await i18next.getFixedT(request);
+  const locale = await i18next.getLocale(request);
+  const title = t(`sivu_otsikko`);
   return json({ title, locale });
 };
 
@@ -46,7 +48,7 @@ function GlobalLoading() {
 
   return (
     <div>
-      {loading && (
+      {loading ? (
         <CircularProgress
           sx={{
             position: "absolute",
@@ -56,14 +58,14 @@ function GlobalLoading() {
           size={75}
           color="inherit"
         />
-      )}
+      ) : null}
     </div>
   );
 }
 
 export default function App() {
-  let { locale } = useLoaderData<typeof loader>();
-  let { i18n } = useTranslation();
+  const { locale } = useLoaderData<typeof loader>();
+  const { i18n } = useTranslation();
 
   useChangeLanguage(locale);
 

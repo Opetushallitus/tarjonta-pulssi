@@ -1,16 +1,11 @@
-import { getSSMParam } from "./awsUtils";
-import type { PoolClient } from "pg";
+import type { AggregationsFilterAggregate } from "@elastic/elasticsearch/api/types";
 import { Pool } from "pg";
-import type { EntityType, Julkaisutila, ToteutusRow } from "./types";
-import type {
-  AggregationsFilterAggregate,
-} from "@elastic/elasticsearch/api/types";
-import type {
-  SearchResultsByEntity} from "./elasticUtils";
-import {
-  bucketsAsArr,
-  getSubBuckets
-} from "./elasticUtils";
+import type { PoolClient } from "pg";
+
+import { getSSMParam } from "./awsUtils";
+import type { SearchResultsByEntity } from "./elasticUtils";
+import { bucketsAsArr, getSubBuckets } from "./elasticUtils";
+import type { Julkaisutila, ToteutusRow } from "./types";
 
 export const DEFAULT_DB_POOL_PARAMS = {
   max: 1,
@@ -20,7 +15,7 @@ export const DEFAULT_DB_POOL_PARAMS = {
   port: 5432,
 };
 
-export type DbRowBase = {
+export interface DbRowBase {
   tila: Julkaisutila;
   julkaistu_amount: number;
   arkistoitu_amount: number;
@@ -30,16 +25,14 @@ export type DbRowBase = {
   arkistoitu_taydennyskoulutus_amount?: number;
   julkaistu_tyovoimakoulutus_amount?: number;
   arkistoitu_tyovoimakoulutus_amount?: number;
-};
+}
 
-export const createPulssiDbPool = async (additionalParams: Record<string, string | number> = {}) => {
-  const pulssiDbUser = await getSSMParam(
-    process.env.TARJONTAPULSSI_POSTGRES_APP_USER
-  );
+export const createPulssiDbPool = async (
+  additionalParams: Record<string, string | number> = {}
+) => {
+  const pulssiDbUser = await getSSMParam(process.env.TARJONTAPULSSI_POSTGRES_APP_USER);
 
-  const pulssiDbPassword = await getSSMParam(
-    process.env.TARJONTAPULSSI_POSTGRES_APP_PASSWORD
-  );
+  const pulssiDbPassword = await getSSMParam(process.env.TARJONTAPULSSI_POSTGRES_APP_PASSWORD);
 
   return new Pool({
     ...DEFAULT_DB_POOL_PARAMS,
@@ -53,10 +46,12 @@ export const createPulssiDbPool = async (additionalParams: Record<string, string
 };
 
 export const toteutusRowHasChanged = (existingRow: ToteutusRow, newRow: ToteutusRow) => {
-  return Number(existingRow.amount) !== newRow.amount || 
-    Number(existingRow.jotpa_amount) !== newRow.jotpa_amount || 
-    Number(existingRow.taydennyskoulutus_amount) !== newRow.taydennyskoulutus_amount || 
-    Number(existingRow.tyovoimakoulutus_amount) !== newRow.tyovoimakoulutus_amount;
+  return (
+    Number(existingRow.amount) !== newRow.amount ||
+    Number(existingRow.jotpa_amount) !== newRow.jotpa_amount ||
+    Number(existingRow.taydennyskoulutus_amount) !== newRow.taydennyskoulutus_amount ||
+    Number(existingRow.tyovoimakoulutus_amount) !== newRow.tyovoimakoulutus_amount
+  );
 };
 
 const saveToteutusAmounts = async (
@@ -93,17 +88,12 @@ export const savePulssiAmounts = async (
 ) => {
   try {
     await pulssiClient.query("BEGIN");
-    for (const [entity, elasticResBody] of Object.entries(
-      searchResultsByEntity
-    )) {
-      const subAggName =
-        entity === "haku" ? "by_hakutapa" : "by_koulutustyyppi_path";
+    for (const [entity, elasticResBody] of Object.entries(searchResultsByEntity)) {
+      const subAggName = entity === "haku" ? "by_hakutapa" : "by_koulutustyyppi_path";
 
       const subAggColumn = entity === "haku" ? "hakutapa" : "tyyppi_path";
 
-      const tilaBuckets = bucketsAsArr(
-        elasticResBody?.aggregations?.by_tila?.buckets
-      );
+      const tilaBuckets = bucketsAsArr(elasticResBody?.aggregations?.by_tila?.buckets);
 
       for (const tilaBucket of tilaBuckets) {
         const tila = tilaBucket.key as Julkaisutila;
@@ -120,18 +110,15 @@ export const savePulssiAmounts = async (
 
           if (entity === "toteutus") {
             const jotpaAmount = Number(
-              (subBucket?.has_jotpa as AggregationsFilterAggregate)
-                ?.doc_count ?? 0
+              (subBucket?.has_jotpa as AggregationsFilterAggregate)?.doc_count ?? 0
             );
 
             const taydennyskoulutusAmount = Number(
-              (subBucket?.is_taydennyskoulutus as AggregationsFilterAggregate)
-                ?.doc_count ?? 0
+              (subBucket?.is_taydennyskoulutus as AggregationsFilterAggregate)?.doc_count ?? 0
             );
-            
+
             const tyovoimakoulutusAmount = Number(
-              (subBucket?.is_tyovoimakoulutus as AggregationsFilterAggregate)
-                ?.doc_count ?? 0
+              (subBucket?.is_tyovoimakoulutus as AggregationsFilterAggregate)?.doc_count ?? 0
             );
 
             await saveToteutusAmounts(pulssiClient, existingRow, {
@@ -154,9 +141,7 @@ export const savePulssiAmounts = async (
                 );
               }
             } else {
-              console.log(
-                `Inserting ${entity} amount (${tila}, ${subBucket.key}) = ${amount}`
-              );
+              console.log(`Inserting ${entity} amount (${tila}, ${subBucket.key}) = ${amount}`);
               await pulssiClient.query(
                 `INSERT INTO ${entity}_amounts(${subAggColumn}, tila, amount) values('${subBucket.key}', '${tila}', ${amount})`
               );

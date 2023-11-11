@@ -1,6 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: off */
 import pkg from "pg";
-import { createMigrator } from './umzug.ts';
+
+import { createMigrator } from "./umzug.ts";
 
 const { Client } = pkg;
 const client = new Client({
@@ -9,7 +10,7 @@ const client = new Client({
   database: "tarjontapulssi",
   user: "oph",
   password: "oph",
-}); 
+});
 
 client
   .connect()

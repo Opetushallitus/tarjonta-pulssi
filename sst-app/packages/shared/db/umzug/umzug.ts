@@ -1,7 +1,8 @@
-import { Umzug } from "umzug";
 import fs from "fs";
 import path from "path";
+
 import type { ClientBase } from "pg";
+import { Umzug } from "umzug";
 
 const MIGRATIONS_TABLE_NAME = "umzug_migrations";
 
@@ -21,13 +22,10 @@ export const createMigrator = (
           ? {
               name: params.name,
               path: params.path,
-              up: () =>
-                params.context.query(fs.readFileSync(params.path!).toString()),
+              up: () => params.context.query(fs.readFileSync(params.path!).toString()),
               down: () =>
                 params.context.query(
-                  fs
-                    .readFileSync(params.path!.replace(".up.sql", ".down.sql"))
-                    .toString()
+                  fs.readFileSync(params.path!.replace(".up.sql", ".down.sql")).toString()
                 ),
             }
           : Umzug.defaultResolver(params);
@@ -36,25 +34,15 @@ export const createMigrator = (
     context: client,
     storage: {
       async executed({ context: client }) {
-        await client.query(
-          `create table if not exists ${MIGRATIONS_TABLE_NAME}(name text)`
-        );
-        const result = await client.query(
-          `select name from ${MIGRATIONS_TABLE_NAME}`
-        );
+        await client.query(`create table if not exists ${MIGRATIONS_TABLE_NAME}(name text)`);
+        const result = await client.query(`select name from ${MIGRATIONS_TABLE_NAME}`);
         return result.rows.map((r: { name: string }) => r.name);
       },
       async logMigration({ name, context: client }) {
-        await client.query(
-          `insert into ${MIGRATIONS_TABLE_NAME}(name) values ($1)`,
-          [name]
-        );
+        await client.query(`insert into ${MIGRATIONS_TABLE_NAME}(name) values ($1)`, [name]);
       },
       async unlogMigration({ name, context: client }) {
-        await client.query(
-          `delete from ${MIGRATIONS_TABLE_NAME} where name = $1`,
-          [name]
-        );
+        await client.query(`delete from ${MIGRATIONS_TABLE_NAME} where name = $1`, [name]);
       },
     },
     logger: console,

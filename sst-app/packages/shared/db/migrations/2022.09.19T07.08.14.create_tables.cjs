@@ -61,9 +61,7 @@ CREATE TABLE koulutus_amounts (
     CHECK (tila IN ('julkaistu', 'arkistoitu'))
 );`);
 
-  await pg.query(
-    historyTableInitSql("koulutus_amounts", ["tyyppi_path", "tila", "amount"])
-  );
+  await pg.query(historyTableInitSql("koulutus_amounts", ["tyyppi_path", "tila", "amount"]));
 
   await pg.query(`
 CREATE TABLE toteutus_amounts (
@@ -74,9 +72,7 @@ CREATE TABLE toteutus_amounts (
     CHECK (tila IN ('julkaistu', 'arkistoitu'))
 );`);
 
-  await pg.query(
-    historyTableInitSql("toteutus_amounts", ["tyyppi_path", "tila", "amount"])
-  );
+  await pg.query(historyTableInitSql("toteutus_amounts", ["tyyppi_path", "tila", "amount"]));
 
   await pg.query(`
 CREATE TABLE hakukohde_amounts (
@@ -87,9 +83,7 @@ CREATE TABLE hakukohde_amounts (
 );
 `);
 
-  await pg.query(
-    historyTableInitSql("hakukohde_amounts", ["tyyppi_path", "tila", "amount"])
-  );
+  await pg.query(historyTableInitSql("hakukohde_amounts", ["tyyppi_path", "tila", "amount"]));
 
   await pg.query(`
 CREATE TABLE haku_amounts (
@@ -99,9 +93,7 @@ CREATE TABLE haku_amounts (
     CHECK (tila IN ('julkaistu', 'arkistoitu'))
 );`);
 
-  await pg.query(
-    historyTableInitSql("haku_amounts", ["hakutapa", "tila", "amount"])
-  );
+  await pg.query(historyTableInitSql("haku_amounts", ["hakutapa", "tila", "amount"]));
 };
 
 const down = async ({ context: pg }) => {
@@ -119,4 +111,4 @@ DROP TABLE haku_amounts, haku_amounts_history;
 `);
 };
 
-module.exports = { up, down }
+module.exports = { up, down };

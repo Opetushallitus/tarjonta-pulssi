@@ -1,3 +1,5 @@
+import CloseIcon from "@mui/icons-material/Close";
+import MenuIcon from "@mui/icons-material/Menu";
 import {
   AppBar,
   IconButton,
@@ -7,16 +9,15 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import { Box } from "@mui/system";
 import { visuallyHidden } from "@mui/utils";
+import { useTranslation } from "react-i18next";
+
+import opintopolku_logo_header_en from "~/assets/opintopolku_logo_header_en.svg";
+import opintopolku_logo_header_fi from "~/assets/opintopolku_logo_header_fi.svg";
+import opintopolku_logo_header_sv from "~/assets/opintopolku_logo_header_sv.svg";
 
 import { LanguageDropdown } from "./LanguageDropdown";
-import MenuIcon from "@mui/icons-material/Menu";
-import CloseIcon from "@mui/icons-material/Close";
-import { Box } from "@mui/system";
-import opintopolku_logo_header_fi from "~/assets/opintopolku_logo_header_fi.svg";
-import opintopolku_logo_header_en from "~/assets/opintopolku_logo_header_en.svg";
-import opintopolku_logo_header_sv from "~/assets/opintopolku_logo_header_sv.svg";
-import { useTranslation } from "react-i18next";
 
 const classes = {
   historyButtonSection: "historyButtonSection",
@@ -74,15 +75,19 @@ const Heading = styled(Typography)(({ theme }) => ({
   },
 }));
 
-export type URLData = {
+export interface URLData {
   protocol: string;
   host: string;
-};
-export type HeaderProps = {
+}
+export interface HeaderProps {
   historyOpen: boolean;
   toggleHistory: () => void;
   currentUrl: URLData;
-};
+}
+
+const VisuallyHidden: React.FC<{ children: string }> = ({ children }: React.PropsWithChildren) => (
+  <span style={visuallyHidden}>{children}</span>
+);
 
 export const Header = (props: HeaderProps) => {
   const { i18n, t } = useTranslation();
@@ -91,15 +96,8 @@ export const Header = (props: HeaderProps) => {
 
   const isSmallDisplay = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const VisuallyHidden: React.FC<{ children: string }> = ({ children }) => (
-    <span style={visuallyHidden}>{children}</span>
-  );
-
   const getOpintopolkuUrl = () =>
-    `${props.currentUrl.protocol}//${props.currentUrl.host
-      .split(".")
-      .slice(-2)
-      .join(".")}`;
+    `${props.currentUrl.protocol}//${props.currentUrl.host.split(".").slice(-2).join(".")}`;
 
   return (
     <PulssiAppBar>
@@ -114,8 +112,9 @@ export const Header = (props: HeaderProps) => {
         <Link href={getOpintopolkuUrl()} sx={{ paddingRight: 3 }}>
           <img
             src={getOpintopolkuHeaderLogoSrc(i18n.language)}
-            aria-hidden="true"
+            aria-hidden={true}
             height="26px"
+            alt=""
           />
           <VisuallyHidden>{t("siirry_opintopolkuun")}</VisuallyHidden>
         </Link>
@@ -130,9 +129,7 @@ export const Header = (props: HeaderProps) => {
           <Box className={classes.historyButton}>
             {props.historyOpen ? <CloseIcon /> : <MenuIcon />}
             <Typography className={classes.historyButtonText}>
-              {props.historyOpen
-                ? t("sulje_muutoshistoria")
-                : t("nayta_muutoshistoria")}
+              {props.historyOpen ? t("sulje_muutoshistoria") : t("nayta_muutoshistoria")}
             </Typography>
           </Box>
         </IconButton>

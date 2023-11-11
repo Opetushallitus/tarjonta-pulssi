@@ -1,32 +1,27 @@
 import { Box, Paper, Typography, styled } from "@mui/material";
-import { EntityTable } from "~/components/EntityTable";
-import type { URLData } from "~/components/Header";
-import { Header } from "~/components/Header";
-import type {
-  EntityType,
-  EntityDataWithSubKey,
-  PulssiData,
-} from "../../../shared/types";
-import { ICONS } from "~/constants";
 import {
   type LoaderFunction,
   type ActionFunction,
   type LinksFunction,
   redirect,
 } from "@remix-run/node";
-import {
-  getCurrentAmountData,
-  getHistoryAmountData,
-} from "~/servers/amount.server";
 import { useFetcher, useLoaderData } from "@remix-run/react";
+import { format } from "date-fns";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+
+import { EntityTable } from "~/components/EntityTable";
+import type { URLData } from "~/components/Header";
+import { Header } from "~/components/Header";
+import { HistorySearchSection } from "~/components/HistorySearchSection";
+import { ICONS } from "~/constants";
+import { getCurrentAmountData, getHistoryAmountData } from "~/servers/amount.server";
 import mainStylesUrl from "~/styles/index.css";
 import tableStylesUrl from "~/styles/table.css";
-import { useTranslation } from "react-i18next";
-import { HistorySearchSection } from "~/components/HistorySearchSection";
-import { format } from "date-fns";
-import { DATETIME_FORMAT, DATETIME_FORMAT_TZ } from "../../../shared/constants";
+
 import { parseDate } from "../../../shared/amountDataUtils";
-import { useMemo } from "react";
+import { DATETIME_FORMAT_TZ } from "../../../shared/constants";
+import type { EntityType, EntityDataWithSubKey, PulssiData } from "../../../shared/types";
 
 const StyledEntitySection = styled(Paper)`
   border: 1px solid rgba(0, 0, 0, 0.15);
@@ -83,20 +78,19 @@ const EntitySection = ({
   );
 };
 
-type ServerSideData = {
+interface ServerSideData {
   data: PulssiData;
   currentUrl: URLData;
   showHistory?: boolean;
   historyStart?: string;
   historyEnd?: string;
-};
+}
 
 export const loader: LoaderFunction = async ({ request }) => {
   const url = new URL(request.url);
   const currentUrl: URLData = { protocol: url.protocol, host: url.host };
   const showHistoryVal = url.searchParams.get("showHistory");
-  const showHistory =
-    showHistoryVal !== null && showHistoryVal.toLowerCase() !== "false";
+  const showHistory = showHistoryVal !== null && showHistoryVal.toLowerCase() !== "false";
   const historyStart = url.searchParams.get("start");
   const historyEnd = url.searchParams.get("end");
   if (showHistory || historyStart || historyEnd) {
@@ -110,7 +104,7 @@ const setSearchParameter = (
   paramName: string,
   formData: FormData,
   searchParameters: URLSearchParams,
-  deleteNonExisting: boolean = false
+  deleteNonExisting = false
 ) => {
   const paramValue = formData.get(paramName);
   if (paramValue) {
@@ -197,9 +191,21 @@ export default function Index() {
         onSearchRangeChange={executeHistoryQuery}
       />
       <div className="Content">
-        <EntitySection entity="koulutus" data={data.koulutukset} showHistory={showHistory || false} />
-        <EntitySection entity="toteutus" data={data.toteutukset} showHistory={showHistory || false} />
-        <EntitySection entity="hakukohde" data={data.hakukohteet} showHistory={showHistory || false} />
+        <EntitySection
+          entity="koulutus"
+          data={data.koulutukset}
+          showHistory={showHistory || false}
+        />
+        <EntitySection
+          entity="toteutus"
+          data={data.toteutukset}
+          showHistory={showHistory || false}
+        />
+        <EntitySection
+          entity="hakukohde"
+          data={data.hakukohteet}
+          showHistory={showHistory || false}
+        />
         <EntitySection entity="haku" data={data.haut} showHistory={showHistory || false} />
       </div>
     </div>

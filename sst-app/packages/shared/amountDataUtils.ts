@@ -1,4 +1,8 @@
+import { parse, isAfter } from "date-fns";
+import { findLastIndex, update } from "lodash";
 import { P, match } from "ts-pattern";
+
+import { DATETIME_FORMAT_TZ } from "./constants";
 import type {
   DatabaseRow,
   EntityDataWithSubKey,
@@ -9,9 +13,6 @@ import type {
   Julkaisutila,
   SubKeyWithAmounts,
 } from "./types";
-import { findLastIndex, update } from "lodash";
-import { parse, isAfter } from "date-fns";
-import { DATETIME_FORMAT_TZ } from "./constants";
 
 export const EMPTY_DATABASE_RESULTS = {
   koulutukset: [],
@@ -25,9 +26,7 @@ const rowAmount = (
   amountFieldName: keyof DatabaseRow,
   maxTimestamp: Date | null = null
 ) =>
-  maxTimestamp &&
-  row.start_timestamp &&
-  isAfter(row.start_timestamp, maxTimestamp)
+  maxTimestamp && row.start_timestamp && isAfter(row.start_timestamp, maxTimestamp)
     ? undefined
     : Number(row[amountFieldName]);
 
@@ -39,30 +38,20 @@ const sumBy = (
 ) => {
   return rows.reduce((result, row) => {
     const amountValue = rowAmount(row, amountFieldName, maxTimestamp);
-    const addedValue =
-      row.tila === tilaFilterValue && amountValue ? amountValue : 0;
+    const addedValue = row.tila === tilaFilterValue && amountValue ? amountValue : 0;
     return result + addedValue;
   }, 0);
 };
 
-export const sumUp = (
-  number1: number | undefined,
-  number2: number | undefined
-) => {
+export const sumUp = (number1: number | undefined, number2: number | undefined) => {
   return match([number1, number2])
-    .with(
-      [P.not(P.nullish), P.not(P.nullish)],
-      ([curVal, addVal]) => curVal + addVal
-    )
+    .with([P.not(P.nullish), P.not(P.nullish)], ([curVal, addVal]) => curVal + addVal)
     .with([P.not(P.nullish), P.nullish], () => number1)
     .with([P.nullish, P.not(P.nullish)], () => number2)
     .otherwise(() => undefined);
 };
 
-export const parseDate = (
-  dateStr: string | null | undefined,
-  referenceData: Date = new Date()
-) => {
+export const parseDate = (dateStr: string | null | undefined, referenceData: Date = new Date()) => {
   try {
     return dateStr !== null && dateStr !== undefined
       ? parse(dateStr, DATETIME_FORMAT_TZ, referenceData)
@@ -81,9 +70,7 @@ const sortSubEntities = (subEntities: Array<SubKeyWithAmounts>) => {
   // Käytetään sorttauksessa erillistä rakennetta, jolla sorttauksessa kaikki ala-tason entiteetit sisältäen "muu" saadaan
   // sijoitettua listan loppuun
   const itemsForSorting = childrenSorted.map((child) => ({
-    sortKey: child.subkey.toLowerCase().includes("muu")
-      ? `2${child.subkey}`
-      : `1${child.subkey}`,
+    sortKey: child.subkey.toLowerCase().includes("muu") ? `2${child.subkey}` : `1${child.subkey}`,
     subEntity: child,
   }));
   const sortedItems = itemsForSorting.sort((entry1, entry2) => {
@@ -98,8 +85,7 @@ export const dbQueryResultToPulssiData = (
   maxTimestamp: Date | null = null
 ) => {
   const countsBySubKey = rows.reduce((result, row) => {
-    const amountField =
-      row.tila === "julkaistu" ? "julkaistu_amount" : "arkistoitu_amount";
+    const amountField = row.tila === "julkaistu" ? "julkaistu_amount" : "arkistoitu_amount";
     const ktParts = row.sub_entity.split("/");
     let parentArray: Array<SubKeyWithAmounts> = result;
     let targetObject: SubKeyWithAmounts | null = null;
@@ -121,9 +107,7 @@ export const dbQueryResultToPulssiData = (
       }
 
       const currentAmount =
-        row.tila === "julkaistu"
-          ? targetObject.julkaistu_amount
-          : targetObject.arkistoitu_amount;
+        row.tila === "julkaistu" ? targetObject.julkaistu_amount : targetObject.arkistoitu_amount;
       const addedAmount = rowAmount(row, "amount", maxTimestamp);
       targetObject[amountField] = sumUp(currentAmount, addedAmount);
       parentArray = targetObject.items ? targetObject.items : parentArray;
@@ -140,18 +124,8 @@ export const dbQueryResultToPulssiData = (
       arkistoitu_amount: sumBy(rows, "arkistoitu", "amount", maxTimestamp),
       ...(entity === "toteutus"
         ? {
-            julkaistu_jotpa_amount: sumBy(
-              rows,
-              "julkaistu",
-              "jotpa_amount",
-              maxTimestamp
-            ),
-            arkistoitu_jotpa_amount: sumBy(
-              rows,
-              "arkistoitu",
-              "jotpa_amount",
-              maxTimestamp
-            ),
+            julkaistu_jotpa_amount: sumBy(rows, "julkaistu", "jotpa_amount", maxTimestamp),
+            arkistoitu_jotpa_amount: sumBy(rows, "arkistoitu", "jotpa_amount", maxTimestamp),
             julkaistu_taydennyskoulutus_amount: sumBy(
               rows,
               "julkaistu",
@@ -179,9 +153,7 @@ export const dbQueryResultToPulssiData = (
           }
         : {}),
     },
-    items: sortedSubItems.sort((entry1, entry2) =>
-      entry1.subkey > entry2.subkey ? 1 : -1
-    ),
+    items: sortedSubItems.sort((entry1, entry2) => (entry1.subkey > entry2.subkey ? 1 : -1)),
   };
 };
 
@@ -191,18 +163,10 @@ const resolveMissingAmountsOfEntity = (
 ) => {
   return expectedSubentities.reduce(
     (result, searched) => {
-      if (
-        !subEntities.find(
-          (sub) => sub.sub_entity === searched && sub.tila === "julkaistu"
-        )
-      ) {
+      if (!subEntities.find((sub) => sub.sub_entity === searched && sub.tila === "julkaistu")) {
         result.julkaistu.push(searched);
       }
-      if (
-        !subEntities.find(
-          (sub) => sub.sub_entity === searched && sub.tila === "arkistoitu"
-        )
-      ) {
+      if (!subEntities.find((sub) => sub.sub_entity === searched && sub.tila === "arkistoitu")) {
         result.arkistoitu.push(searched);
       }
       return result;
@@ -231,10 +195,7 @@ export const resolveMissingAmounts = (
       allSubentitiesByEntities.hakukohteet,
       foundHakukohteet
     ),
-    haut: resolveMissingAmountsOfEntity(
-      allSubentitiesByEntities.haut,
-      foundHaut
-    ),
+    haut: resolveMissingAmountsOfEntity(allSubentitiesByEntities.haut, foundHaut),
   };
 };
 
@@ -244,20 +205,14 @@ export const findMissingHistoryAmountsForEntity = (
 ): Array<DatabaseRow> => {
   const returnValue = new Array<DatabaseRow>();
   const pickFromDataByTila = (searched: string, tila: Julkaisutila) => {
-    const data = currentDbData.find(
-      (data) => data.sub_entity === searched && data.tila === tila
-    );
+    const data = currentDbData.find((data) => data.sub_entity === searched && data.tila === tila);
     if (data) {
       returnValue.push(data);
     }
   };
 
-  missingSubentityAmounts.julkaistu.forEach((sub) =>
-    pickFromDataByTila(sub, "julkaistu")
-  );
-  missingSubentityAmounts.arkistoitu.forEach((sub) =>
-    pickFromDataByTila(sub, "arkistoitu")
-  );
+  missingSubentityAmounts.julkaistu.forEach((sub) => pickFromDataByTila(sub, "julkaistu"));
+  missingSubentityAmounts.arkistoitu.forEach((sub) => pickFromDataByTila(sub, "arkistoitu"));
   return returnValue;
 };
 
@@ -269,19 +224,11 @@ const setCombinedSubentityData = (
   for (let idx = 0; idx < subEntities.length; idx++) {
     Object.entries(subEntities[idx]).forEach((entry) => {
       if (entry[0].endsWith("_amount")) {
-        update(
-          targetData,
-          `${path}.items[${idx}].${entry[0]}_old`,
-          (_) => entry[1]
-        );
+        update(targetData, `${path}.items[${idx}].${entry[0]}_old`, () => entry[1]);
       }
     });
     if (subEntities[idx].items) {
-      setCombinedSubentityData(
-        `${path}.items[${idx}]`,
-        subEntities[idx].items,
-        targetData
-      );
+      setCombinedSubentityData(`${path}.items[${idx}]`, subEntities[idx].items, targetData);
     }
   }
 };
@@ -291,15 +238,12 @@ const setCombinedEntityHistoryData = (
   targetData: PulssiData
 ) => {
   Object.entries(entityData.by_tila).forEach((entry) =>
-    update(targetData, `${path}.by_tila.${entry[0]}_old`, (_) => entry[1])
+    update(targetData, `${path}.by_tila.${entry[0]}_old`, () => entry[1])
   );
   setCombinedSubentityData(`${path}`, entityData.items, targetData);
 };
 
-export const getCombinedHistoryData = (
-  startData: PulssiData,
-  endData: PulssiData
-): PulssiData => {
+export const getCombinedHistoryData = (startData: PulssiData, endData: PulssiData): PulssiData => {
   const combined = JSON.parse(JSON.stringify(endData));
   setCombinedEntityHistoryData("koulutukset", startData.koulutukset, combined);
   setCombinedEntityHistoryData("toteutukset", startData.toteutukset, combined);

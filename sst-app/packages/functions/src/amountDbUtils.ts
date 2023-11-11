@@ -1,10 +1,13 @@
 import type { Pool } from "pg";
+
 import { dbQueryResultToPulssiData } from "../../shared/amountDataUtils";
 import type { DatabaseRow, EntityType, Julkaisutila } from "../../shared/types";
 
+const asOptionalNumber = (rowValue?: string | number) => (rowValue ? Number(rowValue) : undefined);
+
+// TODO: Tyypitys!
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const handleResults = (rows: Array<any>): Array<DatabaseRow> => {
-  const asOptionalNumber = (rowValue: any) =>
-    rowValue ? Number(rowValue) : undefined;
   return rows.map((row) => ({
     sub_entity: String(row["sub_entity"]),
     tila: String(row["tila"]) as Julkaisutila,
@@ -16,13 +19,9 @@ const handleResults = (rows: Array<any>): Array<DatabaseRow> => {
   }));
 };
 
-export const queryPulssiAmounts = async (
-  pulssiDbPool: Pool,
-  entity: EntityType
-) => {
+export const queryPulssiAmounts = async (pulssiDbPool: Pool, entity: EntityType) => {
   const primaryColName = entity === "haku" ? "hakutapa" : "tyyppi_path";
-  const asAmountField = (fieldName: string) =>
-    `coalesce(sum(${fieldName}), 0) as ${fieldName}`;
+  const asAmountField = (fieldName: string) => `coalesce(sum(${fieldName}), 0) as ${fieldName}`;
 
   const amountFields =
     entity === "toteutus"
@@ -40,9 +39,7 @@ export const queryPulssiAmounts = async (
   return handleResults(dbResult.rows);
 };
 
-export const queryAllSubentityTypesByEntityTypes = async (
-  pulssiDbPool: Pool
-) => {
+export const queryAllSubentityTypesByEntityTypes = async (pulssiDbPool: Pool) => {
   const dbResult = await pulssiDbPool.query(
     `select distinct tyyppi_path as entity_item, 'koulutukset' as entity_type from koulutus_amounts
       union all
@@ -63,10 +60,7 @@ export const queryAllSubentityTypesByEntityTypes = async (
   }, {});
 };
 
-export const getCurrentPulssiAmounts = async (
-  pulssiDbPool: Pool,
-  entity: EntityType
-) => {
+export const getCurrentPulssiAmounts = async (pulssiDbPool: Pool, entity: EntityType) => {
   const rows = await queryPulssiAmounts(pulssiDbPool, entity);
   return dbQueryResultToPulssiData(rows, entity);
 };
@@ -81,7 +75,7 @@ export const queryPulssiAmountsAtCertainMoment = async (
       ? "amount, jotpa_amount, taydennyskoulutus_amount, tyovoimakoulutus_amount"
       : "amount";
   const subEntityField = entity === "haku" ? "hakutapa" : "tyyppi_path";
-  const timeLimitCondition = timeLimit ? `where upper(system_time) >= $1`: "";
+  const timeLimitCondition = timeLimit ? `where upper(system_time) >= $1` : "";
 
   const sql = `select ${subEntityField} as sub_entity, tila, lower(system_time) as start_timestamp, ${amountFields} 
     from ${entity}_amounts_history where (${subEntityField}, tila, upper(system_time)) in (
@@ -89,6 +83,8 @@ export const queryPulssiAmountsAtCertainMoment = async (
       ${timeLimitCondition}
       group by ${subEntityField}, tila) order by sub_entity`;
 
-  const dbResult = timeLimit ? await pulssiDbPool.query(sql, [timeLimit]) : await pulssiDbPool.query(sql);
+  const dbResult = timeLimit
+    ? await pulssiDbPool.query(sql, [timeLimit])
+    : await pulssiDbPool.query(sql);
   return handleResults(dbResult.rows);
 };

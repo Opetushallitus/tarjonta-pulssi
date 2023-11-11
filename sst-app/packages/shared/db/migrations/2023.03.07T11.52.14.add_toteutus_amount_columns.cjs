@@ -39,6 +39,6 @@ const up = async ({ context: pg }) => {
   end;
   $$ language plpgsql; 
 `);
-}; 
+};
 
-module.exports = { up }
+module.exports = { up };

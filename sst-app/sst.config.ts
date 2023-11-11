@@ -1,4 +1,5 @@
 import type { SSTConfig } from "sst";
+
 import { TARJONTAPULSSI } from "./stacks/tarjonta-pulssi";
 
 export default {
@@ -10,5 +11,5 @@ export default {
   },
   stacks(app) {
     app.stack(TARJONTAPULSSI);
-  }
+  },
 } satisfies SSTConfig;

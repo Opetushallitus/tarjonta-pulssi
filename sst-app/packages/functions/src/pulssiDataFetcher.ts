@@ -1,7 +1,9 @@
-import { ApiHandler } from "sst/node/api";
 import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
-import { DEFAULT_DB_POOL_PARAMS } from "../../shared/dbUtils";
 import { Pool } from "pg";
+import { ApiHandler } from "sst/node/api";
+
+import { DEFAULT_DB_POOL_PARAMS } from "../../shared/dbUtils";
+
 import { getCurrentAmountDataFromDb, getHistoryDataFromDb } from "./pulssiDbAccessor";
 
 const ssm = new SSMClient({ region: process.env.AWS_REGION });
@@ -27,7 +29,9 @@ export const handler = ApiHandler(async (evt) => {
   const startTimestamp = evt.queryStringParameters?.start;
   const endTimestamp = evt.queryStringParameters?.end;
   const historyParam = evt.queryStringParameters?.history;
-  const result = historyParam ? await getHistoryDataFromDb(pulssiDbPool, startTimestamp, endTimestamp) : await getCurrentAmountDataFromDb(pulssiDbPool);
+  const result = historyParam
+    ? await getHistoryDataFromDb(pulssiDbPool, startTimestamp, endTimestamp)
+    : await getCurrentAmountDataFromDb(pulssiDbPool);
   return {
     statusCode: 200,
     body: JSON.stringify(result),

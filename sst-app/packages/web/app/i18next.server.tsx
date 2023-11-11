@@ -1,6 +1,7 @@
-import Backend from "i18next-fs-backend";
 import { RemixI18Next } from "remix-i18next";
+
 import i18n from "~/i18n"; // your i18n configuration file
+
 import { getTranslationsForLanguage } from "./translations";
 
 const i18next = new RemixI18Next({
