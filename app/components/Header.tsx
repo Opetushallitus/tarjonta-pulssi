@@ -19,13 +19,7 @@ import opintopolku_logo_header_sv from "~/app/assets/opintopolku_logo_header_sv.
 
 import { LanguageDropdown } from "./LanguageDropdown";
 
-const classes = {
-  historyButtonSection: "historyButtonSection",
-  historyButton: "historyButton",
-  historyButtonText: "historyButtonText",
-};
-
-const PulssiAppBar = styled(AppBar)(({ theme }) => ({
+const PulssiAppBar = styled(AppBar)({
   position: "sticky",
   height: "auto",
   flexDirection: "row",
@@ -34,22 +28,7 @@ const PulssiAppBar = styled(AppBar)(({ theme }) => ({
   minHeight: "75px",
   justifyContent: "space-between",
   color: "theme.pallette.primary.main",
-  [`& .${classes.historyButtonSection}`]: {
-    marginLeft: theme.spacing(2),
-  },
-
-  [`& .${classes.historyButton}`]: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  [`& .${classes.historyButtonText}`]: {
-    fontSize: "small",
-    color: "rgb(255, 255, 255)",
-  },
-}));
+});
 
 const getOpintopolkuHeaderLogoSrc = (lang?: string | null) => {
   switch (lang) {
@@ -74,6 +53,13 @@ const Heading = styled(Typography)(({ theme }) => ({
     fontSize: "18px",
   },
 }));
+
+const HistoryButtonContent = styled(Box)({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+});
 
 export interface URLData {
   protocol: string;
@@ -124,14 +110,14 @@ export const Header = (props: HeaderProps) => {
           aria-label={t("muutoshistoria-sulje-valikko")}
           onClick={props.toggleHistory}
           edge="start"
-          className={classes.historyButtonSection}
+          sx={{ marginLeft: (theme) => theme.spacing(2) }}
         >
-          <Box className={classes.historyButton}>
+          <HistoryButtonContent>
             {props.historyOpen ? <CloseIcon /> : <MenuIcon />}
-            <Typography className={classes.historyButtonText}>
+            <Typography sx={{ fontSize: "small", color: "rgb(255, 255, 255)" }}>
               {props.historyOpen ? t("sulje_muutoshistoria") : t("nayta_muutoshistoria")}
             </Typography>
-          </Box>
+          </HistoryButtonContent>
         </IconButton>
       </Box>
       <LanguageDropdown />
