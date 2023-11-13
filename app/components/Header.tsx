@@ -13,9 +13,9 @@ import { Box } from "@mui/system";
 import { visuallyHidden } from "@mui/utils";
 import { useTranslation } from "react-i18next";
 
-import opintopolku_logo_header_en from "~/assets/opintopolku_logo_header_en.svg";
-import opintopolku_logo_header_fi from "~/assets/opintopolku_logo_header_fi.svg";
-import opintopolku_logo_header_sv from "~/assets/opintopolku_logo_header_sv.svg";
+import opintopolku_logo_header_en from "~/app/assets/opintopolku_logo_header_en.svg";
+import opintopolku_logo_header_fi from "~/app/assets/opintopolku_logo_header_fi.svg";
+import opintopolku_logo_header_sv from "~/app/assets/opintopolku_logo_header_sv.svg";
 
 import { LanguageDropdown } from "./LanguageDropdown";
 

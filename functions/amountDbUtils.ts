@@ -1,7 +1,7 @@
 import type { Pool } from "pg";
 
-import { dbQueryResultToPulssiData } from "../shared/amountDataUtils";
-import type { DatabaseRow, EntityType, Julkaisutila } from "../shared/types";
+import { dbQueryResultToPulssiData } from "~/shared/amountDataUtils";
+import type { DatabaseRow, EntityType, Julkaisutila } from "~/shared/types";
 
 const asOptionalNumber = (rowValue?: string | number) => (rowValue ? Number(rowValue) : undefined);
 

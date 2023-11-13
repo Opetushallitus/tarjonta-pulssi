@@ -5,9 +5,8 @@ import { useFetcher } from "@remix-run/react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
-import { LANGUAGES_BY_CODE } from "~/constants";
-
-import { SUPPORTED_LANGUAGES } from "../../shared/constants";
+import { LANGUAGES_BY_CODE } from "~/app/constants";
+import { SUPPORTED_LANGUAGES } from "~/shared/constants";
 
 const CustomInput = styled(InputBase)({
   color: "white",

@@ -1,6 +1,6 @@
-import { toteutusRowHasChanged } from "../shared/dbUtils";
-import { initializeSubBuckets } from "../shared/elasticUtils";
-import type { RowWithKoulutustyyppiPath, ToteutusRow } from "../shared/types";
+import { toteutusRowHasChanged } from "~/shared/dbUtils";
+import { initializeSubBuckets } from "~/shared/elasticUtils";
+import type { RowWithKoulutustyyppiPath, ToteutusRow } from "~/shared/types";
 
 test("initializeSubBuckets should reset sub-bucket amounts to zero, if they exist in db response, but not in elastic", () => {
   const rows: Array<RowWithKoulutustyyppiPath> = [

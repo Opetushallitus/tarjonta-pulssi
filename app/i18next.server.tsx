@@ -1,6 +1,6 @@
 import { RemixI18Next } from "remix-i18next";
 
-import i18n from "~/i18n"; // your i18n configuration file
+import i18n from "~/app/i18n"; // your i18n configuration file
 
 import { getTranslationsForLanguage } from "./translations";
 

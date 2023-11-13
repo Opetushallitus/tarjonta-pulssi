@@ -2,7 +2,7 @@ import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
 import { Pool } from "pg";
 import { ApiHandler } from "sst/node/api";
 
-import { DEFAULT_DB_POOL_PARAMS } from "../shared/dbUtils";
+import { DEFAULT_DB_POOL_PARAMS } from "~/shared/dbUtils";
 
 import { getCurrentAmountDataFromDb, getHistoryDataFromDb } from "./pulssiDbAccessor";
 

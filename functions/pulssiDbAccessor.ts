@@ -8,15 +8,15 @@ import {
   getCombinedHistoryData,
   parseDate,
   resolveMissingAmounts,
-} from "../shared/amountDataUtils";
-import { DATETIME_FORMAT_TZ } from "../shared/constants";
+} from "~/shared/amountDataUtils";
+import { DATETIME_FORMAT_TZ } from "~/shared/constants";
 import type {
   DatabaseRow,
   EntityPlural,
   EntityType,
   SubEntitiesByEntitiesByTila,
   SubEntityAmounts,
-} from "../shared/types";
+} from "~/shared/types";
 
 import {
   getCurrentPulssiAmounts,

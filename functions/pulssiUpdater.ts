@@ -1,8 +1,8 @@
 import { Handler } from "aws-lambda";
 
-import { createPulssiDbPool } from "../shared/dbUtils";
-import { connectElastic } from "../shared/elasticUtils";
-import { saveAmountsFromElasticToDb } from "../shared/pulssiUpdaterUtils";
+import { createPulssiDbPool } from "~/shared/dbUtils";
+import { connectElastic } from "~/shared/elasticUtils";
+import { saveAmountsFromElasticToDb } from "~/shared/pulssiUpdaterUtils";
 
 const elasticClient = await connectElastic();
 const pulssiDbPool = await createPulssiDbPool();

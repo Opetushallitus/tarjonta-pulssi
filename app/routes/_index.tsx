@@ -10,18 +10,17 @@ import { format } from "date-fns";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { EntityTable } from "~/components/EntityTable";
-import type { URLData } from "~/components/Header";
-import { Header } from "~/components/Header";
-import { HistorySearchSection } from "~/components/HistorySearchSection";
-import { ICONS } from "~/constants";
-import { getCurrentAmountData, getHistoryAmountData } from "~/servers/amount.server";
-import mainStylesUrl from "~/styles/index.css";
-import tableStylesUrl from "~/styles/table.css";
-
-import { parseDate } from "../../shared/amountDataUtils";
-import { DATETIME_FORMAT_TZ } from "../../shared/constants";
-import type { EntityType, EntityDataWithSubKey, PulssiData } from "../../shared/types";
+import { EntityTable } from "~/app/components/EntityTable";
+import type { URLData } from "~/app/components/Header";
+import { Header } from "~/app/components/Header";
+import { HistorySearchSection } from "~/app/components/HistorySearchSection";
+import { ICONS } from "~/app/constants";
+import { getCurrentAmountData, getHistoryAmountData } from "~/app/servers/amount.server";
+import mainStylesUrl from "~/app/styles/index.css";
+import tableStylesUrl from "~/app/styles/table.css";
+import { parseDate } from "~/shared/amountDataUtils";
+import { DATETIME_FORMAT_TZ } from "~/shared/constants";
+import type { EntityType, EntityDataWithSubKey, PulssiData } from "~/shared/types";
 
 const StyledEntitySection = styled(Paper)`
   border: 1px solid rgba(0, 0, 0, 0.15);

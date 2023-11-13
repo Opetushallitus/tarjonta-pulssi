@@ -1,11 +1,11 @@
 import { Pool } from "pg";
 
-import { getCurrentAmountDataFromDb, getHistoryDataFromDb } from "../../functions/pulssiDbAccessor";
-import { getCombinedHistoryData } from "../../shared/amountDataUtils";
-import { DEFAULT_DB_POOL_PARAMS } from "../../shared/dbUtils";
-import data_current from "../../shared/testdata/pulssi.json";
-import data_old from "../../shared/testdata/pulssi_old.json";
-import type { PulssiData } from "../../shared/types";
+import { getCurrentAmountDataFromDb, getHistoryDataFromDb } from "~/functions/pulssiDbAccessor";
+import { getCombinedHistoryData } from "~/shared/amountDataUtils";
+import { DEFAULT_DB_POOL_PARAMS } from "~/shared/dbUtils";
+import data_current from "~/shared/testdata/pulssi.json";
+import data_old from "~/shared/testdata/pulssi_old.json";
+import type { PulssiData } from "~/shared/types";
 
 const localPulssiDbPool = new Pool({
   ...DEFAULT_DB_POOL_PARAMS,

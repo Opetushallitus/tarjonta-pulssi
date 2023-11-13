@@ -1,8 +1,7 @@
 import { mapValues } from "lodash";
 
-import i18n from "~/i18n";
-
-import translations from "../public/locales/translation.json";
+import translations from "~/app/assets/translation.json";
+import i18n from "~/app/i18n";
 
 type LngItem = Record<string, string>;
 export const getTranslationsForLanguage = (lng: string) => {

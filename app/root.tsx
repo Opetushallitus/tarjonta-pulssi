@@ -12,7 +12,7 @@ import {
 } from "@remix-run/react";
 import { useTranslation } from "react-i18next";
 
-import i18next from "~/i18next.server";
+import i18next from "~/app/i18next.server";
 
 import { useChangeLanguage } from "./hooks/useChangeLanguage";
 

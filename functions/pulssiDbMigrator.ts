@@ -1,7 +1,7 @@
 import { Handler } from "aws-lambda";
 
-import { createMigrator } from "../shared/db/umzug/umzug.ts";
-import { createPulssiDbPool } from "../shared/dbUtils.ts";
+import { createMigrator } from "~/shared/db/umzug/umzug.ts";
+import { createPulssiDbPool } from "~/shared/dbUtils.ts";
 
 const pulssiDbPool = await createPulssiDbPool();
 

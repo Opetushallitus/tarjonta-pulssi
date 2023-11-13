@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { match, P } from "ts-pattern";
 
-import { DATETIME_FORMAT_TZ } from "../../shared/constants";
+import { DATETIME_FORMAT_TZ } from "~/shared/constants";
 
 const TIME_FORMAT = "HH:mm";
 const REFERENCE_DATE = new Date();
