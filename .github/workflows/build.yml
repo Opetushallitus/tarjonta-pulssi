@@ -20,4 +20,7 @@ jobs:
       - name: Run tests
         run: |
           npm ci --no-audit --prefer-offline
+          npm run typecheck
+          npm run prettier
+          npm run eslint
           npm run test
