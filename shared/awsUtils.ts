@@ -1,19 +1,16 @@
-// Käytetään lambda-ympäristön aws-sdk:a. Ei toimi ESM-importilla, joten täytyy käyttää requirea
-/* eslint-disable @typescript-eslint/no-var-requires */
-const AWS = require("aws-sdk");
-const ssm = new AWS.SSM();
+import { SSM } from "@aws-sdk/client-ssm";
+
+const ssm = new SSM();
 
 export async function getSSMParam(param?: string) {
   if (param == null) {
     return undefined;
   }
   try {
-    const result = await ssm
-      .getParameter({
-        Name: param,
-        WithDecryption: true,
-      })
-      .promise();
+    const result = await ssm.getParameter({
+      Name: param,
+      WithDecryption: true,
+    });
     return result.Parameter?.Value;
   } catch (e) {
     console.error(e);
