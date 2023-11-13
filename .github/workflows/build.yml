@@ -1,10 +1,12 @@
 name: Tarjonta-pulssi
+env:
+  HUSKY: 0
 
 on:
   workflow_dispatch:
   push:
     paths-ignore:
-      - '**.md'
+      - "**.md"
 
 jobs:
   test:
@@ -13,12 +15,9 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
-          cache: 'npm'
-          cache-dependency-path: sst-app/package-lock.json
+          node-version-file: ".nvmrc"
+          cache: "npm"
       - name: Run tests
         run: |
-          cd sst-app
           npm ci --no-audit --prefer-offline
           npm run test
-
