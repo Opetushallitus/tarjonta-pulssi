@@ -1,6 +1,6 @@
 import type { AggregationsFilterAggregate } from "@elastic/elasticsearch/api/types";
 import { Pool } from "pg";
-import type { PoolClient } from "pg";
+import type { PoolClient, PoolConfig } from "pg";
 
 import { getSSMParam } from "./awsUtils";
 import type { SearchResultsByEntity } from "./elasticUtils";
@@ -27,9 +27,7 @@ export interface DbRowBase {
   arkistoitu_tyovoimakoulutus_amount?: number;
 }
 
-export const createPulssiDbPool = async (
-  additionalParams: Record<string, string | number> = {}
-) => {
+export const createPulssiDbPool = async (additionalParams: Partial<PoolConfig> = {}) => {
   const pulssiDbUser = await getSSMParam(process.env.TARJONTAPULSSI_POSTGRES_APP_USER);
 
   const pulssiDbPassword = await getSSMParam(process.env.TARJONTAPULSSI_POSTGRES_APP_PASSWORD);

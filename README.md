@@ -14,11 +14,11 @@ Tietojen esittämistä varten on toteutettu yhden sivun (SPA) sovellus, Remix -f
 
 ## Hakemistorakenne
 
-- Sovelluksen infran määrittelytiedosto `tarjonta-pulssi.ts` löytyy hakemistosta `sst-app/stacks`. Määrittelyt (constructit) on toteutettu AWS CDK:lla.
-- Lambda-funktioden lähdekoodit löytyvät hakemistosta `sst-app/packages/functions/src`.
-- Web (Remix) -sovelluksen koodit löytyvät hakemistosta `sst-app/packages/web`.
-- Yhteiset, sekä lamdoissa että web-sovelluksessa käytettävät koodit löytyvät hakemistosta `sst-app/packages/shared`.
-- Tietokantamigraatiot löytyvät hakemistosta `sst-app/packages/shared/db/migrations`.
+- Sovelluksen infran määrittelytiedosto `tarjonta-pulssi.ts` löytyy hakemistosta `stacks`. Määrittelyt (constructit) on toteutettu AWS CDK:lla.
+- Lambda-funktioden lähdekoodit löytyvät hakemistosta `functions`.
+- Web (Remix) -sovelluksen koodit löytyvät hakemistosta `app`.
+- Yhteiset, sekä lamdoissa että web-sovelluksessa käytettävät koodit löytyvät hakemistosta `shared`.
+- Tietokantamigraatiot löytyvät hakemistosta `shared/db/migrations`.
 
 ### Esivaatimukset
 
@@ -65,12 +65,13 @@ Profiili on sade / tuotanto -ympäristössä `oph-prod`, muissa `oph-dev`
 
 Komennon ajamisesta tehty seuraavia huomioita (ajettu macOS:ssä).
 
-- Postgresql:n `pg_config` -työkalu täytyy löytyä polusta. Työkalun voi kopioida PostgreSQL -kontin sisältä (kontin käynnistämiseksi kts. Ajaminen lokaalia PostgreSQL -kantaa vasten) komennolla `docker cp tarjontapulssi-database:/usr/bin/pg_config <kohdehakemisto>`. Vaihtoehtoinen tapa on asentaa PostgreSQL omalle koneelle.
+- Komentoa ajettaessa kannattaa asettaa ympäristömuuttuja `export NPM_CONFIG_IGNORE_SCRIPTS=true`. Tällöin deploy ei vaadi `pg_config` -työkalua.
+- Tarvittaessa `pg_config` -työkalun voi kopioida PostgreSQL -kontin sisältä (kontin käynnistämiseksi kts. Ajaminen lokaalia PostgreSQL -kantaa vasten) komennolla `docker cp tarjontapulssi-database:/usr/bin/pg_config <kohdehakemisto>`. Vaihtoehtoinen tapa on asentaa PostgreSQL omalle koneelle.
 - `xcrun` -työkalu täytyy olla asennettuna ja oikein konfiguroituna. Tämä onnistuu komennolla `xcode-select --install`.
 
 ### Tietokantamigraatiot
 
-Tietokantamigraatiot on toteutettu [Umzug](https://github.com/sequelize/umzug)-kirjastolla ja ne löytyvät hakemistosta `sst-app/packages/shared/db/migrations`. Migraatiot ajetaan lambdassa automaattisesti deployn yhteydessä ja ne on toteutettu JavaScript CommonJS-moduuleina, jotta niitä on helpompi ajaa lambdassa.
+Tietokantamigraatiot on toteutettu [Umzug](https://github.com/sequelize/umzug)-kirjastolla ja ne löytyvät hakemistosta `shared/db/migrations`. Migraatiot ajetaan lambdassa automaattisesti deployn yhteydessä ja ne on toteutettu JavaScript CommonJS-moduuleina, jotta niitä on helpompi ajaa lambdassa.
 
 Migraatiot voi ajaa myös käsin. Jos haluat ajaa migraatioita käsin esim. untuvaa vasten, aseta ensin VPN päälle ja tunneloi haluamasi ympäristön tietokantayhteys localhostiin. Lisää migrate.ts:ään kyseisen ympäristön tietokannan käyttäjätunnus ja salasana. Sen jälkeen voit ajaa kantaan migraatiot komennolla `npm run umzug up`.
 
@@ -87,13 +88,13 @@ Kaikissa kolmessa tapauksessa sovellusta ajetaan osoitteessa `http://localhost:3
 
 #### Ajaminen staattista testidataa käyttäen
 
-Käynnistä sovellus lokaalisti komennolla `npm run dev:local` hakemistossa `sst-app/packages/web.` Tällöin sovellus lataa näytettävät lukemat tiedostoista `pulssi.json` ja `pulssi_old.json` hakemistosta `sst-app/packages/shared/testdata`.
+Käynnistä sovellus lokaalisti komennolla `npm run dev:local`. Tällöin sovellus lataa näytettävät lukemat tiedostoista `pulssi.json` ja `pulssi_old.json` hakemistosta `shared/testdata`.
 Huom! Näytettävät lukemat ovat tässä tapauksessa aina samoja, ei sovellu tarkempaan historia-haun testaamiseen.
 
 #### Ajaminen lokaalia PostgreSQl -kantaa vasten
 
 Käynnistä ensin lokaali PostgreSql -kanta (kts. kaksi seuraavaa kappaletta).
-Käynnistä tämän jälkeen sovellus lokaalisti komennolla `npm run dev:localdb` hakemistossa `sst-app/packages/web.`
+Käynnistä tämän jälkeen sovellus lokaalisti komennolla `npm run dev:localdb`.
 
 ##### PostgreSQL Kontti-imagen luonti (tarvitsee tehdä vain kerran):
 
@@ -102,7 +103,7 @@ Käynnistä tämän jälkeen sovellus lokaalisti komennolla `npm run dev:localdb
 
 ##### Lokaalin tarjontapulssi-tietokannan käynnistys
 
-Komento `npm run prepare-test-env` (hakemistossa `sst-app`) käynnistää lokaalin kannan, suorittaa migraatiot, sekä importoi kantaan valmiiksi testidataa. Kaikki vaiheet voi ajaa tarvittaessa myös erikseen, kts `sst-app/package.json`. Tämän jälkeen kanta on valmiina käytettäväksi.
+Komento `npm run prepare-test-env` (hakemistossa `sst-app`) käynnistää lokaalin kannan, suorittaa migraatiot, sekä importoi kantaan valmiiksi testidataa. Kaikki vaiheet voi ajaa tarvittaessa myös erikseen, kts `package.json`. Tämän jälkeen kanta on valmiina käytettäväksi.
 Huom! Datan importointi saattaa kestää useita kymmeniä sekunteja. Importointia ajettaessa päätteelle tulostuu toistuvasti `INSERT 0 1`.
 
 #### Ajaminen live-lambda moodissa
