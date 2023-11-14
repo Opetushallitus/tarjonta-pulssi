@@ -4,16 +4,17 @@ import type { Pool } from "pg";
 import {
   EMPTY_DATABASE_RESULTS,
   dbQueryResultToPulssiData,
+  discardAmountsWhenOutOfTimelimit,
   findMissingHistoryAmountsForEntity,
-  getCombinedHistoryData,
   parseDate,
-  resolveMissingAmounts,
+  resolveMissingSubentities,
 } from "~/shared/amountDataUtils";
 import { DATETIME_FORMAT_TZ } from "~/shared/constants";
 import type {
-  DatabaseRow,
+  EntityDatabaseResults,
   EntityPlural,
   EntityType,
+  PulssiData,
   SubEntitiesByEntitiesByTila,
   SubEntityAmounts,
 } from "~/shared/types";
@@ -21,7 +22,7 @@ import type {
 import {
   getCurrentPulssiAmounts,
   queryPulssiAmounts,
-  queryPulssiAmountsAtCertainMoment,
+  queryPulssiAmountsHistory,
   queryAllSubentityTypesByEntityTypes,
 } from "./amountDbUtils";
 
@@ -35,162 +36,161 @@ export const getCurrentAmountDataFromDb = async (dbPool: Pool) => {
   return pulssiData;
 };
 
+const queryEntityHistoryAmounts = async (dbPool: Pool, pointOfTime: Date | null) => {
+  return {
+    koulutukset: await queryPulssiAmountsHistory(dbPool, "koulutus", pointOfTime),
+    toteutukset: await queryPulssiAmountsHistory(dbPool, "toteutus", pointOfTime),
+    hakukohteet: await queryPulssiAmountsHistory(dbPool, "hakukohde", pointOfTime),
+    haut: await queryPulssiAmountsHistory(dbPool, "haku", pointOfTime),
+  };
+};
+
 const getCurrentAmountDataForMissingHistoryAmounts = async (
   dbPool: Pool,
   missingHistoryAmounts: SubEntitiesByEntitiesByTila,
-  cachedData: Record<EntityPlural, Array<DatabaseRow>> = EMPTY_DATABASE_RESULTS
+  cachedData: EntityDatabaseResults = EMPTY_DATABASE_RESULTS
 ) => {
-  const missingAmounts = (amounts: SubEntityAmounts) =>
+  const amountsMissingFor = (amounts: SubEntityAmounts) =>
     amounts.julkaistu.length > 0 || amounts.arkistoitu.length > 0;
   const getDbResults = async (entity: EntityType, cachedDataKey: EntityPlural) =>
     cachedData[cachedDataKey].length > 0
       ? cachedData[cachedDataKey]
       : await queryPulssiAmounts(dbPool, entity);
   return {
-    koulutukset: missingAmounts(missingHistoryAmounts.koulutukset)
+    koulutukset: amountsMissingFor(missingHistoryAmounts.koulutukset)
       ? await getDbResults("koulutus", "koulutukset")
       : [],
-    toteutukset: missingAmounts(missingHistoryAmounts.toteutukset)
+    toteutukset: amountsMissingFor(missingHistoryAmounts.toteutukset)
       ? await getDbResults("toteutus", "toteutukset")
       : [],
-    hakukohteet: missingAmounts(missingHistoryAmounts.hakukohteet)
+    hakukohteet: amountsMissingFor(missingHistoryAmounts.hakukohteet)
       ? await getDbResults("hakukohde", "hakukohteet")
       : [],
-    haut: missingAmounts(missingHistoryAmounts.haut) ? await getDbResults("haku", "haut") : [],
+    haut: amountsMissingFor(missingHistoryAmounts.haut) ? await getDbResults("haku", "haut") : [],
   };
 };
 
-export const getHistoryDataFromDb = async (
-  dbPool: Pool,
-  startStr: string | undefined,
-  endStr: string | undefined
-) => {
+const combineHistoryAndCurrentAmounts = (
+  historyData: EntityDatabaseResults,
+  currentData: EntityDatabaseResults,
+  subEntitiesMissingFromHistory: SubEntitiesByEntitiesByTila,
+  timeLimit: Date | null
+) => ({
+  koulutukset: [
+    historyData.koulutukset,
+    findMissingHistoryAmountsForEntity(
+      subEntitiesMissingFromHistory.koulutukset,
+      currentData.koulutukset
+    ),
+  ]
+    .flat()
+    .map((k) => discardAmountsWhenOutOfTimelimit(k, timeLimit)),
+  toteutukset: [
+    historyData.toteutukset,
+    findMissingHistoryAmountsForEntity(
+      subEntitiesMissingFromHistory.toteutukset,
+      currentData.toteutukset
+    ),
+  ]
+    .flat()
+    .map((k) => discardAmountsWhenOutOfTimelimit(k, timeLimit)),
+  hakukohteet: [
+    historyData.hakukohteet,
+    findMissingHistoryAmountsForEntity(
+      subEntitiesMissingFromHistory.hakukohteet,
+      currentData.hakukohteet
+    ),
+  ]
+    .flat()
+    .map((k) => discardAmountsWhenOutOfTimelimit(k, timeLimit)),
+  haut: [
+    historyData.haut,
+    findMissingHistoryAmountsForEntity(subEntitiesMissingFromHistory.haut, currentData.haut),
+  ]
+    .flat()
+    .map((k) => discardAmountsWhenOutOfTimelimit(k, timeLimit)),
+});
+
+export const getHistoryDataFromDb = async (dbPool: Pool, startStr?: string, endStr?: string) => {
   const referenceDate = new Date();
   const start = parseDate(startStr, referenceDate);
   const end = parseDate(endStr, referenceDate);
 
-  let koulutukset = await queryPulssiAmountsAtCertainMoment(dbPool, "koulutus", start);
-  let toteutukset = await queryPulssiAmountsAtCertainMoment(dbPool, "toteutus", start);
-  let hakukohteet = await queryPulssiAmountsAtCertainMoment(dbPool, "hakukohde", start);
-  let haut = await queryPulssiAmountsAtCertainMoment(dbPool, "haku", start);
-
   const allSubentitiesByEntities = await queryAllSubentityTypesByEntityTypes(dbPool);
-  let missingHistoryAmounts = resolveMissingAmounts(
+
+  const entityAmountsAtStart = await queryEntityHistoryAmounts(dbPool, start);
+
+  const missingHistoryAmountsAtStart = resolveMissingSubentities(
     allSubentitiesByEntities,
-    koulutukset,
-    toteutukset,
-    hakukohteet,
-    haut
+    entityAmountsAtStart
   );
-  let currentAmountData = await getCurrentAmountDataForMissingHistoryAmounts(
+  const currentAmountDataForStart = await getCurrentAmountDataForMissingHistoryAmounts(
     dbPool,
-    missingHistoryAmounts
+    missingHistoryAmountsAtStart
   );
 
-  const pulssiAmountsAtStart = {
+  const completeEntityAmountsAtStart = combineHistoryAndCurrentAmounts(
+    entityAmountsAtStart,
+    currentAmountDataForStart,
+    missingHistoryAmountsAtStart,
+    start
+  );
+
+  // Jos loppuaikaa ei ole annettu, haetaan lukemat aina current datasta
+  const entityAmountsAtEnd = end
+    ? await queryEntityHistoryAmounts(dbPool, end)
+    : EMPTY_DATABASE_RESULTS;
+
+  const missingHistoryAmountsAtEnd = resolveMissingSubentities(
+    allSubentitiesByEntities,
+    entityAmountsAtEnd
+  );
+
+  const currentAmountDataForEnd = await getCurrentAmountDataForMissingHistoryAmounts(
+    dbPool,
+    missingHistoryAmountsAtEnd,
+    currentAmountDataForStart
+  );
+
+  const completeEntityAmountsAtEnd = combineHistoryAndCurrentAmounts(
+    entityAmountsAtEnd,
+    currentAmountDataForEnd,
+    missingHistoryAmountsAtEnd,
+    end
+  );
+
+  const returnValue: PulssiData = {
     koulutukset: dbQueryResultToPulssiData(
-      koulutukset.concat(
-        findMissingHistoryAmountsForEntity(
-          missingHistoryAmounts.koulutukset,
-          currentAmountData.koulutukset
-        )
-      ),
+      completeEntityAmountsAtEnd.koulutukset,
       "koulutus",
-      start
+      completeEntityAmountsAtStart.koulutukset
     ),
     toteutukset: dbQueryResultToPulssiData(
-      toteutukset.concat(
-        findMissingHistoryAmountsForEntity(
-          missingHistoryAmounts.toteutukset,
-          currentAmountData.toteutukset
-        )
-      ),
+      completeEntityAmountsAtEnd.toteutukset,
       "toteutus",
-      start
+      completeEntityAmountsAtStart.toteutukset
     ),
     hakukohteet: dbQueryResultToPulssiData(
-      hakukohteet.concat(
-        findMissingHistoryAmountsForEntity(
-          missingHistoryAmounts.hakukohteet,
-          currentAmountData.hakukohteet
-        )
-      ),
+      completeEntityAmountsAtEnd.hakukohteet,
       "hakukohde",
-      start
+      completeEntityAmountsAtStart.hakukohteet
     ),
     haut: dbQueryResultToPulssiData(
-      haut.concat(
-        findMissingHistoryAmountsForEntity(missingHistoryAmounts.haut, currentAmountData.haut)
-      ),
+      completeEntityAmountsAtEnd.haut,
       "haku",
-      start
+      completeEntityAmountsAtStart.haut
     ),
   };
-
-  const minAikaleima = [koulutukset, toteutukset, hakukohteet, haut]
+  const minAikaleima = [
+    entityAmountsAtStart.koulutukset,
+    entityAmountsAtStart.toteutukset,
+    entityAmountsAtStart.hakukohteet,
+    entityAmountsAtStart.haut,
+  ]
     .flat()
     .reduce((prev, curr) =>
       isBefore(prev.start_timestamp, curr.start_timestamp) ? prev : curr
     ).start_timestamp;
-
-  koulutukset = end ? await queryPulssiAmountsAtCertainMoment(dbPool, "koulutus", end) : [];
-  toteutukset = end ? await queryPulssiAmountsAtCertainMoment(dbPool, "toteutus", end) : [];
-  hakukohteet = end ? await queryPulssiAmountsAtCertainMoment(dbPool, "hakukohde", end) : [];
-  haut = end ? await queryPulssiAmountsAtCertainMoment(dbPool, "haku", end) : [];
-  missingHistoryAmounts = resolveMissingAmounts(
-    allSubentitiesByEntities,
-    koulutukset,
-    toteutukset,
-    hakukohteet,
-    haut
-  );
-  currentAmountData = await getCurrentAmountDataForMissingHistoryAmounts(
-    dbPool,
-    missingHistoryAmounts,
-    currentAmountData
-  );
-
-  const pulssiAmountsAtEnd = {
-    koulutukset: dbQueryResultToPulssiData(
-      koulutukset.concat(
-        findMissingHistoryAmountsForEntity(
-          missingHistoryAmounts.koulutukset,
-          currentAmountData.koulutukset
-        )
-      ),
-      "koulutus",
-      end
-    ),
-    toteutukset: dbQueryResultToPulssiData(
-      toteutukset.concat(
-        findMissingHistoryAmountsForEntity(
-          missingHistoryAmounts.toteutukset,
-          currentAmountData.toteutukset
-        )
-      ),
-      "toteutus",
-      end
-    ),
-    hakukohteet: dbQueryResultToPulssiData(
-      hakukohteet.concat(
-        findMissingHistoryAmountsForEntity(
-          missingHistoryAmounts.hakukohteet,
-          currentAmountData.hakukohteet
-        )
-      ),
-      "hakukohde",
-      end
-    ),
-    haut: dbQueryResultToPulssiData(
-      haut.concat(
-        findMissingHistoryAmountsForEntity(missingHistoryAmounts.haut, currentAmountData.haut)
-      ),
-      "haku",
-      end
-    ),
-  };
-
-  const returnValue = getCombinedHistoryData(pulssiAmountsAtStart, pulssiAmountsAtEnd);
   returnValue.minAikaleima = format(minAikaleima, DATETIME_FORMAT_TZ);
   return returnValue;
 };

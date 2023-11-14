@@ -65,17 +65,17 @@ export const getCurrentPulssiAmounts = async (pulssiDbPool: Pool, entity: Entity
   return dbQueryResultToPulssiData(rows, entity);
 };
 
-export const queryPulssiAmountsAtCertainMoment = async (
+export const queryPulssiAmountsHistory = async (
   pulssiDbPool: Pool,
   entity: EntityType,
-  timeLimit: Date | null
+  pointOfTime: Date | null
 ) => {
   const amountFields =
     entity === "toteutus"
       ? "amount, jotpa_amount, taydennyskoulutus_amount, tyovoimakoulutus_amount"
       : "amount";
   const subEntityField = entity === "haku" ? "hakutapa" : "tyyppi_path";
-  const timeLimitCondition = timeLimit ? `where upper(system_time) >= $1` : "";
+  const timeLimitCondition = pointOfTime ? `where upper(system_time) >= $1` : "";
 
   const sql = `select ${subEntityField} as sub_entity, tila, lower(system_time) as start_timestamp, ${amountFields} 
     from ${entity}_amounts_history where (${subEntityField}, tila, upper(system_time)) in (
@@ -83,8 +83,8 @@ export const queryPulssiAmountsAtCertainMoment = async (
       ${timeLimitCondition}
       group by ${subEntityField}, tila) order by sub_entity`;
 
-  const dbResult = timeLimit
-    ? await pulssiDbPool.query(sql, [timeLimit])
+  const dbResult = pointOfTime
+    ? await pulssiDbPool.query(sql, [pointOfTime])
     : await pulssiDbPool.query(sql);
   return handleResults(dbResult.rows);
 };

@@ -1,11 +1,9 @@
 import { Pool } from "pg";
 
 import { getCurrentAmountDataFromDb, getHistoryDataFromDb } from "~/functions/pulssiDbAccessor";
-import { getCombinedHistoryData } from "~/shared/amountDataUtils";
 import { DEFAULT_DB_POOL_PARAMS } from "~/shared/dbUtils";
 import data_current from "~/shared/testdata/pulssi.json";
-import data_old from "~/shared/testdata/pulssi_old.json";
-import type { PulssiData } from "~/shared/types";
+import data_with_history from "~/shared/testdata/pulssi_with_history.json";
 
 const localPulssiDbPool = new Pool({
   ...DEFAULT_DB_POOL_PARAMS,
@@ -32,10 +30,7 @@ export const getCurrentAmountData = async () => {
 export const getHistoryAmountData = async (startStr: string | null, endStr: string | null) => {
   switch (process.env.DATABASE) {
     case "file":
-      return getCombinedHistoryData(
-        data_old as unknown as PulssiData,
-        data_current as unknown as PulssiData
-      );
+      return { ...data_with_history, minAikaleima: "26.10.2022 00:00 +02" };
     case "local":
       return await getHistoryDataFromDb(
         localPulssiDbPool,

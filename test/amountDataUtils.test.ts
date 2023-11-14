@@ -1,11 +1,9 @@
 import { parse } from "date-fns";
-import { merge } from "lodash";
 
 import {
   dbQueryResultToPulssiData,
   findMissingHistoryAmountsForEntity,
-  getCombinedHistoryData,
-  resolveMissingAmounts,
+  resolveMissingSubentities,
 } from "~/shared/amountDataUtils";
 import { DATETIME_FORMAT_TZ } from "~/shared/constants";
 import type { DatabaseRow, SubEntityAmounts, SubKeyWithAmounts } from "~/shared/types";
@@ -147,6 +145,13 @@ const dbResults: Array<DatabaseRow> = [
   },
 ];
 
+const dbResultsOld = dbResults.map((sub) => ({
+  sub_entity: sub.sub_entity,
+  tila: sub.tila,
+  start_timestamp: sub.start_timestamp,
+  amount: (sub.amount || 1) - 1,
+}));
+
 const expectedItems: Array<SubKeyWithAmounts> = [
   { subkey: "aaa", julkaistu_amount: 1, arkistoitu_amount: 3 },
   {
@@ -174,7 +179,27 @@ const expectedItems: Array<SubKeyWithAmounts> = [
   { subkey: "ddd", julkaistu_amount: 37, arkistoitu_amount: 39 },
   { subkey: "eee", julkaistu_amount: 41, arkistoitu_amount: 43 },
 ];
+
+const toOldData = (dataItem: SubKeyWithAmounts): SubKeyWithAmounts => ({
+  subkey: dataItem.subkey,
+  julkaistu_amount: dataItem.julkaistu_amount,
+  julkaistu_amount_old:
+    (dataItem.julkaistu_amount || 1) - (dataItem.items ? dataItem.items.length : 1),
+  arkistoitu_amount: dataItem.arkistoitu_amount,
+  arkistoitu_amount_old:
+    (dataItem.arkistoitu_amount || 1) - (dataItem.items ? dataItem.items.length : 1),
+  items: dataItem.items ? dataItem.items.map((subItem) => toOldData(subItem)) : undefined,
+});
+
+const expectedItemsWithHistory = expectedItems.map((sub) => toOldData(sub));
+
 const expectedByTila = { julkaistu_amount: 231, arkistoitu_amount: 253 };
+const expectedByTilaWithHistory = {
+  julkaistu_amount: 231,
+  julkaistu_amount_old: 220,
+  arkistoitu_amount: 253,
+  arkistoitu_amount_old: 242,
+};
 
 const toteutusDbResults: Array<DatabaseRow> = [
   {
@@ -233,6 +258,16 @@ const toteutusDbResults: Array<DatabaseRow> = [
   },
 ];
 
+const toteutusDbResultsOld = toteutusDbResults.map((sub) => ({
+  sub_entity: sub.sub_entity,
+  tila: sub.tila,
+  start_timestamp: sub.start_timestamp,
+  amount: (sub.amount || 1) - 1,
+  jotpa_amount: (sub.jotpa_amount || 1) - 1,
+  taydennyskoulutus_amount: (sub.taydennyskoulutus_amount || 1) - 1,
+  tyovoimakoulutus_amount: (sub.tyovoimakoulutus_amount || 1) - 1,
+}));
+
 const hakukohdeDbResults: Array<DatabaseRow> = [
   {
     sub_entity: "aaa",
@@ -259,15 +294,23 @@ const expectedByTilaForToteutukset = {
   arkistoitu_tyovoimakoulutus_amount: 48,
 };
 
-const expectedByTilaForToteutuksetWithTimestamp = {
-  julkaistu_amount: 10,
-  arkistoitu_amount: 18,
-  julkaistu_jotpa_amount: 12,
-  arkistoitu_jotpa_amount: 20,
-  julkaistu_taydennyskoulutus_amount: 14,
-  arkistoitu_taydennyskoulutus_amount: 22,
-  julkaistu_tyovoimakoulutus_amount: 16,
-  arkistoitu_tyovoimakoulutus_amount: 24,
+const expectedByTilaForToteutuksetWithHistory = {
+  julkaistu_amount: 27,
+  julkaistu_amount_old: 24,
+  arkistoitu_amount: 39,
+  arkistoitu_amount_old: 36,
+  julkaistu_jotpa_amount: 30,
+  julkaistu_jotpa_amount_old: 27,
+  arkistoitu_jotpa_amount: 42,
+  arkistoitu_jotpa_amount_old: 39,
+  julkaistu_taydennyskoulutus_amount: 33,
+  julkaistu_taydennyskoulutus_amount_old: 30,
+  arkistoitu_taydennyskoulutus_amount: 45,
+  arkistoitu_taydennyskoulutus_amount_old: 42,
+  julkaistu_tyovoimakoulutus_amount: 36,
+  julkaistu_tyovoimakoulutus_amount_old: 33,
+  arkistoitu_tyovoimakoulutus_amount: 48,
+  arkistoitu_tyovoimakoulutus_amount_old: 45,
 };
 
 test("Db query results should be correctly parsed and sorted", () => {
@@ -278,29 +321,16 @@ test("Amounts by tila should be parsed correctly", () => {
   expect(dbQueryResultToPulssiData(dbResults, "koulutus").by_tila).toMatchObject(expectedByTila);
 });
 
-test("Db query results parsed correctly when some results excluded by timestamp", () => {
-  const expected = expectedItems.map((sub) =>
-    sub.subkey === "eee"
-      ? { subkey: "eee", julkaistu_amount: undefined, arkistoitu_amount: undefined }
-      : sub
+test("Db query results should be correctly parsed when history data included", () => {
+  expect(dbQueryResultToPulssiData(dbResults, "koulutus", dbResultsOld).items).toMatchObject(
+    expectedItemsWithHistory
   );
-  expect(
-    dbQueryResultToPulssiData(
-      dbResults,
-      "koulutus",
-      parse("15.9.2023 16:01 +00", DATETIME_FORMAT_TZ, referenceDate)
-    ).items
-  ).toMatchObject(expected);
 });
 
-test("Amounts by tila parsed correctly when some results excluded by timestamp", () => {
-  expect(
-    dbQueryResultToPulssiData(
-      dbResults,
-      "koulutus",
-      parse("15.9.2023 16:01 +00", DATETIME_FORMAT_TZ, referenceDate)
-    ).by_tila
-  ).toMatchObject({ julkaistu_amount: 190, arkistoitu_amount: 210 });
+test("Amounts by tila should be parsed correctly when history data included", () => {
+  expect(dbQueryResultToPulssiData(dbResults, "koulutus", dbResultsOld).by_tila).toMatchObject(
+    expectedByTilaWithHistory
+  );
 });
 
 test("Amounts by tila for toteutukset should be parsed correctly", () => {
@@ -309,14 +339,10 @@ test("Amounts by tila for toteutukset should be parsed correctly", () => {
   );
 });
 
-test("Amounts by tila for toteutukset parsed correctly when some results excluded by timestamp", () => {
+test("Amounts by tila for toteutukset should be parsed correctly when history data included", () => {
   expect(
-    dbQueryResultToPulssiData(
-      toteutusDbResults,
-      "toteutus",
-      parse("15.9.2023 16:01 +00", DATETIME_FORMAT_TZ, referenceDate)
-    ).by_tila
-  ).toMatchObject(expectedByTilaForToteutuksetWithTimestamp);
+    dbQueryResultToPulssiData(toteutusDbResults, "toteutus", toteutusDbResultsOld).by_tila
+  ).toMatchObject(expectedByTilaForToteutuksetWithHistory);
 });
 
 test("Missing db results resolved correctly", () => {
@@ -326,13 +352,12 @@ test("Missing db results resolved correctly", () => {
     hakukohteet: hakukohdeDbResults.map((res) => res.sub_entity).concat(["ccc"]),
     haut: ["aaa", "bbb"],
   };
-  const missingResults = resolveMissingAmounts(
-    allSubentities,
-    dbResults,
-    toteutusDbResults,
-    hakukohdeDbResults,
-    []
-  );
+  const missingResults = resolveMissingSubentities(allSubentities, {
+    koulutukset: dbResults,
+    toteutukset: toteutusDbResults,
+    hakukohteet: hakukohdeDbResults,
+    haut: [],
+  });
   expect(missingResults.koulutukset).toMatchObject({
     julkaistu: ["fff", "ggg/aaa"],
     arkistoitu: ["fff", "ggg/aaa"],
@@ -359,147 +384,4 @@ test("Find desired db amounts from dbresult -list correctly", () => {
     dbResults[1],
     dbResults[15],
   ]);
-});
-
-test("History amounts combined correctly", () => {
-  const startData = {
-    koulutukset: { items: [], by_tila: { julkaistu_amount: 0, arkistoitu_amount: 0 } },
-    toteutukset: {
-      items: [
-        {
-          subkey: "aaa",
-          julkaistu_amount: 1,
-          arkistoitu_amount: 2,
-          julkaistu_jotpa_amount: 3,
-          arkistoitu_jotpa_amount: 4,
-          julkaistu_taydennyskoulutus_amount: 5,
-          arkistoitu_taydennyskoulutus_amount: 6,
-          julkaistu_tyovoimakoulutus_amount: 7,
-          arkistoitu_tyovoimakoulutus_amount: 8,
-          items: [
-            {
-              subkey: "bbb",
-              julkaistu_amount: 2,
-              arkistoitu_amount: 3,
-              julkaistu_jotpa_amount: 4,
-              arkistoitu_jotpa_amount: 5,
-              julkaistu_taydennyskoulutus_amount: 6,
-              arkistoitu_taydennyskoulutus_amount: 7,
-              julkaistu_tyovoimakoulutus_amount: 8,
-              arkistoitu_tyovoimakoulutus_amount: 9,
-            },
-          ],
-        },
-        {
-          subkey: "ccc",
-          julkaistu_amount: 3,
-          arkistoitu_amount: 4,
-          julkaistu_jotpa_amount: 5,
-          arkistoitu_jotpa_amount: 6,
-          julkaistu_taydennyskoulutus_amount: 7,
-          arkistoitu_taydennyskoulutus_amount: 8,
-          julkaistu_tyovoimakoulutus_amount: 9,
-          arkistoitu_tyovoimakoulutus_amount: 10,
-          items: [
-            {
-              subkey: "ddd",
-              julkaistu_amount: -1,
-              arkistoitu_amount: -1,
-              julkaistu_jotpa_amount: -1,
-              arkistoitu_jotpa_amount: -1,
-              julkaistu_taydennyskoulutus_amount: -1,
-              arkistoitu_taydennyskoulutus_amount: -1,
-              julkaistu_tyovoimakoulutus_amount: -1,
-              arkistoitu_tyovoimakoulutus_amount: -1,
-            },
-          ],
-        },
-      ],
-      by_tila: {
-        julkaistu_amount: 6,
-        arkistoitu_amount: 9,
-        julkaistu_jotpa_amount: 12,
-        arkistoitu_jotpa_amount: 15,
-        julkaistu_taydennyskoulutus_amount: 18,
-        arkistoitu_taydennyskoulutus_amount: 21,
-        julkaistu_tyovoimakoulutus_amount: 24,
-        arkistoitu_tyovoimakoulutus_amount: 27,
-      },
-    },
-    hakukohteet: { items: [], by_tila: { julkaistu_amount: 0, arkistoitu_amount: 0 } },
-    haut: { items: [], by_tila: { julkaistu_amount: 0, arkistoitu_amount: 0 } },
-  };
-  const endData = {
-    koulutukset: { items: [], by_tila: { julkaistu_amount: 0, arkistoitu_amount: 0 } },
-    toteutukset: {
-      items: [
-        {
-          subkey: "aaa",
-          julkaistu_amount: 2,
-          arkistoitu_amount: 3,
-          julkaistu_jotpa_amount: 4,
-          arkistoitu_jotpa_amount: 5,
-          julkaistu_taydennyskoulutus_amount: 6,
-          arkistoitu_taydennyskoulutus_amount: 7,
-          julkaistu_tyovoimakoulutus_amount: 8,
-          arkistoitu_tyovoimakoulutus_amount: 9,
-          items: [
-            {
-              subkey: "bbb",
-              julkaistu_amount: 3,
-              arkistoitu_amount: 4,
-              julkaistu_jotpa_amount: 5,
-              arkistoitu_jotpa_amount: 6,
-              julkaistu_taydennyskoulutus_amount: 7,
-              arkistoitu_taydennyskoulutus_amount: 8,
-              julkaistu_tyovoimakoulutus_amount: 9,
-              arkistoitu_tyovoimakoulutus_amount: 10,
-            },
-          ],
-        },
-        {
-          subkey: "ccc",
-          julkaistu_amount: -1,
-          arkistoitu_amount: -1,
-          julkaistu_jotpa_amount: -1,
-          arkistoitu_jotpa_amount: -1,
-          julkaistu_taydennyskoulutus_amount: -1,
-          arkistoitu_taydennyskoulutus_amount: -1,
-          julkaistu_tyovoimakoulutus_amount: -1,
-          arkistoitu_tyovoimakoulutus_amount: -1,
-          items: [
-            {
-              subkey: "ddd",
-              julkaistu_amount: 4,
-              arkistoitu_amount: 5,
-              julkaistu_jotpa_amount: 6,
-              arkistoitu_jotpa_amount: 7,
-              julkaistu_taydennyskoulutus_amount: 8,
-              arkistoitu_taydennyskoulutus_amount: 9,
-              julkaistu_tyovoimakoulutus_amount: 10,
-              arkistoitu_tyovoimakoulutus_amount: 11,
-            },
-          ],
-        },
-      ],
-      by_tila: {
-        julkaistu_amount: 9,
-        arkistoitu_amount: 12,
-        julkaistu_jotpa_amount: 15,
-        arkistoitu_jotpa_amount: 18,
-        julkaistu_taydennyskoulutus_amount: 21,
-        arkistoitu_taydennyskoulutus_amount: 24,
-        julkaistu_tyovoimakoulutus_amount: 27,
-        arkistoitu_tyovoimakoulutus_amount: 30,
-      },
-    },
-    hakukohteet: { items: [], by_tila: { julkaistu_amount: 0, arkistoitu_amount: 0 } },
-    haut: { items: [], by_tila: { julkaistu_amount: 0, arkistoitu_amount: 0 } },
-  };
-  const dataWithOldAmounts = JSON.parse(
-    JSON.stringify(startData).replace(/amount"/g, 'amount_old"')
-  );
-  expect(getCombinedHistoryData(startData, endData)).toMatchObject(
-    merge(endData, dataWithOldAmounts)
-  );
 });

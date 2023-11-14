@@ -90,8 +90,14 @@ export interface DatabaseRow {
   sub_entity: string;
   tila: Julkaisutila;
   start_timestamp: Date;
-  amount: number;
+  amount?: number;
   jotpa_amount?: number;
   taydennyskoulutus_amount?: number;
   tyovoimakoulutus_amount?: number;
+}
+export interface EntityDatabaseResults {
+  koulutukset: Array<DatabaseRow>;
+  toteutukset: Array<DatabaseRow>;
+  hakukohteet: Array<DatabaseRow>;
+  haut: Array<DatabaseRow>;
 }

@@ -1,17 +1,16 @@
 import { parse, isAfter } from "date-fns";
-import { findLastIndex, update } from "lodash";
+import { findLastIndex } from "lodash";
 import { P, match } from "ts-pattern";
 
 import { DATETIME_FORMAT_TZ } from "./constants";
 import type {
   DatabaseRow,
-  EntityDataWithSubKey,
   EntityType,
-  PulssiData,
   SubEntitiesByEntities,
   SubEntityAmounts,
   Julkaisutila,
   SubKeyWithAmounts,
+  EntityDatabaseResults,
 } from "./types";
 
 export const EMPTY_DATABASE_RESULTS = {
@@ -21,29 +20,21 @@ export const EMPTY_DATABASE_RESULTS = {
   haut: [],
 };
 
-const rowAmount = (
-  row: DatabaseRow,
-  amountFieldName: keyof DatabaseRow,
-  maxTimestamp: Date | null = null
-) =>
-  maxTimestamp && row.start_timestamp && isAfter(row.start_timestamp, maxTimestamp)
-    ? undefined
-    : Number(row[amountFieldName]);
-
 const sumBy = (
-  rows: Array<DatabaseRow>,
   tilaFilterValue: Julkaisutila,
   amountFieldName: keyof DatabaseRow,
-  maxTimestamp: Date | null = null
-) => {
-  return rows.reduce((result, row) => {
-    const amountValue = rowAmount(row, amountFieldName, maxTimestamp);
-    const addedValue = row.tila === tilaFilterValue && amountValue ? amountValue : 0;
-    return result + addedValue;
-  }, 0);
-};
+  rows?: Array<DatabaseRow>
+) =>
+  rows
+    ? rows.reduce((result, row) => {
+        const amountValue = Number(row[amountFieldName]);
+        const addedValue =
+          row.tila === tilaFilterValue && !Number.isNaN(amountValue) ? amountValue : 0;
+        return result + addedValue;
+      }, 0)
+    : undefined;
 
-export const sumUp = (number1: number | undefined, number2: number | undefined) => {
+export const sumUp = (number1?: number, number2?: number) => {
   return match([number1, number2])
     .with([P.not(P.nullish), P.not(P.nullish)], ([curVal, addVal]) => curVal + addVal)
     .with([P.not(P.nullish), P.nullish], () => number1)
@@ -60,8 +51,6 @@ export const parseDate = (dateStr: string | null | undefined, referenceData: Dat
     return null;
   }
 };
-
-const EMPTY_ITEMS = new Array<SubKeyWithAmounts>();
 
 const sortSubEntities = (subEntities: Array<SubKeyWithAmounts>) => {
   const childrenSorted: Array<SubKeyWithAmounts> = subEntities.map((child) =>
@@ -82,13 +71,16 @@ const sortSubEntities = (subEntities: Array<SubKeyWithAmounts>) => {
 export const dbQueryResultToPulssiData = (
   rows: Array<DatabaseRow>,
   entity: EntityType,
-  maxTimestamp: Date | null = null
+  oldDataRows?: Array<DatabaseRow>
 ) => {
   const countsBySubKey = rows.reduce((result, row) => {
-    const amountField = row.tila === "julkaistu" ? "julkaistu_amount" : "arkistoitu_amount";
     const ktParts = row.sub_entity.split("/");
     let parentArray: Array<SubKeyWithAmounts> = result;
     let targetObject: SubKeyWithAmounts | null = null;
+    const oldDataRow = oldDataRows
+      ? oldDataRows.find((dr) => dr.sub_entity === row.sub_entity && dr.tila === row.tila)
+      : undefined;
+
     for (let idx = 0; idx < ktParts.length; idx++) {
       const thisIsParentLevel = idx < ktParts.length - 1;
       // Aloitetaan haku taulukon loppupäästä; tietokanta-sorttauksen myötä taulukon loppupäästä löytyy viimeisimmät / käsittelyssä olevat avain-arvot
@@ -106,10 +98,14 @@ export const dbQueryResultToPulssiData = (
         targetObject = parentArray[subEntityIdx];
       }
 
-      const currentAmount =
-        row.tila === "julkaistu" ? targetObject.julkaistu_amount : targetObject.arkistoitu_amount;
-      const addedAmount = rowAmount(row, "amount", maxTimestamp);
-      targetObject[amountField] = sumUp(currentAmount, addedAmount);
+      const amountKey = row.tila === "julkaistu" ? "julkaistu_amount" : "arkistoitu_amount";
+      targetObject[amountKey] = sumUp(targetObject[amountKey], row.amount);
+      if (oldDataRow) {
+        const amountKeyOld =
+          row.tila === "julkaistu" ? "julkaistu_amount_old" : "arkistoitu_amount_old";
+        targetObject[amountKeyOld] = sumUp(targetObject[amountKeyOld], oldDataRow.amount);
+      }
+
       parentArray = targetObject.items ? targetObject.items : parentArray;
     }
     return result;
@@ -120,35 +116,51 @@ export const dbQueryResultToPulssiData = (
   );
   return {
     by_tila: {
-      julkaistu_amount: sumBy(rows, "julkaistu", "amount", maxTimestamp),
-      arkistoitu_amount: sumBy(rows, "arkistoitu", "amount", maxTimestamp),
+      julkaistu_amount: sumBy("julkaistu", "amount", rows),
+      julkaistu_amount_old: sumBy("julkaistu", "amount", oldDataRows),
+      arkistoitu_amount: sumBy("arkistoitu", "amount", rows),
+      arkistoitu_amount_old: sumBy("arkistoitu", "amount", oldDataRows),
       ...(entity === "toteutus"
         ? {
-            julkaistu_jotpa_amount: sumBy(rows, "julkaistu", "jotpa_amount", maxTimestamp),
-            arkistoitu_jotpa_amount: sumBy(rows, "arkistoitu", "jotpa_amount", maxTimestamp),
+            julkaistu_jotpa_amount: sumBy("julkaistu", "jotpa_amount", rows),
+            julkaistu_jotpa_amount_old: sumBy("julkaistu", "jotpa_amount", oldDataRows),
+            arkistoitu_jotpa_amount: sumBy("arkistoitu", "jotpa_amount", rows),
+            arkistoitu_jotpa_amount_old: sumBy("arkistoitu", "jotpa_amount", oldDataRows),
             julkaistu_taydennyskoulutus_amount: sumBy(
-              rows,
               "julkaistu",
               "taydennyskoulutus_amount",
-              maxTimestamp
+              rows
+            ),
+            julkaistu_taydennyskoulutus_amount_old: sumBy(
+              "julkaistu",
+              "taydennyskoulutus_amount",
+              oldDataRows
             ),
             arkistoitu_taydennyskoulutus_amount: sumBy(
-              rows,
               "arkistoitu",
               "taydennyskoulutus_amount",
-              maxTimestamp
+              rows
             ),
-            julkaistu_tyovoimakoulutus_amount: sumBy(
-              rows,
+            arkistoitu_taydennyskoulutus_amount_old: sumBy(
+              "arkistoitu",
+              "taydennyskoulutus_amount",
+              oldDataRows
+            ),
+            julkaistu_tyovoimakoulutus_amount: sumBy("julkaistu", "tyovoimakoulutus_amount", rows),
+            julkaistu_tyovoimakoulutus_amount_old: sumBy(
               "julkaistu",
               "tyovoimakoulutus_amount",
-              maxTimestamp
+              oldDataRows
             ),
             arkistoitu_tyovoimakoulutus_amount: sumBy(
-              rows,
               "arkistoitu",
               "tyovoimakoulutus_amount",
-              maxTimestamp
+              rows
+            ),
+            arkistoitu_tyovoimakoulutus_amount_old: sumBy(
+              "arkistoitu",
+              "tyovoimakoulutus_amount",
+              oldDataRows
             ),
           }
         : {}),
@@ -157,7 +169,7 @@ export const dbQueryResultToPulssiData = (
   };
 };
 
-const resolveMissingAmountsOfEntity = (
+const resolveMissingSubentitiesOfEntity = (
   expectedSubentities: Array<string>,
   subEntities: Array<DatabaseRow>
 ) => {
@@ -175,27 +187,24 @@ const resolveMissingAmountsOfEntity = (
   );
 };
 
-export const resolveMissingAmounts = (
+export const resolveMissingSubentities = (
   allSubentitiesByEntities: SubEntitiesByEntities,
-  foundKoulutukset: Array<DatabaseRow>,
-  foundToteutukset: Array<DatabaseRow>,
-  foundHakukohteet: Array<DatabaseRow>,
-  foundHaut: Array<DatabaseRow>
+  foundEntities: EntityDatabaseResults
 ) => {
   return {
-    koulutukset: resolveMissingAmountsOfEntity(
+    koulutukset: resolveMissingSubentitiesOfEntity(
       allSubentitiesByEntities.koulutukset,
-      foundKoulutukset
+      foundEntities.koulutukset
     ),
-    toteutukset: resolveMissingAmountsOfEntity(
+    toteutukset: resolveMissingSubentitiesOfEntity(
       allSubentitiesByEntities.toteutukset,
-      foundToteutukset
+      foundEntities.toteutukset
     ),
-    hakukohteet: resolveMissingAmountsOfEntity(
+    hakukohteet: resolveMissingSubentitiesOfEntity(
       allSubentitiesByEntities.hakukohteet,
-      foundHakukohteet
+      foundEntities.hakukohteet
     ),
-    haut: resolveMissingAmountsOfEntity(allSubentitiesByEntities.haut, foundHaut),
+    haut: resolveMissingSubentitiesOfEntity(allSubentitiesByEntities.haut, foundEntities.haut),
   };
 };
 
@@ -204,6 +213,7 @@ export const findMissingHistoryAmountsForEntity = (
   currentDbData: Array<DatabaseRow>
 ): Array<DatabaseRow> => {
   const returnValue = new Array<DatabaseRow>();
+
   const pickFromDataByTila = (searched: string, tila: Julkaisutila) => {
     const data = currentDbData.find((data) => data.sub_entity === searched && data.tila === tila);
     if (data) {
@@ -216,38 +226,22 @@ export const findMissingHistoryAmountsForEntity = (
   return returnValue;
 };
 
-const setCombinedSubentityData = (
-  path: string,
-  subEntities: Array<SubKeyWithAmounts> = EMPTY_ITEMS,
-  targetData: PulssiData
-) => {
-  for (let idx = 0; idx < subEntities.length; idx++) {
-    Object.entries(subEntities[idx]).forEach((entry) => {
-      if (entry[0].endsWith("_amount")) {
-        update(targetData, `${path}.items[${idx}].${entry[0]}_old`, () => entry[1]);
-      }
-    });
-    if (subEntities[idx].items) {
-      setCombinedSubentityData(`${path}.items[${idx}]`, subEntities[idx].items, targetData);
-    }
-  }
-};
-const setCombinedEntityHistoryData = (
-  path: string,
-  entityData: EntityDataWithSubKey,
-  targetData: PulssiData
-) => {
-  Object.entries(entityData.by_tila).forEach((entry) =>
-    update(targetData, `${path}.by_tila.${entry[0]}_old`, () => entry[1])
-  );
-  setCombinedSubentityData(`${path}`, entityData.items, targetData);
-};
-
-export const getCombinedHistoryData = (startData: PulssiData, endData: PulssiData): PulssiData => {
-  const combined = JSON.parse(JSON.stringify(endData));
-  setCombinedEntityHistoryData("koulutukset", startData.koulutukset, combined);
-  setCombinedEntityHistoryData("toteutukset", startData.toteutukset, combined);
-  setCombinedEntityHistoryData("hakukohteet", startData.hakukohteet, combined);
-  setCombinedEntityHistoryData("haut", startData.haut, combined);
-  return combined;
+export const discardAmountsWhenOutOfTimelimit = (
+  dbRow: DatabaseRow,
+  timeLimit: Date | null
+): DatabaseRow => {
+  const baseDbRow = {
+    sub_entity: dbRow.sub_entity,
+    tila: dbRow.tila,
+    start_timestamp: dbRow.start_timestamp,
+  };
+  return timeLimit && isAfter(dbRow.start_timestamp, timeLimit)
+    ? { ...baseDbRow }
+    : {
+        ...baseDbRow,
+        amount: dbRow.amount,
+        jotpa_amount: dbRow.jotpa_amount,
+        taydennyskoulutus_amount: dbRow.taydennyskoulutus_amount,
+        tyovoimakoulutus_amount: dbRow.tyovoimakoulutus_amount,
+      };
 };
