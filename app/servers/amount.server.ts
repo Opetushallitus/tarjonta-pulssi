@@ -1,28 +1,21 @@
-import { Pool } from "pg";
-
-import { getCurrentAmountDataFromDb, getHistoryDataFromDb } from "~/functions/pulssiDbAccessor";
-import { DEFAULT_DB_POOL_PARAMS } from "~/shared/dbUtils";
-import data_current from "~/shared/testdata/pulssi.json";
-import data_with_history from "~/shared/testdata/pulssi_with_history.json";
-
-const localPulssiDbPool = new Pool({
-  ...DEFAULT_DB_POOL_PARAMS,
-  host: "localhost",
-  database: "tarjontapulssi",
-  user: "oph",
-  password: "oph",
-});
+import { getCurrentAmountDataFromAws, getHistoryAmountDataFromAws } from "./amount.aws.server";
+import {
+  getCurrentAmountDataFromLocaldb,
+  getHistoryAmountDataFromLocaldb,
+} from "./amount.localdb.server";
+import {
+  getCurrentAmountDataFromLocalfile,
+  getHistoryAmountDataFromLocalfile,
+} from "./amount.localfile.server";
 
 export const getCurrentAmountData = async () => {
   switch (process.env.DATABASE) {
     case "file":
-      return data_current;
+      return await getCurrentAmountDataFromLocalfile();
     case "local":
-      return await getCurrentAmountDataFromDb(localPulssiDbPool);
+      return await getCurrentAmountDataFromLocaldb();
     default: {
-      const results = await fetch(process.env.DB_API_URL || "");
-      const jsonResult = await results.json();
-      return jsonResult;
+      return await getCurrentAmountDataFromAws();
     }
   }
 };
@@ -30,20 +23,11 @@ export const getCurrentAmountData = async () => {
 export const getHistoryAmountData = async (startStr: string | null, endStr: string | null) => {
   switch (process.env.DATABASE) {
     case "file":
-      return { ...data_with_history, minAikaleima: "26.10.2022 00:00 +02" };
+      return getHistoryAmountDataFromLocalfile(startStr, endStr);
     case "local":
-      return await getHistoryDataFromDb(
-        localPulssiDbPool,
-        startStr ?? undefined,
-        endStr ?? undefined
-      );
+      return await getHistoryAmountDataFromLocaldb(startStr, endStr);
     default: {
-      let params = { history: "true " };
-      params = startStr !== null ? Object.assign(params, { start: startStr }) : params;
-      params = endStr !== null ? Object.assign(params, { end: endStr }) : params;
-      const url = `${process.env.DB_API_URL || ""}?${new URLSearchParams(params).toString()}`;
-      const results = await fetch(url);
-      return await results.json();
+      return await getHistoryAmountDataFromAws(startStr, endStr);
     }
   }
 };
