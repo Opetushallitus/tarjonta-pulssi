@@ -1,7 +1,7 @@
 import LanguageIcon from "@mui/icons-material/Language";
 import { Select, MenuItem, InputBase, Box, SelectChangeEvent } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useFetcher } from "@remix-run/react";
+import { useSearchParams } from "@remix-run/react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -15,24 +15,21 @@ const CustomInput = styled(InputBase)({
 export const LanguageDropdown = () => {
   const { i18n } = useTranslation();
 
-  const fetcher = useFetcher();
+  const [, setSearchParams] = useSearchParams();
   const onLanguageChange = (e: SelectChangeEvent) => {
-    fetcher.submit({ lng: e.target.value }, { method: "POST" });
+    setSearchParams((prev) => {
+      prev.set("lng", e.target.value);
+      return prev;
+    });
   };
   const [open, setOpen] = React.useState(false);
-  const handleOpen = () => {
-    setOpen(true);
-  };
-  const handleClose = () => {
-    setOpen(false);
+  const toggle = () => {
+    setOpen((isOpen) => !isOpen);
   };
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center">
-      <LanguageIcon
-        onClick={open ? handleClose : handleOpen}
-        style={{ paddingRight: "9px", cursor: "pointer" }}
-      />
+      <LanguageIcon onClick={toggle} style={{ paddingRight: "9px", cursor: "pointer" }} />
       <Select
         sx={{
           textTransform: "uppercase",
@@ -45,8 +42,8 @@ export const LanguageDropdown = () => {
         }}
         value={i18n.language}
         open={open}
-        onClose={handleClose}
-        onOpen={handleOpen}
+        onClose={toggle}
+        onOpen={toggle}
         onChange={onLanguageChange}
         input={<CustomInput />}
         renderValue={(value) => value?.toUpperCase()}

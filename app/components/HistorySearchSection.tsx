@@ -7,14 +7,15 @@ import {
   addDays,
   addMonths,
   isAfter,
-  isBefore,
   differenceInCalendarDays,
   differenceInCalendarMonths,
   format,
+  sub,
+  min,
 } from "date-fns";
 import fi from "date-fns/locale/fi";
 import { sortBy, castArray } from "lodash";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { match, P } from "ts-pattern";
 
@@ -134,7 +135,7 @@ interface SelectProps {
   label: string;
   dateTimeValue: Date | null;
   referenceDateTime: Date;
-  minDateTime: Date;
+  minDateTime?: Date;
   maxDateTime?: Date;
   onDateChange: (date: Date | null) => void;
 }
@@ -161,15 +162,14 @@ const DateTimeSelect = (props: SelectProps) => {
   );
 };
 export interface HistoryProps {
-  isOpen: boolean;
-  minDateTime: string;
+  minDateTime?: string;
   start: Date | null;
   end: Date | null;
   onSearchRangeChange: (start: Date | null, end: Date | null) => void;
 }
 
 export const HistorySearchSection = (props: HistoryProps) => {
-  const { isOpen, minDateTime, start, end, onSearchRangeChange } = props;
+  const { minDateTime, start, end, onSearchRangeChange } = props;
   const { t } = useTranslation();
 
   const onStartDateChange = (date: Date | null) => onSearchRangeChange(date, end);
@@ -182,20 +182,14 @@ export const HistorySearchSection = (props: HistoryProps) => {
     onSearchRangeChange(newStart, newEnd);
   };
 
-  const [minDateTimeVal, setMinDateTimeVal] = useState<Date>(new Date());
-
-  useEffect(() => {
-    if (minDateTime !== "") {
-      const refDate = new Date();
-      const newDateval = parse(minDateTime, DATETIME_FORMAT_TZ, refDate);
-      if (isBefore(newDateval, minDateTimeVal)) {
-        setMinDateTimeVal(newDateval);
-      }
-    }
-  }, [minDateTime, minDateTimeVal]);
+  const minDateTimeVal = useMemo(() => {
+    return minDateTime
+      ? parse(minDateTime, DATETIME_FORMAT_TZ, new Date())
+      : sub(new Date(), { months: 6 });
+  }, [minDateTime]);
 
   return (
-    <Box display={isOpen ? "flex" : "none"} flexDirection="column" width="100%">
+    <Box flexDirection="column" width="100%">
       <Box
         display="flex"
         flexDirection="row"
@@ -212,7 +206,6 @@ export const HistorySearchSection = (props: HistoryProps) => {
           label={t("alkuaika")}
           dateTimeValue={start}
           referenceDateTime={DEFAULT_START_TIME}
-          minDateTime={minDateTimeVal}
           maxDateTime={end || undefined}
           onDateChange={onStartDateChange}
         />
@@ -225,7 +218,7 @@ export const HistorySearchSection = (props: HistoryProps) => {
           onDateChange={onEndDateChange}
         />
         <HistorySearchSlider
-          minDate={minDateTimeVal}
+          minDate={min([start ?? new Date(), minDateTimeVal])}
           values={[start, end]}
           onChangeCommitted={onSliderValueCommit}
         />

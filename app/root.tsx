@@ -1,5 +1,5 @@
 import { CircularProgress } from "@mui/material";
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { json, LinksFunction, type LoaderFunctionArgs } from "@remix-run/node";
 import type { MetaFunction } from "@remix-run/react";
 import {
   Links,
@@ -8,12 +8,17 @@ import {
   Outlet,
   Scripts,
   useLoaderData,
+  useLocation,
+  useNavigate,
   useNavigation,
 } from "@remix-run/react";
 import { useTranslation } from "react-i18next";
 
 import i18next from "~/app/i18next.server";
+import mainStylesUrl from "~/app/styles/index.css";
+import tableStylesUrl from "~/app/styles/table.css";
 
+import { Header } from "./components/Header";
 import { useChangeLanguage } from "./hooks/useChangeLanguage";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -29,11 +34,21 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   ];
 };
 
+export const links: LinksFunction = () => {
+  return [
+    { rel: "stylesheet", href: mainStylesUrl },
+    { rel: "stylesheet", href: tableStylesUrl },
+  ];
+};
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const t = await i18next.getFixedT(request);
   const locale = await i18next.getLocale(request);
+
+  const url = new URL(request.url);
+  const baseURL = `${url.protocol}//${url.host.split(".").slice(-2).join(".")}`;
   const title = t(`sivu_otsikko`);
-  return json({ title, locale });
+  return json({ title, locale, baseURL });
 };
 
 export const handle = {
@@ -64,8 +79,13 @@ function GlobalLoading() {
 }
 
 export default function App() {
-  const { locale } = useLoaderData<typeof loader>();
+  const { locale, baseURL } = useLoaderData<typeof loader>();
   const { i18n } = useTranslation();
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isHistoryVisible = location.pathname.endsWith("history");
 
   useChangeLanguage(locale);
 
@@ -77,7 +97,19 @@ export default function App() {
       </head>
       <body>
         <GlobalLoading />
-        <Outlet />
+        <div className="App">
+          <Header
+            historyOpen={isHistoryVisible}
+            toggleHistory={() =>
+              navigate({
+                pathname: isHistoryVisible ? "/" : "history",
+                search: location.search,
+              })
+            }
+            baseURL={baseURL}
+          />
+          <Outlet />
+        </div>
         <Scripts />
         <LiveReload />
       </body>

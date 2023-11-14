@@ -85,7 +85,7 @@ export const EntityTable = ({
 
   return (
     <>
-      <Box m={2}>
+      <Box margin={2}>
         <table>
           <thead>
             <tr>
@@ -129,7 +129,7 @@ export const EntityTable = ({
           >
             <JoistaHeading variant="h3">{t("joista_otsikko")}</JoistaHeading>
           </Box>
-          <Box m={2}>
+          <Box margin={2}>
             <table style={{ width: "100%" }}>
               <thead>
                 <tr>
