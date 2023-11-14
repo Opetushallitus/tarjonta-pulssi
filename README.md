@@ -97,8 +97,8 @@ Käynnistä tämän jälkeen sovellus lokaalisti komennolla `npm run dev:localdb
 
 ##### PostgreSQL Kontti-imagen luonti (tarvitsee tehdä vain kerran):
 
-`cd postgresql`
-`docker build --tag tarjontapulssi-postgres`
+    cd postgresql
+    docker build --tag tarjontapulssi-postgres .
 
 ##### Lokaalin tarjontapulssi-tietokannan käynnistys
 
