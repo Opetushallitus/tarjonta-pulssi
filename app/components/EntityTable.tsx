@@ -17,7 +17,7 @@ interface RowProps {
   formatAmounts: (curr: number, old: number) => string;
 }
 
-const formatSingleAmount = (amount: number, _ = NaN) => (Number.isNaN(amount) ? "?" : `${amount}`);
+const formatSingleAmount = (amount: number, _ = NaN) => (Number.isNaN(amount) ? "0" : `${amount}`);
 const formatHistoryAmounts = (currentAmount: number, oldAmount: number) => {
   const currValue = formatSingleAmount(currentAmount);
   const oldValue = formatSingleAmount(oldAmount);
