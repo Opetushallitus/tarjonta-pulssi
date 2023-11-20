@@ -23,6 +23,8 @@ const pulssiDbPool = new Pool({
   database: "tarjontapulssi",
   user: dbUsername,
   password: dbPassword,
+  max: 5,
+  min: 1,
 });
 
 export const handler = ApiHandler(async (evt) => {
