@@ -19,9 +19,10 @@ const handleResults = (rows: Array<any>): Array<DatabaseRow> => {
   }));
 };
 
+const asAmountField = (fieldName: string) => `coalesce(sum(${fieldName}), 0) as ${fieldName}`;
+
 export const queryPulssiAmounts = async (pulssiDbPool: Pool, entity: EntityType) => {
   const primaryColName = entity === "haku" ? "hakutapa" : "tyyppi_path";
-  const asAmountField = (fieldName: string) => `coalesce(sum(${fieldName}), 0) as ${fieldName}`;
 
   const amountFields =
     entity === "toteutus"
