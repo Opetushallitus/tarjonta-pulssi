@@ -59,32 +59,24 @@ export interface EntityDataWithSubKey {
   items: Array<SubKeyWithAmounts>;
 }
 
-export interface PulssiData {
-  koulutukset: EntityDataWithSubKey;
-  toteutukset: EntityDataWithSubKey;
-  hakukohteet: EntityDataWithSubKey;
-  haut: EntityDataWithSubKey;
+export type PulssiData = {
+  [E in EntityPlural]: EntityDataWithSubKey;
+} & {
   minAikaleima?: string;
-}
+};
 
-export interface SubEntitiesByEntities {
-  koulutukset: Array<string>;
-  toteutukset: Array<string>;
-  hakukohteet: Array<string>;
-  haut: Array<string>;
-}
+export type SubEntitiesByEntities = {
+  [E in EntityPlural]: Array<string>;
+};
 
 export interface SubEntityAmounts {
   julkaistu: Array<string>;
   arkistoitu: Array<string>;
 }
 
-export interface SubEntitiesByEntitiesByTila {
-  koulutukset: SubEntityAmounts;
-  toteutukset: SubEntityAmounts;
-  hakukohteet: SubEntityAmounts;
-  haut: SubEntityAmounts;
-}
+export type SubEntitiesByEntitiesByTila = {
+  [E in EntityPlural]: SubEntityAmounts;
+};
 
 export interface DatabaseRow {
   sub_entity: string;
@@ -95,9 +87,6 @@ export interface DatabaseRow {
   taydennyskoulutus_amount?: number;
   tyovoimakoulutus_amount?: number;
 }
-export interface EntityDatabaseResults {
-  koulutukset: Array<DatabaseRow>;
-  toteutukset: Array<DatabaseRow>;
-  hakukohteet: Array<DatabaseRow>;
-  haut: Array<DatabaseRow>;
-}
+export type EntityDatabaseResults = {
+  [E in EntityPlural]: Array<DatabaseRow>;
+};
