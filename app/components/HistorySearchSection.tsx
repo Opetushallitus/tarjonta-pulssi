@@ -124,11 +124,14 @@ const HistorySearchSlider = (props: SliderProps) => {
   );
 };
 
-const combineDateTime = (date: Date, time: Date) => {
-  const combined = new Date(date);
-  combined.setHours(time.getHours());
-  combined.setMinutes(time.getMinutes());
-  return combined;
+const combineDateTime = (date: Date | null, time: Date) => {
+  if (date) {
+    const combined = new Date(date);
+    combined.setHours(time.getHours());
+    combined.setMinutes(time.getMinutes());
+    return combined;
+  }
+  return null;
 };
 
 interface SelectProps {
@@ -176,9 +179,8 @@ export const HistorySearchSection = (props: HistoryProps) => {
   const onEndDateChange = (date: Date | null) => onSearchRangeChange(start, date);
 
   const onSliderValueCommit = (sliderStart: Date | null, sliderEnd: Date | null) => {
-    const newStart =
-      sliderStart !== null ? combineDateTime(sliderStart, start || DEFAULT_START_TIME) : null;
-    const newEnd = sliderEnd !== null ? combineDateTime(sliderEnd, end || DEFAULT_END_TIME) : null;
+    const newStart = combineDateTime(sliderStart, start || DEFAULT_START_TIME);
+    const newEnd = combineDateTime(sliderEnd, end || DEFAULT_END_TIME);
     onSearchRangeChange(newStart, newEnd);
   };
 

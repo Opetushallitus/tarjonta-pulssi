@@ -45,9 +45,13 @@ export default function History() {
     setSearchParams((params) => {
       if (start) {
         params.set("start", format(start, DATETIME_FORMAT_TZ));
+      } else {
+        params.delete("start");
       }
       if (end) {
         params.set("end", format(end, DATETIME_FORMAT_TZ));
+      } else {
+        params.delete("end");
       }
       return params;
     });
