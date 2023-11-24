@@ -1,8 +1,9 @@
 import { parse, isAfter } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz";
 import { findLastIndex } from "lodash";
 import { P, match } from "ts-pattern";
 
-import { DATETIME_FORMAT_TZ } from "./constants";
+import { DATETIME_FORMAT_TZ, DEFAULT_TIMEZONE } from "./constants";
 import type {
   DatabaseRow,
   EntityType,
@@ -42,14 +43,30 @@ export const sumUp = (number1?: number, number2?: number) => {
     .otherwise(() => undefined);
 };
 
-export const parseDate = (dateStr: string | null | undefined, referenceData: Date = new Date()) => {
+export const parseDate = (
+  dateStr: string | null | undefined,
+  referenceData: Date = new Date(),
+  setToDefaultTimeZone = true
+) => {
   try {
-    return dateStr !== null && dateStr !== undefined
-      ? parse(dateStr, DATETIME_FORMAT_TZ, referenceData)
-      : null;
+    let date =
+      dateStr !== null && dateStr !== undefined
+        ? parse(dateStr, DATETIME_FORMAT_TZ, referenceData)
+        : null;
+    if (date != null && setToDefaultTimeZone && new Date().getTimezoneOffset() === 0) {
+      date = utcToZonedTime(date, DEFAULT_TIMEZONE);
+    }
+    return date;
   } catch (e) {
     return null;
   }
+};
+
+export const currentDateInDefaultTimezone = () => {
+  const currentDate = new Date();
+  return currentDate.getTimezoneOffset() === 0
+    ? utcToZonedTime(currentDate, DEFAULT_TIMEZONE)
+    : currentDate;
 };
 
 const sortSubEntities = (subEntities: Array<SubKeyWithAmounts>) => {

@@ -19,7 +19,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { match, P } from "ts-pattern";
 
-import { DATETIME_FORMAT_TZ } from "~/shared/constants";
+import { currentDateInDefaultTimezone, parseDate } from "~/shared/amountDataUtils";
 
 const TIME_FORMAT = "HH:mm";
 const REFERENCE_DATE = new Date();
@@ -87,7 +87,7 @@ const resolveSliderMarks = (startDate: Date, endDate: Date, isSmallDisplay = fal
 
 const HistorySearchSlider = (props: SliderProps) => {
   const { values, minDate, onChangeCommitted } = props;
-  const currentDate = new Date();
+  const currentDate = currentDateInDefaultTimezone();
   const completeValues = [values[0] ?? minDate, values[1] ?? currentDate];
   const maxValue = differenceInCalendarDays(currentDate, minDate);
   const sliderValues = completeValues.map((dateVal) => differenceInCalendarDays(dateVal, minDate));
@@ -157,7 +157,6 @@ const DateTimeSelect = (props: SelectProps) => {
         slotProps={{ field: { readOnly: true } }}
         minDateTime={minDateTime}
         maxDateTime={maxDateTime}
-        disableFuture={true}
         referenceDate={referenceDateTime}
         timeSteps={{ hours: 1, minutes: 1 }}
       />
@@ -186,8 +185,8 @@ export const HistorySearchSection = (props: HistoryProps) => {
 
   const minDateTimeVal = useMemo(() => {
     return minDateTime
-      ? parse(minDateTime, DATETIME_FORMAT_TZ, new Date())
-      : sub(new Date(), { months: 6 });
+      ? parseDate(minDateTime)
+      : sub(currentDateInDefaultTimezone(), { months: 6 });
   }, [minDateTime]);
 
   return (
@@ -208,7 +207,7 @@ export const HistorySearchSection = (props: HistoryProps) => {
           label={t("alkuaika")}
           dateTimeValue={start}
           referenceDateTime={DEFAULT_START_TIME}
-          maxDateTime={end || undefined}
+          maxDateTime={end || currentDateInDefaultTimezone()}
           onDateChange={onStartDateChange}
         />
         <span style={{ marginLeft: "15px", marginRight: "15px", fontWeight: 600 }}>-</span>
@@ -216,11 +215,12 @@ export const HistorySearchSection = (props: HistoryProps) => {
           label={t("loppuaika")}
           dateTimeValue={end}
           referenceDateTime={DEFAULT_END_TIME}
-          minDateTime={start || minDateTimeVal}
+          minDateTime={start || minDateTimeVal!}
+          maxDateTime={currentDateInDefaultTimezone()}
           onDateChange={onEndDateChange}
         />
         <HistorySearchSlider
-          minDate={min([start ?? new Date(), minDateTimeVal])}
+          minDate={min([start ?? currentDateInDefaultTimezone(), minDateTimeVal!])}
           values={[start, end]}
           onChangeCommitted={onSliderValueCommit}
         />

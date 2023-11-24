@@ -128,8 +128,8 @@ const getCompleteAmounts = async (
 
 export const getHistoryDataFromDb = async (dbPool: Pool, startStr?: string, endStr?: string) => {
   const referenceDate = new Date();
-  const start = parseDate(startStr, referenceDate);
-  const end = parseDate(endStr, referenceDate);
+  const start = parseDate(startStr, referenceDate, false);
+  const end = parseDate(endStr, referenceDate, false);
 
   const [allSubentitiesByEntities, entityAmountsAtStart, entityAmountsAtEnd] = await Promise.all([
     queryAllSubentityTypesByEntityTypes(dbPool),
