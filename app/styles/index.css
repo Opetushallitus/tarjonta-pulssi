@@ -1,0 +1,41 @@
+body {
+  font-family: "Roboto", sans-serif;
+  font-size: 1rem;
+  margin: 0;
+  display: flex;
+  min-width: 320px;
+  min-height: 100vh;
+  justify-content: center;
+  background-color: rgb(250, 250, 250);
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  text-align: center;
+  justify-content: center;
+  align-items: flex-start;
+  margin-left: 0%;
+  flex-grow: 1;
+  color: black;
+  width: 100%;
+  background-color: rgb(255, 255, 255);
+}
+
+.Content {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  margin-left: 1%;
+  color: black;
+  background-color: rgb(255, 255, 255);
+}
+
+@media (max-width: 2350px) {
+  .App {
+    max-width: 1280px;
+  }
+}

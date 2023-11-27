@@ -1,0 +1,277 @@
+{
+  "aikuisten-perusopetus": {
+    "fi": "Aikuisten perusopetus",
+    "sv": "Grundläggande utbildning för vuxna",
+    "en": "Adult comprehensive education"
+  },
+  "alkuaika": {
+    "fi": "alkuaika",
+    "sv": "begynnelsetid",
+    "en": "starting time"
+  },
+  "amk": {
+    "fi": "Ammattikorkeakoulutus",
+    "sv": "Yrkeshögskoleutbildning",
+    "en": "UAS programmes"
+  },
+  "amm": {
+    "en": "Vocational education and training",
+    "fi": "Ammatillinen koulutus",
+    "sv": "Yrkesutbildning"
+  },
+  "ammatillinen-perustutkinto": {
+    "fi": "Ammatillinen perustutkinto",
+    "sv": "Yrkesinriktad grundexamen",
+    "en": "Vocational upper secondary qualification"
+  },
+  "ammattitutkinto": {
+    "fi": "Ammattitutkinto",
+    "sv": "Yrkesexamen",
+    "en": "Further vocational qualification"
+  },
+  "amm-muu": {
+    "fi": "Muu ammatillinen tutkintoon johtamaton",
+    "sv": "Övrig yrkesutbildning",
+    "en": "Other vocational education"
+  },
+  "amm-ope-erityisope-ja-opo": {
+    "fi": "Ammatillinen opettajan-, erityisopettajan- ja opinto-ohjaajankoulutus",
+    "sv": "Yrkespedagogisk lärar-, speciallärar- och handledarutbildning",
+    "en": "Professional teacher, special education teacher and guidance counsellor training"
+  },
+  "amm-osaamisala": {
+    "fi": "Osaamisala",
+    "sv": "Kompetensområde",
+    "en": "Competence area"
+  },
+  "amm-tutkinnon-osa": {
+    "fi": "Tutkinnon osa",
+    "sv": "Examensdel",
+    "en": "Qualification unit"
+  },
+  "amm-tutkintoon-johtamaton": {
+    "fi": "Ammatillinen tutkintoon johtamaton koulutus",
+    "sv": "Yrkesutbildning som leder inte till examen",
+    "en": "Vocational education that does not lead to a qualification"
+  },
+  "avaa-sulje-muutoshistoria": {
+    "fi": "Avaa tai sulje muutoshistoria",
+    "sv": "Öppna eller stäng ändringshistorik",
+    "en": "Open or close change history"
+  },
+  "avoin-amk": {
+    "fi": "Avoin ammattikorkeakoulu",
+    "sv": "Öppen yrkeshögskola",
+    "en": "Open UAS"
+  },
+  "avoin-yo": {
+    "fi": "Avoin yliopisto",
+    "sv": "Öppen universitet",
+    "en": "Open university"
+  },
+  "erikoisammattitutkinto": {
+    "fi": "Erikoisammattitutkinto",
+    "sv": "Specialyrkesexamen",
+    "en": "Specialist vocational qualification"
+  },
+  "ope-pedag-opinnot": {
+    "en": "Teacher Education Programmes",
+    "fi": "Opettajien pedagogiset opinnot",
+    "sv": "Pedagogiska studierna för lärare"
+  },
+  "erikoislaakari": {
+    "en": "Specialist training in medicine",
+    "fi": "Erikoislääkärikoulutukset",
+    "sv": "Specialistläkarutbildningar"
+  },
+  "hakukohde_otsikko": {
+    "fi": "Hakukohteet",
+    "en": "Study programmes available for application",
+    "sv": "Ansökningsmål"
+  },
+  "haku_otsikko": {
+    "fi": "Haut",
+    "sv": "Ansökningar",
+    "en": "Application procedures"
+  },
+  "hakutapa_otsikko": {
+    "fi": "Hakutapa",
+    "sv": "Ansökningssätt",
+    "en": "Type of application procedure"
+  },
+  "joista_otsikko": {
+    "fi": "joista",
+    "sv": "av vilket",
+    "en": "of which"
+  },
+  "jotpa_otsikko": {
+    "fi": "JOTPA-rahoitettuja",
+    "sv": "JOTPA-financierad",
+    "en": "JOTPA-financed"
+  },
+  "taydennyskoulutus_otsikko": {
+    "fi": "Täydennyskoulutuksia",
+    "sv": "Fortbildningar",
+    "en": "Continuing education studies"
+  },
+  "tyovoimakoulutus_otsikko": {
+    "fi": "Työvoimakoulutuksia",
+    "sv": "Arbetskraftsutbildningar",
+    "en": "Labour market training courses"
+  },
+  "julkaistut_otsikko": {
+    "fi": "Julkaistut",
+    "sv": "Publicerade",
+    "en": "Published"
+  },
+  "kk": {
+    "fi": "Korkeakoulututkinnot",
+    "sv": "Högskoleexamina",
+    "en": "Higher education degrees"
+  },
+  "kk-muu": {
+    "fi": "Korkeakoulujen tutkintoon johtamattomat koulutukset",
+    "sv": "Högskoleutbildning som leder inte till examen",
+    "en": "Higher education that does not lead to a degree"
+  },
+  "kk-opintojakso": {
+    "en": "Course",
+    "fi": "Opintojakso",
+    "sv": "Studieavsnitt"
+  },
+  "kk-opintokokonaisuus": {
+    "fi": "Opintokokonaisuus",
+    "sv": "Studiehelhet",
+    "en": "Study module"
+  },
+  "kk-opintojakso-avoin": {
+    "en": "Course, open higher education studies",
+    "fi": "Opintojakso, avoin korkeakoulutus",
+    "sv": "Studieavsnitt, öppen högskoleutbildning"
+  },
+  "kk-opintokokonaisuus-avoin": {
+    "fi": "Opintokokonaisuus, avoin korkeakoulutus",
+    "sv": "Studiehelhet, öppen högskoleutbildning",
+    "en": "Study module, open higher education studies"
+  },
+  "koulutus_otsikko": {
+    "fi": "Koulutukset",
+    "en": "Learning opportunity specifications",
+    "sv": "Utbildningar"
+  },
+  "lk": {
+    "fi": "Lukiokoulutus",
+    "sv": "Gymnasieutbildning",
+    "en": "General upper secondary education"
+  },
+  "loppuaika": {
+    "fi": "loppuaika",
+    "sv": "sluttid",
+    "en": "ending time"
+  },
+  "molemmat_tilat_otsikko": {
+    "fi": "Julkaistut + Arkistoidut",
+    "sv": "Publicerade + Arkiverade",
+    "en": "Published + Archived"
+  },
+  "muu-amm-tutkintoon-johtava": {
+    "fi": "Muu ammatillinen tutkintoon johtava",
+    "sv": "Övrig yrkesutbildning som leder till examen",
+    "en": "Other vocational education that leads to a qualification"
+  },
+  "nayta_muutoshistoria": {
+    "fi": "Näytä muutoshistoria",
+    "sv": "Visa ändringshistorik",
+    "en": "Show change history"
+  },
+  "sivu_otsikko": {
+    "fi": "Tarjonta-pulssi",
+    "sv": "Utbildningsutbuds-puls",
+    "en": "Education database pulse"
+  },
+  "sulje_muutoshistoria": {
+    "fi": "Sulje muutoshistoria",
+    "sv": "Stäng ändringshistorik",
+    "en": "Close change history"
+  },
+  "telma": {
+    "en": "Preparatory education for work and independent living (TELMA)",
+    "fi": "Työhön ja itsenäiseen elämään valmentava koulutus (TELMA)",
+    "sv": "Utbildning som handleder för arbete och ett självständigt liv (TELMA)"
+  },
+  "toteutus_otsikko": {
+    "fi": "Toteutukset",
+    "sv": "Förverkliganden",
+    "en": "Learning opportunity instances"
+  },
+  "tuva": {
+    "fi": "Tutkintokoulutukseen valmentava koulutus (TUVA)",
+    "sv": "Utbildning som handleder för examensutbildning (Hux)",
+    "en": "Preparatory education for programmes leading to an upper secondary qualification (TUVA)"
+  },
+  "tyyppi_otsikko": {
+    "fi": "Koulutustyyppi",
+    "sv": "Utbildningstyp",
+    "en": "Education type"
+  },
+  "vapaa-sivistystyo": {
+    "en": "Liberal adult education",
+    "fi": "Vapaa sivistystyö",
+    "sv": "Fritt bildningsarbete"
+  },
+  "yhteensa_otsikko": {
+    "fi": "Yhteensä",
+    "sv": "Totalt",
+    "en": "Total"
+  },
+  "yo": {
+    "en": "University education",
+    "fi": "Yliopistokoulutus",
+    "sv": "Universitetsutbildning"
+  },
+  "hakutapa_01": {
+    "fi": "Yhteishaku",
+    "sv": "Gemensam ansökan",
+    "en": "Joint application"
+  },
+  "hakutapa_04": {
+    "fi": "Joustava haku",
+    "en": "Rolling admission (higher education)",
+    "sv": "Flexibel ansökan"
+  },
+  "hakutapa_05": {
+    "fi": "Siirtohaku",
+    "sv": "Ansökan om överflyttning",
+    "en": "Transfer application"
+  },
+  "hakutapa_02": {
+    "sv": "Separata antagningar",
+    "en": "Separate application",
+    "fi": "Erillishaku"
+  },
+  "hakutapa_03": {
+    "en": "Rolling admission (upper secondary level)",
+    "fi": "Jatkuva haku",
+    "sv": "Kontinuerlig ansökan"
+  },
+  "hakutapa_06": {
+    "fi": "Lisähaku",
+    "sv": "Tilläggsansökan",
+    "en": "Supplementary application"
+  },
+  "erikoistumiskoulutus": {
+    "fi": "Erikoistumiskoulutus",
+    "sv": "Specialiseringsutbildning",
+    "en": "Specialist education"
+  },
+  "taiteen-perusopetus": {
+    "fi": "Taiteen perusopetus",
+    "sv": "Grundläggande konstundervisning",
+    "en": "Basic education in the arts"
+  },
+  "muu": {
+    "fi": "Muu koulutus",
+    "sv": "Annan utbildning",
+    "en": "Other education"
+  }
+}

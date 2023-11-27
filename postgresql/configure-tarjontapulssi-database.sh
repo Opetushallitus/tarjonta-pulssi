@@ -16,3 +16,4 @@ END
 
 psql "${DB_APP_DB}" -c "ALTER SCHEMA \"public\" OWNER TO \"${DB_APP_USER}\"" \
                     -c "GRANT ALL ON SCHEMA \"public\" TO \"${DB_APP_USER}\""
+
