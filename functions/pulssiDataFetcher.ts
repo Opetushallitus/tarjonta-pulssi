@@ -26,8 +26,8 @@ const pulssiDbPool = new Pool({
   max: 5,
   min: 1,
   ssl: {
-    rejectUnauthorized: false
-  }
+    rejectUnauthorized: false,
+  },
 });
 
 export const handler = ApiHandler(async (evt) => {
