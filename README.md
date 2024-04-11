@@ -56,7 +56,7 @@ Tietojen esittämistä varten on toteutettu yhden sivun (SPA) sovellus, Remix -f
 `cd tools/db`  
 `./update-postgres-db-roles.sh ymparisto tarjontapulssi`
 
-#### Deployaa tarjonta-pulssi sovellus (tarjonta-pulssi -repositoryssä, sst-app -hakemistossa)
+#### Deployaa tarjonta-pulssi sovellus (tarjonta-pulssi -repositoryssä)
 
 `npx sst deploy --profile=<oph-dev / oph-prod> --stage=<ympäristö>`
 
@@ -103,7 +103,7 @@ Käynnistä tämän jälkeen sovellus lokaalisti komennolla `npm run dev:localdb
 
 ##### Lokaalin tarjontapulssi-tietokannan käynnistys
 
-Komento `npm run prepare-test-env` (hakemistossa `sst-app`) käynnistää lokaalin kannan, suorittaa migraatiot, sekä importoi kantaan valmiiksi testidataa. Kaikki vaiheet voi ajaa tarvittaessa myös erikseen, kts `package.json`. Tämän jälkeen kanta on valmiina käytettäväksi.
+Komento `npm run prepare-test-env` käynnistää lokaalin kannan, suorittaa migraatiot, sekä importoi kantaan valmiiksi testidataa. Kaikki vaiheet voi ajaa tarvittaessa myös erikseen, kts `package.json`. Tämän jälkeen kanta on valmiina käytettäväksi.
 Huom! Datan importointi saattaa kestää useita kymmeniä sekunteja. Importointia ajettaessa päätteelle tulostuu toistuvasti `INSERT 0 1`.
 
 #### Ajaminen live-lambda moodissa
@@ -116,8 +116,8 @@ Lisää ensin oman koneen `/etc/hosts` -tiedostoon rivi `127.0.0.1 tarjontapulss
 Tämän jälkeen tunnelin voi avata komennolla `ssh -N -L 5432:tarjontapulssi.db.hahtuvaopintopolku.fi:5432 <käyttäjätunnus>@bastion.<ympäristö>opintopolku.fi`, jossa käyttäjätunnus vastaa omaa käyttäjätunnusta ja ympäristö `untuva` tai `hahtuva`.
 
 Suositeltava tapa on käyttää kahta terminaali-ikkunaa käyttäen siten että toisessa ajetaan Live lambda -kehitysympäristöä ja toisessa Remix -sovellusta. Ainakin Remix -ikkunassa on suositeltavaa käynnistää ensin `aws-vault` -sessio, jolloin MFA -koodi tarvitsee syöttää ainoastaan kerran (muussa tapauksessa koodin syöttämistä vaaditaan säännöllisin väliajoin).
-Käynnistä ensin kehitysympäristö toisessa ikkunassa komennolla `npx sst dev --profile=oph-dev --stage=<ympäristö>` (hakemistossa `sst-app`), jossa ympäristö `untuva` tai `hahtuva`.
-Tämän jälkeen käynnistä Remix-sovellus toisessa ikkunassa komennolla `npm run dev` (hakemistossa `sst-app/packages/web`).
+Käynnistä ensin kehitysympäristö toisessa ikkunassa komennolla `npx sst dev --profile=oph-dev --stage=<ympäristö>`, jossa ympäristö `untuva` tai `hahtuva`.
+Tämän jälkeen käynnistä Remix-sovellus toisessa ikkunassa komennolla `npm run dev`.
 
 ##### Aws-vaultin ajaminen
 
