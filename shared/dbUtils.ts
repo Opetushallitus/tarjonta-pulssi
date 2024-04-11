@@ -40,6 +40,9 @@ export const createPulssiDbPool = async (additionalParams: Partial<PoolConfig> =
     user: pulssiDbUser,
     password: pulssiDbPassword,
     ...additionalParams,
+    ssl: {
+      rejectUnauthorized: false,
+    },
   });
 };
 
