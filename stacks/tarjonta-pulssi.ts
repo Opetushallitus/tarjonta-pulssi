@@ -1,4 +1,5 @@
 import { Fn, Token, Duration } from "aws-cdk-lib";
+import { HttpVersion, PriceClass } from "aws-cdk-lib/aws-cloudfront";
 import { Vpc, SubnetType, SecurityGroup, Port } from "aws-cdk-lib/aws-ec2";
 import { Rule, Schedule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
@@ -92,6 +93,12 @@ export function TARJONTAPULSSI({ stack }: StackContext) {
     customDomain: {
       domainName: OPHdomainName,
       hostedZone: OPHhostedZone,
+    },
+    cdk: {
+      distribution: {
+        httpVersion: HttpVersion.HTTP2_AND_3,
+        priceClass: PriceClass.PRICE_CLASS_100,
+      },
     },
   });
 
