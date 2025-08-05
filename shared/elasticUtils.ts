@@ -82,6 +82,13 @@ const AGGS_BY_ENTITY: Record<EntityType, object> = {
             },
           },
         },
+        is_pieni_osaamiskokonaisuus: {
+          filter: {
+            term: {
+              "metadata.isPieniOsaamiskokonaisuus": true,
+            },
+          },
+        },
       },
     },
   },

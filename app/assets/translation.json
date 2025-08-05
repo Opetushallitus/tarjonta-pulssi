@@ -119,6 +119,11 @@
     "sv": "Arbetskraftsutbildningar",
     "en": "Labour market training courses"
   },
+  "pieni_osaamiskokonaisuus_otsikko": {
+    "fi": "Pieniä osaamiskokonaisuuksia",
+    "sv": "Mikromeriter",
+    "en": "Microcredentials"
+  },
   "julkaistut_otsikko": {
     "fi": "Julkaistut",
     "sv": "Publicerade",

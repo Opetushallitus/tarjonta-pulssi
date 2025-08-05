@@ -23,6 +23,7 @@ export type ToteutusRow = RowWithKoulutustyyppiPath & {
   jotpa_amount: number;
   taydennyskoulutus_amount: number;
   tyovoimakoulutus_amount: number;
+  pieni_osaamiskokonaisuus_amount: number;
 };
 
 export type Row = HakuRow | RowWithKoulutustyyppiPath;
@@ -47,6 +48,10 @@ export interface EntityDataWithSubKey {
     julkaistu_jotpa_amount_old?: number;
     arkistoitu_jotpa_amount?: number;
     arkistoitu_jotpa_amount_old?: number;
+    julkaistu_pieni_osaamiskokonaisuus_amount?: number;
+    julkaistu_pieni_osaamiskokonaisuus_amount_old?: number;
+    arkistoitu_pieni_osaamiskokonaisuus_amount?: number;
+    arkistoitu_pieni_osaamiskokonaisuus_amount_old?: number;
     julkaistu_taydennyskoulutus_amount?: number;
     julkaistu_taydennyskoulutus_amount_old?: number;
     arkistoitu_taydennyskoulutus_amount?: number;
@@ -86,6 +91,7 @@ export interface DatabaseRow {
   jotpa_amount?: number;
   taydennyskoulutus_amount?: number;
   tyovoimakoulutus_amount?: number;
+  pieni_osaamiskokonaisuus_amount?: number;
 }
 export type EntityDatabaseResults = {
   [E in EntityPlural]: Array<DatabaseRow>;

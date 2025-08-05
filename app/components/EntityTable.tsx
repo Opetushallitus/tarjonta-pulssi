@@ -171,6 +171,18 @@ export const EntityTable = ({
                   }}
                   formatAmounts={showHistory ? formatHistoryAmounts : formatSingleAmount}
                 />
+                <ContentRow
+                  titleKey="pieni_osaamiskokonaisuus_otsikko"
+                  amounts={{
+                    julkaistu_amount: data?.by_tila?.julkaistu_pieni_osaamiskokonaisuus_amount,
+                    julkaistu_amount_old:
+                      data?.by_tila?.julkaistu_pieni_osaamiskokonaisuus_amount_old,
+                    arkistoitu_amount: data?.by_tila?.arkistoitu_pieni_osaamiskokonaisuus_amount,
+                    arkistoitu_amount_old:
+                      data?.by_tila?.arkistoitu_pieni_osaamiskokonaisuus_amount_old,
+                  }}
+                  formatAmounts={showHistory ? formatHistoryAmounts : formatSingleAmount}
+                />
               </tbody>
             </table>
           </Box>

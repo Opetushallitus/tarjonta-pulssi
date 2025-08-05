@@ -86,6 +86,7 @@ test("Unchanged toteutus-row should not cause db update", () => {
     jotpa_amount: "5",
     taydennyskoulutus_amount: "3",
     tyovoimakoulutus_amount: "2",
+    pieni_osaamiskokonaisuus_amount: "2",
   };
   const newRow: ToteutusRow = {
     tila: "julkaistu",
@@ -94,6 +95,7 @@ test("Unchanged toteutus-row should not cause db update", () => {
     jotpa_amount: 5,
     taydennyskoulutus_amount: 3,
     tyovoimakoulutus_amount: 2,
+    pieni_osaamiskokonaisuus_amount: 2,
   };
   expect(toteutusRowHasChanged(existingRow, newRow)).toBe(false);
 });
@@ -107,6 +109,7 @@ test("Changed toteutus-row should cause db update", () => {
     jotpa_amount: "6",
     taydennyskoulutus_amount: "3",
     tyovoimakoulutus_amount: "2",
+    pieni_osaamiskokonaisuus_amount: "2",
   };
   const newRow: ToteutusRow = {
     tila: "julkaistu",
@@ -115,6 +118,7 @@ test("Changed toteutus-row should cause db update", () => {
     jotpa_amount: 5,
     taydennyskoulutus_amount: 3,
     tyovoimakoulutus_amount: 2,
+    pieni_osaamiskokonaisuus_amount: 2,
   };
   expect(toteutusRowHasChanged(existingRow, newRow)).toBe(true);
 });
