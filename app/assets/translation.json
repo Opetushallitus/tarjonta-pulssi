@@ -224,6 +224,11 @@
     "fi": "Vapaa sivistystyö",
     "sv": "Fritt bildningsarbete"
   },
+  "vapaa-sivistystyo-osaamismerkki": {
+    "en": "Skills badge",
+    "fi": "Osaamismerkki",
+    "sv": "Kompetensmärke"
+  },
   "yhteensa_otsikko": {
     "fi": "Yhteensä",
     "sv": "Totalt",
