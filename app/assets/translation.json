@@ -119,6 +119,11 @@
     "sv": "Arbetskraftsutbildningar",
     "en": "Labour market training courses"
   },
+  "pieni_osaamiskokonaisuus_otsikko": {
+    "fi": "Pieniä osaamiskokonaisuuksia",
+    "sv": "Mikromeriter",
+    "en": "Microcredentials"
+  },
   "julkaistut_otsikko": {
     "fi": "Julkaistut",
     "sv": "Publicerade",
@@ -218,6 +223,11 @@
     "en": "Liberal adult education",
     "fi": "Vapaa sivistystyö",
     "sv": "Fritt bildningsarbete"
+  },
+  "vapaa-sivistystyo-osaamismerkki": {
+    "en": "Skills badge",
+    "fi": "Osaamismerkki",
+    "sv": "Kompetensmärke"
   },
   "yhteensa_otsikko": {
     "fi": "Yhteensä",

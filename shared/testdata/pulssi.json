@@ -1,6 +1,9 @@
 {
   "koulutukset": {
-    "by_tila": { "julkaistu_amount": 276, "arkistoitu_amount": 213 },
+    "by_tila": {
+      "julkaistu_amount": 276,
+      "arkistoitu_amount": 213
+    },
     "items": [
       {
         "subkey": "kk-muu",
@@ -141,7 +144,9 @@
       "julkaistu_taydennyskoulutus_amount": 6,
       "arkistoitu_taydennyskoulutus_amount": 3,
       "julkaistu_tyovoimakoulutus_amount": 22,
-      "arkistoitu_tyovoimakoulutus_amount": 19
+      "arkistoitu_tyovoimakoulutus_amount": 19,
+      "julkaistu_pieni_osaamiskokonaisuus_amount": 2,
+      "arkistoitu_pieni_osaamiskokonaisuus_amount": 1
     },
     "items": [
       {
@@ -275,7 +280,10 @@
     ]
   },
   "hakukohteet": {
-    "by_tila": { "julkaistu_amount": 276, "arkistoitu_amount": 213 },
+    "by_tila": {
+      "julkaistu_amount": 276,
+      "arkistoitu_amount": 213
+    },
     "items": [
       {
         "subkey": "kk-muu",
@@ -408,7 +416,10 @@
     ]
   },
   "haut": {
-    "by_tila": { "julkaistu_amount": 21, "arkistoitu_amount": 16 },
+    "by_tila": {
+      "julkaistu_amount": 21,
+      "arkistoitu_amount": 16
+    },
     "items": [
       {
         "subkey": "hakutapa_02",

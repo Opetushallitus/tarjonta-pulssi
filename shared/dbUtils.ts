@@ -25,6 +25,8 @@ export interface DbRowBase {
   arkistoitu_taydennyskoulutus_amount?: number;
   julkaistu_tyovoimakoulutus_amount?: number;
   arkistoitu_tyovoimakoulutus_amount?: number;
+  julkaistu_pieni_osaamiskokonaisuus_amount: number;
+  arkistoitu_pieni_osaamiskokonaisuus_amount: number;
 }
 
 export const createPulssiDbPool = async (additionalParams: Partial<PoolConfig> = {}) => {
@@ -51,7 +53,8 @@ export const toteutusRowHasChanged = (existingRow: ToteutusRow, newRow: Toteutus
     Number(existingRow.amount) !== newRow.amount ||
     Number(existingRow.jotpa_amount) !== newRow.jotpa_amount ||
     Number(existingRow.taydennyskoulutus_amount) !== newRow.taydennyskoulutus_amount ||
-    Number(existingRow.tyovoimakoulutus_amount) !== newRow.tyovoimakoulutus_amount
+    Number(existingRow.tyovoimakoulutus_amount) !== newRow.tyovoimakoulutus_amount ||
+    Number(existingRow.pieni_osaamiskokonaisuus_amount) !== newRow.pieni_osaamiskokonaisuus_amount
   );
 };
 
@@ -63,12 +66,13 @@ const saveToteutusAmounts = async (
   if (existingRow) {
     if (toteutusRowHasChanged(existingRow, newRow)) {
       console.log(
-        `Updating changed toteutus amounts (${newRow.tila}, ${newRow.tyyppi_path}) = ${newRow.amount} (jotpa = ${newRow.jotpa_amount}, taydennyskoulutus = ${newRow.taydennyskoulutus_amount}, tyovoimakoulutus = ${newRow.tyovoimakoulutus_amount})`
+        `Updating changed toteutus amounts (${newRow.tila}, ${newRow.tyyppi_path}) = ${newRow.amount} (jotpa = ${newRow.jotpa_amount}, taydennyskoulutus = ${newRow.taydennyskoulutus_amount}, tyovoimakoulutus = ${newRow.tyovoimakoulutus_amount}, pieni_osaamiskokonaisuus = ${newRow.pieni_osaamiskokonaisuus_amount})`
       );
 
       await pulssiClient.query(
         `UPDATE toteutus_amounts SET amount = ${newRow.amount}, jotpa_amount = ${newRow.jotpa_amount}, 
-        taydennyskoulutus_amount = ${newRow.taydennyskoulutus_amount}, tyovoimakoulutus_amount = ${newRow.tyovoimakoulutus_amount}  
+        taydennyskoulutus_amount = ${newRow.taydennyskoulutus_amount}, tyovoimakoulutus_amount = ${newRow.tyovoimakoulutus_amount},
+        pieni_osaamiskokonaisuus_amount = ${newRow.pieni_osaamiskokonaisuus_amount}
         WHERE tila = '${newRow.tila}' AND tyyppi_path = '${newRow.tyyppi_path}'`
       );
     }
@@ -77,8 +81,8 @@ const saveToteutusAmounts = async (
       `Inserting toteutus amounts (${newRow.tila}, ${newRow.tyyppi_path}) = ${newRow.amount} (jotpa = ${newRow.jotpa_amount}, taydennyskoulutus = ${newRow.taydennyskoulutus_amount}, tyovoimakoulutus = ${newRow.tyovoimakoulutus_amount})`
     );
     await pulssiClient.query(
-      `INSERT INTO toteutus_amounts(tyyppi_path, tila, amount, jotpa_amount, taydennyskoulutus_amount, tyovoimakoulutus_amount) 
-      values('${newRow.tyyppi_path}', '${newRow.tila}', ${newRow.amount}, ${newRow.jotpa_amount}, ${newRow.taydennyskoulutus_amount}, ${newRow.tyovoimakoulutus_amount})`
+      `INSERT INTO toteutus_amounts(tyyppi_path, tila, amount, jotpa_amount, taydennyskoulutus_amount, tyovoimakoulutus_amount, pieni_osaamiskokonaisuus_amount) 
+      values('${newRow.tyyppi_path}', '${newRow.tila}', ${newRow.amount}, ${newRow.jotpa_amount}, ${newRow.taydennyskoulutus_amount}, ${newRow.tyovoimakoulutus_amount}, ${newRow.pieni_osaamiskokonaisuus_amount})`
     );
   }
 };
@@ -122,6 +126,11 @@ export const savePulssiAmounts = async (
               (subBucket?.is_tyovoimakoulutus as AggregationsFilterAggregate)?.doc_count ?? 0
             );
 
+            const pieniOsaamiskokonaisuusAmount = Number(
+              (subBucket?.is_pieni_osaamiskokonaisuus as AggregationsFilterAggregate)?.doc_count ??
+                0
+            );
+
             await saveToteutusAmounts(pulssiClient, existingRow, {
               tyyppi_path: subBucket.key,
               tila,
@@ -129,6 +138,7 @@ export const savePulssiAmounts = async (
               jotpa_amount: jotpaAmount,
               taydennyskoulutus_amount: taydennyskoulutusAmount,
               tyovoimakoulutus_amount: tyovoimakoulutusAmount,
+              pieni_osaamiskokonaisuus_amount: pieniOsaamiskokonaisuusAmount,
             });
           } else {
             if (existingRow) {

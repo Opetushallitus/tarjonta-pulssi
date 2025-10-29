@@ -16,6 +16,7 @@ const handleResults = (rows: Array<any>): Array<DatabaseRow> => {
     jotpa_amount: asOptionalNumber(row["jotpa_amount"]),
     taydennyskoulutus_amount: asOptionalNumber(row["taydennyskoulutus_amount"]),
     tyovoimakoulutus_amount: asOptionalNumber(row["tyovoimakoulutus_amount"]),
+    pieni_osaamiskokonaisuus_amount: asOptionalNumber(row["pieni_osaamiskokonaisuus_amount"]),
   }));
 };
 
@@ -31,6 +32,7 @@ export const queryPulssiAmounts = async (pulssiDbPool: Pool, entity: EntityType)
           asAmountField("jotpa_amount"),
           asAmountField("taydennyskoulutus_amount"),
           asAmountField("tyovoimakoulutus_amount"),
+          asAmountField("pieni_osaamiskokonaisuus_amount"),
         ].join(", ")
       : asAmountField("amount");
   const dbResult = await pulssiDbPool.query(
@@ -73,7 +75,7 @@ export const queryPulssiAmountsHistory = async (
 ) => {
   const amountFields =
     entity === "toteutus"
-      ? "amount, jotpa_amount, taydennyskoulutus_amount, tyovoimakoulutus_amount"
+      ? "amount, jotpa_amount, taydennyskoulutus_amount, tyovoimakoulutus_amount, pieni_osaamiskokonaisuus_amount"
       : "amount";
   const subEntityField = entity === "haku" ? "hakutapa" : "tyyppi_path";
   const timeLimitCondition = pointOfTime ? `where upper(system_time) >= $1` : "";

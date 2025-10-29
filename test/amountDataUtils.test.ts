@@ -210,6 +210,7 @@ const toteutusDbResults: Array<DatabaseRow> = [
     jotpa_amount: 2,
     taydennyskoulutus_amount: 3,
     tyovoimakoulutus_amount: 4,
+    pieni_osaamiskokonaisuus_amount: 2,
   },
   {
     sub_entity: "aaa",
@@ -219,6 +220,7 @@ const toteutusDbResults: Array<DatabaseRow> = [
     jotpa_amount: 6,
     taydennyskoulutus_amount: 7,
     tyovoimakoulutus_amount: 8,
+    pieni_osaamiskokonaisuus_amount: 3,
   },
   {
     sub_entity: "bbb",
@@ -228,6 +230,7 @@ const toteutusDbResults: Array<DatabaseRow> = [
     jotpa_amount: 10,
     taydennyskoulutus_amount: 11,
     tyovoimakoulutus_amount: 12,
+    pieni_osaamiskokonaisuus_amount: 4,
   },
   {
     sub_entity: "bbb",
@@ -237,6 +240,7 @@ const toteutusDbResults: Array<DatabaseRow> = [
     jotpa_amount: 14,
     taydennyskoulutus_amount: 15,
     tyovoimakoulutus_amount: 16,
+    pieni_osaamiskokonaisuus_amount: 6,
   },
   {
     sub_entity: "ccc/aaa",
@@ -266,6 +270,7 @@ const toteutusDbResultsOld = toteutusDbResults.map((sub) => ({
   jotpa_amount: (sub.jotpa_amount || 1) - 1,
   taydennyskoulutus_amount: (sub.taydennyskoulutus_amount || 1) - 1,
   tyovoimakoulutus_amount: (sub.tyovoimakoulutus_amount || 1) - 1,
+  pieni_osaamiskokonaisuus_amount: (sub.pieni_osaamiskokonaisuus_amount || 1) - 1,
 }));
 
 const hakukohdeDbResults: Array<DatabaseRow> = [
@@ -292,6 +297,8 @@ const expectedByTilaForToteutukset = {
   arkistoitu_taydennyskoulutus_amount: 45,
   julkaistu_tyovoimakoulutus_amount: 36,
   arkistoitu_tyovoimakoulutus_amount: 48,
+  julkaistu_pieni_osaamiskokonaisuus_amount: 6,
+  arkistoitu_pieni_osaamiskokonaisuus_amount: 9,
 };
 
 const expectedByTilaForToteutuksetWithHistory = {
@@ -311,6 +318,10 @@ const expectedByTilaForToteutuksetWithHistory = {
   julkaistu_tyovoimakoulutus_amount_old: 33,
   arkistoitu_tyovoimakoulutus_amount: 48,
   arkistoitu_tyovoimakoulutus_amount_old: 45,
+  julkaistu_pieni_osaamiskokonaisuus_amount: 6,
+  julkaistu_pieni_osaamiskokonaisuus_amount_old: 4,
+  arkistoitu_pieni_osaamiskokonaisuus_amount: 9,
+  arkistoitu_pieni_osaamiskokonaisuus_amount_old: 7,
 };
 
 test("Db query results should be correctly parsed and sorted", () => {

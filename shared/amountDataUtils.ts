@@ -179,6 +179,26 @@ export const dbQueryResultToPulssiData = (
               "tyovoimakoulutus_amount",
               oldDataRows
             ),
+            julkaistu_pieni_osaamiskokonaisuus_amount: sumBy(
+              "julkaistu",
+              "pieni_osaamiskokonaisuus_amount",
+              rows
+            ),
+            julkaistu_pieni_osaamiskokonaisuus_amount_old: sumBy(
+              "julkaistu",
+              "pieni_osaamiskokonaisuus_amount",
+              oldDataRows
+            ),
+            arkistoitu_pieni_osaamiskokonaisuus_amount: sumBy(
+              "arkistoitu",
+              "pieni_osaamiskokonaisuus_amount",
+              rows
+            ),
+            arkistoitu_pieni_osaamiskokonaisuus_amount_old: sumBy(
+              "arkistoitu",
+              "pieni_osaamiskokonaisuus_amount",
+              oldDataRows
+            ),
           }
         : {}),
     },
@@ -260,5 +280,6 @@ export const discardAmountsWhenOutOfTimelimit = (
         jotpa_amount: dbRow.jotpa_amount,
         taydennyskoulutus_amount: dbRow.taydennyskoulutus_amount,
         tyovoimakoulutus_amount: dbRow.tyovoimakoulutus_amount,
+        pieni_osaamiskokonaisuus_amount: dbRow.pieni_osaamiskokonaisuus_amount,
       };
 };
