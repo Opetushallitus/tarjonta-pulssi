@@ -13,14 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+      - uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
-          cache: "npm"
+          cache: "pnpm"
       - name: Run tests
         run: |
-          npm ci --no-audit --prefer-offline
-          npm run typecheck
-          npm run prettier
-          npm run eslint
-          npm run test
+          pnpm install
+          pnpm run typecheck
+          pnpm run prettier
+          pnpm run eslint
+          pnpm run test

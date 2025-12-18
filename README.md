@@ -23,7 +23,7 @@ Tietojen esittämistä varten on toteutettu yhden sivun (SPA) sovellus, Remix -f
 ### Esivaatimukset
 
 - aws-profiilit ovat käyttäjän kotihakemistossa `cloud-base` - repositorystä löytyvän `tools/config-wizard.sh` mukaiset.
-- npm ja npx asennettuina, versio 9.8.1 tai uudempi
+- pnpm asennettuna, versio 10.26.0 tai uudempi
 - node asennettuna, versio 18.x
 - [Docker](https://www.docker.com/get-started) PostgreSQLää varten.
 
@@ -58,7 +58,7 @@ Tietojen esittämistä varten on toteutettu yhden sivun (SPA) sovellus, Remix -f
 
 #### Deployaa tarjonta-pulssi sovellus (tarjonta-pulssi -repositoryssä)
 
-`npx sst deploy --profile=<oph-dev / oph-prod> --stage=<ympäristö>`
+`pnpm exec sst deploy --profile=<oph-dev / oph-prod> --stage=<ympäristö>`
 
 Ympäristö on joko `untuva`, `hahtuva`, `pallero` tai `sade` (= tuotanto)
 Profiili on sade / tuotanto -ympäristössä `oph-prod`, muissa `oph-dev`
@@ -73,13 +73,13 @@ Komennon ajamisesta tehty seuraavia huomioita (ajettu macOS:ssä).
 
 Tietokantamigraatiot on toteutettu [Umzug](https://github.com/sequelize/umzug)-kirjastolla ja ne löytyvät hakemistosta `shared/db/migrations`. Migraatiot ajetaan lambdassa automaattisesti deployn yhteydessä ja ne on toteutettu JavaScript CommonJS-moduuleina, jotta niitä on helpompi ajaa lambdassa.
 
-Migraatiot voi ajaa myös käsin. Jos haluat ajaa migraatioita käsin esim. untuvaa vasten, aseta ensin VPN päälle ja tunneloi haluamasi ympäristön tietokantayhteys localhostiin. Lisää migrate.ts:ään kyseisen ympäristön tietokannan käyttäjätunnus ja salasana. Sen jälkeen voit ajaa kantaan migraatiot komennolla `npm run umzug up`.
+Migraatiot voi ajaa myös käsin. Jos haluat ajaa migraatioita käsin esim. untuvaa vasten, aseta ensin VPN päälle ja tunneloi haluamasi ympäristön tietokantayhteys localhostiin. Lisää migrate.ts:ään kyseisen ympäristön tietokannan käyttäjätunnus ja salasana. Sen jälkeen voit ajaa kantaan migraatiot komennolla `pnpm run umzug up`.
 
-Yhdistettyäsi yllä olevan ohjeen avulla migrate.ts:n kantaan, voit myös luoda uuden migraation komennolla `npm run umzug -- create --name "migraation-nimi.cjs"`.
+Yhdistettyäsi yllä olevan ohjeen avulla migrate.ts:n kantaan, voit myös luoda uuden migraation komennolla `pnpm run umzug -- create --name "migraation-nimi.cjs"`.
 
 ### Testaus
 
-Yksikkö- ja integrointi-testit on toteutettu Jest-kirjastolla. Ne voi ajaa komennolla `npm run test`. Testit ajetaan myös automaattisesti Github Actionsissa.
+Yksikkö- ja integrointi-testit on toteutettu Jest-kirjastolla. Ne voi ajaa komennolla `pnpm run test`. Testit ajetaan myös automaattisesti Github Actionsissa.
 
 ### Ajaminen lokaalisti
 
@@ -88,13 +88,13 @@ Kaikissa kolmessa tapauksessa sovellusta ajetaan osoitteessa `http://localhost:3
 
 #### Ajaminen staattista testidataa käyttäen
 
-Käynnistä sovellus lokaalisti komennolla `npm run dev:local`. Tällöin sovellus lataa näytettävät lukemat tiedostoista `pulssi.json` ja `pulssi_old.json` hakemistosta `shared/testdata`.
+Käynnistä sovellus lokaalisti komennolla `pnpm run dev:local`. Tällöin sovellus lataa näytettävät lukemat tiedostoista `pulssi.json` ja `pulssi_old.json` hakemistosta `shared/testdata`.
 Huom! Näytettävät lukemat ovat tässä tapauksessa aina samoja, ei sovellu tarkempaan historia-haun testaamiseen.
 
 #### Ajaminen lokaalia PostgreSQl -kantaa vasten
 
 Käynnistä ensin lokaali PostgreSql -kanta (kts. kaksi seuraavaa kappaletta).
-Käynnistä tämän jälkeen sovellus lokaalisti komennolla `npm run dev:localdb`.
+Käynnistä tämän jälkeen sovellus lokaalisti komennolla `pnpm run dev:localdb`.
 
 ##### PostgreSQL Kontti-imagen luonti (tarvitsee tehdä vain kerran):
 
@@ -103,7 +103,7 @@ Käynnistä tämän jälkeen sovellus lokaalisti komennolla `npm run dev:localdb
 
 ##### Lokaalin tarjontapulssi-tietokannan käynnistys
 
-Komento `npm run prepare-test-env` käynnistää lokaalin kannan, suorittaa migraatiot, sekä importoi kantaan valmiiksi testidataa. Kaikki vaiheet voi ajaa tarvittaessa myös erikseen, kts `package.json`. Tämän jälkeen kanta on valmiina käytettäväksi.
+Komento `pnpm run prepare-test-env` käynnistää lokaalin kannan, suorittaa migraatiot, sekä importoi kantaan valmiiksi testidataa. Kaikki vaiheet voi ajaa tarvittaessa myös erikseen, kts `package.json`. Tämän jälkeen kanta on valmiina käytettäväksi.
 Huom! Datan importointi saattaa kestää useita kymmeniä sekunteja. Importointia ajettaessa päätteelle tulostuu toistuvasti `INSERT 0 1`.
 
 #### Ajaminen live-lambda moodissa
@@ -116,8 +116,8 @@ Lisää ensin oman koneen `/etc/hosts` -tiedostoon rivi `127.0.0.1 tarjontapulss
 Tämän jälkeen tunnelin voi avata komennolla `ssh -N -L 5432:tarjontapulssi.db.hahtuvaopintopolku.fi:5432 <käyttäjätunnus>@bastion.<ympäristö>opintopolku.fi`, jossa käyttäjätunnus vastaa omaa käyttäjätunnusta ja ympäristö `untuva` tai `hahtuva`.
 
 Suositeltava tapa on käyttää kahta terminaali-ikkunaa käyttäen siten että toisessa ajetaan Live lambda -kehitysympäristöä ja toisessa Remix -sovellusta. Ainakin Remix -ikkunassa on suositeltavaa käynnistää ensin `aws-vault` -sessio, jolloin MFA -koodi tarvitsee syöttää ainoastaan kerran (muussa tapauksessa koodin syöttämistä vaaditaan säännöllisin väliajoin).
-Käynnistä ensin kehitysympäristö toisessa ikkunassa komennolla `npx sst dev --profile=oph-dev --stage=<ympäristö>`, jossa ympäristö `untuva` tai `hahtuva`.
-Tämän jälkeen käynnistä Remix-sovellus toisessa ikkunassa komennolla `npm run dev`.
+Käynnistä ensin kehitysympäristö toisessa ikkunassa komennolla `pnpm exec sst dev --profile=oph-dev --stage=<ympäristö>`, jossa ympäristö `untuva` tai `hahtuva`.
+Tämän jälkeen käynnistä Remix-sovellus toisessa ikkunassa komennolla `pnpm run dev`.
 
 ##### Aws-vaultin ajaminen
 
