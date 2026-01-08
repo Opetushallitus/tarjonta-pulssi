@@ -8,7 +8,6 @@ overrides:
   express@4.18.2>body-parser: 1.20.4
   braces@3.0.2: 3.0.3
   path-to-regexp@0.1.7: 0.1.12
-  "@types/node@25.0.2": 20.9.0
 
 importers:
   .:
@@ -7181,7 +7180,7 @@ packages:
       }
     engines: { node: ^14.15.0 || ^16.10.0 || >=18.0.0 }
     peerDependencies:
-      "@types/node": 20.9.0
+      "@types/node": "*"
       ts-node: ">=9.0.0"
     peerDependenciesMeta:
       "@types/node":
@@ -10460,7 +10459,7 @@ packages:
     peerDependencies:
       "@swc/core": ">=1.2.50"
       "@swc/wasm": ">=1.2.50"
-      "@types/node": 20.9.0
+      "@types/node": "*"
       typescript: ">=2.7"
     peerDependenciesMeta:
       "@swc/core":
@@ -10899,7 +10898,7 @@ packages:
     engines: { node: ^14.18.0 || >=16.0.0 }
     hasBin: true
     peerDependencies:
-      "@types/node": 20.9.0
+      "@types/node": ">= 14"
       less: "*"
       lightningcss: ^1.21.0
       sass: "*"
