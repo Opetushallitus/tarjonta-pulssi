@@ -6,7 +6,8 @@
     {
       "matchManagers": ["github-actions"],
       "groupName": "github-actions",
-      "extends": ["schedule:weekly"]
+      "extends": ["schedule:weekly"],
+      "minimumReleaseAge": "3 days"
     }
   ]
 }
