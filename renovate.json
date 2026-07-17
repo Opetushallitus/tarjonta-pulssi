@@ -7,7 +7,9 @@
       "matchManagers": ["github-actions"],
       "groupName": "github-actions",
       "extends": ["schedule:weekly"],
-      "minimumReleaseAge": "3 days"
+      "minimumReleaseAge": "7 days",
+      "automerge": true,
+      "automergeType": "pr"
     }
   ]
 }
