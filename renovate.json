@@ -10,7 +10,15 @@
       "minimumReleaseAge": "7 days",
       "automerge": true,
       "automergeType": "pr",
-      "separateMajorMinor": false
+      "separateMajorMinor": false,
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch",
+        "pin",
+        "pinDigest",
+        "digest"
+      ]
     }
   ]
 }
