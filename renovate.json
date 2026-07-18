@@ -3,6 +3,7 @@
   "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
   "enabledManagers": ["github-actions"],
   "platformAutomerge": false,
+  "recreateWhen": "always",
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
@@ -10,7 +11,7 @@
       "groupName": "github-actions",
       "automerge": true,
       "automergeType": "pr",
-      "prTitle": "Pin github-actions versions"
+      "commitMessageTopic": "github-actions versions",
     },
     {
       "matchManagers": ["github-actions"],
