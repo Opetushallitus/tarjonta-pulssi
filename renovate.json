@@ -11,7 +11,7 @@
       "groupName": "github-actions",
       "automerge": true,
       "automergeType": "pr",
-      "commitMessageTopic": "github-actions versions",
+      "commitMessageTopic": "github-actions versions"
     },
     {
       "matchManagers": ["github-actions"],
