@@ -5,20 +5,20 @@
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["pin", "pinDigest", "digest"],
+      "groupName": "github-actions",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major", "minor", "patch"],
       "groupName": "github-actions",
       "extends": ["schedule:weekly"],
       "minimumReleaseAge": "7 days",
       "automerge": true,
       "automergeType": "pr",
-      "separateMajorMinor": false,
-      "matchUpdateTypes": [
-        "major",
-        "minor",
-        "patch",
-        "pin",
-        "pinDigest",
-        "digest"
-      ]
+      "separateMajorMinor": false
     }
   ]
 }
