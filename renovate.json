@@ -10,7 +10,7 @@
       "groupName": "github-actions",
       "automerge": true,
       "automergeType": "pr",
-      "prTitle": "Pin github-actions versions",
+      "prTitle": "Pin github-actions versions"
     },
     {
       "matchManagers": ["github-actions"],
