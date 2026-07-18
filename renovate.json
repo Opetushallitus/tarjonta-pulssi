@@ -18,8 +18,7 @@
       "extends": ["schedule:weekly"],
       "minimumReleaseAge": "7 days",
       "automerge": true,
-      "automergeType": "pr",
-      "separateMajorMinor": false
+      "automergeType": "pr"
     }
   ]
 }
