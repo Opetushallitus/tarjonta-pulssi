@@ -9,7 +9,8 @@
       "matchUpdateTypes": ["pin", "pinDigest", "digest"],
       "groupName": "github-actions",
       "automerge": true,
-      "automergeType": "pr"
+      "automergeType": "pr",
+      "prTitle": "Pin github-actions versions",
     },
     {
       "matchManagers": ["github-actions"],
