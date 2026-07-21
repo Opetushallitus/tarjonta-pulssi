@@ -9,15 +9,13 @@
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["pin", "pinDigest", "digest"],
       "groupName": "github-actions",
-      "automerge": true,
       "commitMessageTopic": "github-actions versions"
     },
     {
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["major", "minor", "patch"],
       "groupName": "github-actions",
-      "minimumReleaseAge": "7 days",
-      "automerge": true
+      "minimumReleaseAge": "7 days"
     }
   ]
 }
