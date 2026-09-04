@@ -20,6 +20,16 @@ overrides:
   "axios@^1.12.0": ^1.16.0
   "@remix-run/router@1.23.0": 1.23.2
   "fast-xml-parser@^4": ^4.5.5
+  # fast-xml-parser >= 4.5.4 rajoittaa entiteettien kokonaislaajennuksen
+  # 1000:een (CVE-2026-26278 / CVE-2026-33036 -korjaus). SST:n deploy-monitor
+  # lukee DescribeStackEvents-vastauksia, joissa on tuhansia &quot;-entiteetteja,
+  # joten @aws-sdk/client-cloudformation 3.449.0 kaatuu virheeseen
+  # "Entity expansion limit exceeded". Rajataan vain deployn aikainen
+  # CloudFormation-asiakas vanhaan versioon; tuotantopolku
+  # (@aws-sdk/client-ssm) pysyy korjatussa 4.5.x:ssa.
+  # Poistettavissa kun sst:n AWS SDK nousee versioon, joka ei kayta
+  # fast-xml-parseria (>= ~3.900, XML-jasennys siirtyi @smithy/coreen).
+  "@aws-sdk/client-cloudformation>fast-xml-parser": 4.2.5
   "undici@^6": ^6.27.0
   "minimatch@^3": ^3.1.4
   "minimatch@^5": ^5.1.8
