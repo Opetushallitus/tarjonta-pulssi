@@ -10,7 +10,9 @@ import { ThemeProvider } from "@mui/material";
 import { createReadableStreamFromReadable, type EntryContext } from "@remix-run/node";
 import { RemixServer } from "@remix-run/react";
 import { createInstance } from "i18next";
-import Backend from "i18next-fs-backend";
+// HUOM: "/cjs" on pakollinen. Paketin ESM-build kaatuu SSR-bundlaukseen
+// (top-level await CJS-outputissa). Ks. muistiinpano/commit-viesti.
+import Backend from "i18next-fs-backend/cjs";
 import isbot from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
 import { I18nextProvider, initReactI18next, ReportNamespaces } from "react-i18next";
