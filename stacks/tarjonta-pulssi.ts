@@ -28,7 +28,7 @@ import { NodejsFunction, OutputFormat, type BundlingOptions } from "aws-cdk-lib/
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { AaaaRecord, ARecord, HostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
 import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
-import { BlockPublicAccess, Bucket } from "aws-cdk-lib/aws-s3";
+import { BlockPublicAccess, Bucket, ObjectOwnership } from "aws-cdk-lib/aws-s3";
 import { BucketDeployment, CacheControl, Source } from "aws-cdk-lib/aws-s3-deployment";
 import type { Construct } from "constructs";
 
@@ -37,6 +37,20 @@ import type { Construct } from "constructs";
  * React Router 8 vaatii Noden >= 22.22.
  */
 const LAMBDA_RUNTIME = Runtime.NODEJS_24_X;
+
+/**
+ * CloudFrontin access login säilytysaika. Loki sisältää asiakkaan IP-osoitteen,
+ * joten tämä on tietosuojapäätös — älä pidennä ilman perustetta. Lambdojen omat
+ * lokit säilyvät erikseen vuoden, mutta ne eivät sisällä IP-osoitteita.
+ */
+const ACCESS_LOG_RETENTION = Duration.days(90);
+
+/**
+ * Sama säilytysaika SSR-lambdan lokiryhmälle, koska sinne kirjoitetaan nyt
+ * pyyntökohtainen access-rivi IP-osoitteineen (ks. `server/lambda.ts`). Muut
+ * lambdat pitävät vuoden retentionsa — ne eivät käsittele IP-osoitteita.
+ */
+const SSR_LOG_RETENTION = RetentionDays.THREE_MONTHS;
 
 /** Vite-buildin hajautetut assetit tarjoillaan tämän polun alta. */
 const CLIENT_BUILD_DIR = "build/client";
@@ -130,7 +144,7 @@ export class TarjontaPulssiStack extends Stack {
       entry: "server/lambda.ts",
       handler: "handler",
       runtime: LAMBDA_RUNTIME,
-      logRetention: RetentionDays.ONE_YEAR,
+      logRetention: SSR_LOG_RETENTION,
       architecture: Architecture.ARM_64,
       memorySize: 1024,
       timeout: Duration.seconds(20),
@@ -166,6 +180,25 @@ export class TarjontaPulssiStack extends Stack {
       autoDeleteObjects: true,
     });
 
+    // CloudFrontin access log (standard logging, legacy). Kattaa kaikki
+    // selainpyynnöt — myös staattiset assetit ja välimuistiosumat, jotka eivät
+    // koskaan päädy SSR-lambdalle.
+    //
+    // Legacy-toimitus käyttää ACL:ia, joten tämä ämpäri on pakko luoda
+    // `OBJECT_WRITER`-omistajuudella. Rajaus koskee vain lokiämpäriä;
+    // `SiteAssetsBucket` pysyy ACL:ttomassa oletuksessa.
+    const accessLogBucket = new Bucket(this, "SiteAccessLogBucket", {
+      objectOwnership: ObjectOwnership.OBJECT_WRITER,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      enforceSSL: true,
+      lifecycleRules: [{ expiration: ACCESS_LOG_RETENTION }],
+      // Tuotannon lokit ovat ainoa kopio käyttöhistoriasta, joten niitä ei
+      // poisteta stackin mukana. Testiympäristöissä siivous on tärkeämpää.
+      ...(stage === "sade"
+        ? { removalPolicy: RemovalPolicy.RETAIN }
+        : { removalPolicy: RemovalPolicy.DESTROY, autoDeleteObjects: true }),
+    });
+
     const staticBehavior: BehaviorOptions = {
       origin: S3BucketOrigin.withOriginAccessControl(assetsBucket),
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -177,6 +210,11 @@ export class TarjontaPulssiStack extends Stack {
       comment: `tarjonta-pulssi ${stage}`,
       httpVersion: HttpVersion.HTTP2_AND_3,
       priceClass: PriceClass.PRICE_CLASS_100,
+      enableLogging: true,
+      logBucket: accessLogBucket,
+      logFilePrefix: "cloudfront/",
+      // Oletus, mutta kirjoitettu näkyviin: evästeitä ei lokiteta.
+      logIncludesCookies: false,
       defaultBehavior: {
         origin: FunctionUrlOrigin.withOriginAccessControl(ssrFunctionUrl),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -357,6 +395,7 @@ export class TarjontaPulssiStack extends Stack {
       value: `https://${distribution.distributionDomainName}`,
     });
     new CfnOutput(this, "ApiUrl", { value: dbApi.apiEndpoint });
+    new CfnOutput(this, "accesslogbucket", { value: accessLogBucket.bucketName });
     if (customDomain) {
       new CfnOutput(this, "customurl", { value: `https://${customDomain.domainName}` });
     }

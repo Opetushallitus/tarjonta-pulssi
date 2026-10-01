@@ -15,6 +15,58 @@ Tietojen esittämistä varten on toteutettu yhden sivun sovellus React Router -f
 
 SSR-lambda on CloudFrontin takana Lambda Function URL:in kautta, suojattuna Origin Access Controlilla (OAC). CloudFront allekirjoittaa pyynnöt (SigV4), eikä Lambda tue allekirjoittamatonta bodyä: PUT/POST vaatisi selaimelta `x-amz-content-sha256` -otsakkeen, mihin se ei pysty. **Tämä reitti kelpaa siis vain GET/HEAD-liikenteelle.** Sovelluksessa ei ole yhtään `action`-exporttia eikä lomaketta, joten rajoitus ei pure. Jos sellainen lisätään, SSR-lambda on siirrettävä API Gatewayn taakse.
 
+### Lokitus
+
+| Mitä                                                 | Missä                                                      | Säilytys |
+| ---------------------------------------------------- | ---------------------------------------------------------- | -------- |
+| SSR-lambdan pyyntöloki (`"type":"access"`)           | CloudWatch Logs, SSR-lambdan lokiryhmä                     | 90 vrk   |
+| Muiden lambdojen lokit (dbApi, updater, migraattori) | CloudWatch Logs, `/aws/lambda/<stack>-<funktio>`           | 365 vrk  |
+| CloudFront access log                                | S3, stackin `accesslogbucket`-output, prefix `cloudfront/` | 90 vrk   |
+
+#### SSR-lambdan pyyntöloki
+
+`server/lambda.ts` kirjoittaa jokaisesta pyynnöstä yhden JSON-rivin: metodi, polku,
+kyselymerkkijono, HTTP-status, kesto millisekunteina, katsojan IP, user-agent ja
+`requestId`. Rivit syntyvät vain HTML- ja data-pyynnöistä — staattiset assetit eivät kulje
+SSR-lambdan kautta. Haku Logs Insightsilla:
+
+```
+fields @timestamp, ip, method, path, status, durationMs, userAgent
+| filter type = "access"
+| sort @timestamp desc
+```
+
+Kaksi asiaa, joiden varassa tämä on:
+
+- **IP luetaan `X-Forwarded-For` -ketjun viimeisestä alkiosta**, ei
+  `requestContext.http.sourceIp`:stä — jälkimmäinen on CloudFrontin reunapalvelin.
+  CloudFront lisää katsojan IP:n ketjun loppuun, joten vain viimeinen alkio on sellainen,
+  jota selain ei voi väärentää.
+- **User-agent on oikea vain origin request policyn ansiosta.** Jos
+  `ALL_VIEWER_EXCEPT_HOST_HEADER` joskus vaihdetaan, CloudFront korvaa otsakkeen arvolla
+  `Amazon CloudFront` — mikä rikkoisi myös `isbot`-tunnistuksen `entry.server.tsx`:ssä.
+
+#### CloudFront access log
+
+Kattaa **kaikki** selainpyynnöt — myös staattiset assetit ja välimuistiosumat, jotka eivät
+koskaan päädy SSR-lambdalle. Muoto on gzipattu W3C-tabulaattorieroteltu tiedosto, toimitus
+tunneittain ja best-effort-periaatteella, eli yksittäinen rivi voi saapua viiveellä tai jäädä
+kokonaan pois. Analysointiin käytännöllisin työkalu on Athena.
+
+#### Tietosuoja
+
+Sekä CloudFrontin access log että SSR-lambdan pyyntöloki **sisältävät asiakkaan
+IP-osoitteen**, joten molempien säilytysaika on 90 vuorokautta. Se on tietosuojapäätös, ei
+tekninen — vakiot `ACCESS_LOG_RETENTION` ja `SSR_LOG_RETENTION` tiedostossa
+`stacks/tarjonta-pulssi.ts`. Muut lambdat pitävät vuoden retentionsa, koska ne eivät käsittele
+IP-osoitteita. Evästeitä ei lokiteta kummassakaan.
+
+Tuotannossa (`sade`) lokiämpäri säilyy vaikka stack poistettaisiin; testiympäristöissä se
+siivotaan stackin mukana.
+
+Huom. että **dbApi:lla ei ole omaa access logia**. Se ei ole julkisesti liikennöity rajapinta —
+ainoa kutsuja on SSR-lambda — mutta katvealue on hyvä tiedostaa.
+
 ## Hakemistorakenne
 
 - CDK-sovelluksen käynnistystiedosto löytyy hakemistosta `bin` ja stackien määrittelyt hakemistosta `stacks`.
