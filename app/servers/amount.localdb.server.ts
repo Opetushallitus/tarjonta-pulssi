@@ -1,7 +1,11 @@
-import { Pool } from "pg";
+// pg on CJS-paketti, jonka nimettyjä exportteja Noden ESM-tulkinta ei tunnista.
+// Sama kiertotie kuin shared/db/umzug/migrate.ts:ssä.
+import pg from "pg";
 
 import { getCurrentAmountDataFromDb, getHistoryDataFromDb } from "~/functions/pulssiDbAccessor";
 import { DEFAULT_DB_POOL_PARAMS } from "~/shared/dbUtils";
+
+const { Pool } = pg;
 
 const localPulssiDbPool = new Pool({
   ...DEFAULT_DB_POOL_PARAMS,

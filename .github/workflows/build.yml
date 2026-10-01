@@ -26,3 +26,4 @@ jobs:
           pnpm run prettier
           pnpm run eslint
           pnpm run test
+          pnpm run build

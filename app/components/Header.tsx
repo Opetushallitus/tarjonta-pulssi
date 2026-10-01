@@ -1,5 +1,3 @@
-import CloseIcon from "@mui/icons-material/Close";
-import MenuIcon from "@mui/icons-material/Menu";
 import {
   AppBar,
   IconButton,
@@ -16,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import opintopolku_logo_header_en from "~/app/assets/opintopolku_logo_header_en.svg";
 import opintopolku_logo_header_fi from "~/app/assets/opintopolku_logo_header_fi.svg";
 import opintopolku_logo_header_sv from "~/app/assets/opintopolku_logo_header_sv.svg";
+import { CloseIcon, MenuIcon } from "~/app/icons";
 
 import { LanguageDropdown } from "./LanguageDropdown";
 

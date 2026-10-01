@@ -1,5 +1,4 @@
-import { type LoaderFunction } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, type LoaderFunction } from "react-router";
 
 import { getCurrentAmountData } from "~/app/servers/amount.server";
 import { PulssiData } from "~/shared/types";

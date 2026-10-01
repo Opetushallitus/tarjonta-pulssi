@@ -4,19 +4,23 @@ Tarjonta-pulssi on palvelu, joka koostaa koulutustarjontaan (kouta/konfo) liitty
 
 ## Arkkitehtuuri
 
-Palvelu on rakennettu [SST](https://docs.sst.dev/) ja [Remix](https://remix.run/) -framework:eja käyttäen. Palvelu koostuu karkeasti kuvattuna Remix-site -constructista, kolmesta erillisestä AWS-lambdasta ja PostgreSQL-tietokannasta.
-Remix-site koostaa varsinaisen Tarjonta-pulssi web-sovelluksen AWS:n sisällä: Tallentaa sovelluksen staattiset tiedostot S3 -ämpäriin, josta ne tarjoillaan käyttäjälle CloudFront:in (CDN) kautta. Sisältää myös
-sovelluksen Remix NodeJS Lambda-backendin.
+Palvelu on rakennettu [AWS CDK](https://docs.aws.amazon.com/cdk/) ja [React Router](https://reactrouter.com/) -framework:eja käyttäen. Palvelu koostuu karkeasti kuvattuna web-sovelluksesta, kolmesta erillisestä AWS-lambdasta ja PostgreSQL-tietokannasta.
+Web-sovellus tarjoillaan CloudFrontin (CDN) kautta: staattiset tiedostot S3 -ämpäristä ja palvelinpuolen renderöinti (SSR) Lambdasta, jota CloudFront kutsuu suoraan Lambda Function URL:in kautta.
 Ensimmäinen lambda-funktio (updater) hakee lukumääriä ElasticSearch:ista ja tallentaa niitä palvelun omaan PostgreSQL-tietokantaan. Toinen lambda / API (dbApi) tarjoaa sovellukselle rajapinnan datan hakemiseen tietokannasta.
 Kolmas lambda-funktio on tietokantamigraatioiden ajamista varten ja suoritetaan deployn yhteydessä.
 
-Tietojen esittämistä varten on toteutettu yhden sivun (SPA) sovellus, Remix -framework:in päälle. UI -kirjastona on käytetty [Reactia](https://react.dev/). Sovelluksessa käytetään [MUI](https://mui.com/) -kirjaston tarjoamia käyttöliittymäkomponentteja.
+Tietojen esittämistä varten on toteutettu yhden sivun sovellus React Router -framework:in päälle. UI -kirjastona on käytetty [Reactia](https://react.dev/). Sovelluksessa käytetään [MUI](https://mui.com/) -kirjaston tarjoamia käyttöliittymäkomponentteja.
+
+### CloudFront ja Lambda Function URL
+
+SSR-lambda on CloudFrontin takana Lambda Function URL:in kautta, suojattuna Origin Access Controlilla (OAC). CloudFront allekirjoittaa pyynnöt (SigV4), eikä Lambda tue allekirjoittamatonta bodyä: PUT/POST vaatisi selaimelta `x-amz-content-sha256` -otsakkeen, mihin se ei pysty. **Tämä reitti kelpaa siis vain GET/HEAD-liikenteelle.** Sovelluksessa ei ole yhtään `action`-exporttia eikä lomaketta, joten rajoitus ei pure. Jos sellainen lisätään, SSR-lambda on siirrettävä API Gatewayn taakse.
 
 ## Hakemistorakenne
 
-- Sovelluksen infran määrittelytiedosto `tarjonta-pulssi.ts` löytyy hakemistosta `stacks`. Määrittelyt (constructit) on toteutettu AWS CDK:lla.
+- CDK-sovelluksen käynnistystiedosto löytyy hakemistosta `bin` ja stackien määrittelyt hakemistosta `stacks`.
 - Lambda-funktioden lähdekoodit löytyvät hakemistosta `functions`.
-- Web (Remix) -sovelluksen koodit löytyvät hakemistosta `app`.
+- Web-sovelluksen koodit löytyvät hakemistosta `app`.
+- SSR-lambdan handler löytyy hakemistosta `server`.
 - Yhteiset, sekä lamdoissa että web-sovelluksessa käytettävät koodit löytyvät hakemistosta `shared`.
 - Tietokantamigraatiot löytyvät hakemistosta `shared/db/migrations`.
 
@@ -24,7 +28,7 @@ Tietojen esittämistä varten on toteutettu yhden sivun (SPA) sovellus, Remix -f
 
 - aws-profiilit ovat käyttäjän kotihakemistossa `cloud-base` - repositorystä löytyvän `tools/config-wizard.sh` mukaiset.
 - pnpm asennettuna, versio 10.26.0 tai uudempi
-- node asennettuna, versio 18.x
+- node asennettuna, `.nvmrc`:n mukainen versio
 - [Docker](https://www.docker.com/get-started) PostgreSQLää varten.
 
 ### Sovelluksen rakentaminen tyhjästä AWS:ään
@@ -58,16 +62,36 @@ Tietojen esittämistä varten on toteutettu yhden sivun (SPA) sovellus, Remix -f
 
 #### Deployaa tarjonta-pulssi sovellus (tarjonta-pulssi -repositoryssä)
 
-`pnpm exec sst deploy --profile=<oph-dev / oph-prod> --stage=<ympäristö>`
+```sh
+aws-vault exec <oph-dev / oph-prod>
+pnpm run cdk:deploy -- -c stage=<ympäristö>
+```
 
 Ympäristö on joko `untuva`, `hahtuva`, `pallero` tai `sade` (= tuotanto)
 Profiili on sade / tuotanto -ympäristössä `oph-prod`, muissa `oph-dev`
+
+`cdk:deploy` ajaa ensin `react-router build`:in, koska SSR-lambda bundlataan käännetystä palvelinbuildista. Deployattavat muutokset kannattaa katsoa ensin läpi komennolla `pnpm run cdk:diff -- -c stage=<ympäristö>`.
+
+Sovellus muodostuu kahdesta stackista: `<ympäristö>-tarjonta-pulssi-app-CERT` (us-east-1, CloudFrontin vaatima sertifikaatti) ja `<ympäristö>-tarjonta-pulssi-app-TARJONTAPULSSI` (eu-west-1, kaikki muu).
 
 Komennon ajamisesta tehty seuraavia huomioita (ajettu macOS:ssä).
 
 - Komentoa ajettaessa kannattaa asettaa ympäristömuuttuja `export NPM_CONFIG_IGNORE_SCRIPTS=true`. Tällöin deploy ei vaadi `pg_config` -työkalua.
 - Tarvittaessa `pg_config` -työkalun voi kopioida PostgreSQL -kontin sisältä (kontin käynnistämiseksi kts. Ajaminen lokaalia PostgreSQL -kantaa vasten) komennolla `docker cp tarjontapulssi-database:/usr/bin/pg_config <kohdehakemisto>`. Vaihtoehtoinen tapa on asentaa PostgreSQL omalle koneelle.
 - `xcrun` -työkalu täytyy olla asennettuna ja oikein konfiguroituna. Tämä onnistuu komennolla `xcode-select --install`.
+
+#### Ensimmäinen deploy SST:stä siirryttäessä
+
+Vanha SST-pohjainen CloudFront-distribuutio ja sen Route53-tietue käyttävät samaa domainia kuin uusi. CloudFront ei salli kahta distribuutiota samalla aliaksella, ja CloudFormation luo uudet resurssit ennen kuin poistaa vanhat — eli samassa päivityksessä tehtynä deploy kaatuisi virheeseen `CNAMEAlreadyExists`.
+
+Siksi ensimmäinen deploy ajetaan **ympäristöä kohden kahdessa vaiheessa**: ensin ilman omaa domainia (jolloin vanhat resurssit ehtivät poistua), sitten normaalisti.
+
+```sh
+pnpm run cdk:deploy -- -c stage=<ympäristö> -c skipDomain=true
+pnpm run cdk:deploy -- -c stage=<ympäristö>
+```
+
+Vaiheiden välissä sovelluksen voi tarkistaa stackin `cloudfronturl`-outputista. Myöhemmillä deployilla `skipDomain`-lippua ei käytetä.
 
 ### Tietokantamigraatiot
 
@@ -83,7 +107,7 @@ Yksikkö- ja integrointi-testit on toteutettu Jest-kirjastolla. Ne voi ajaa kome
 
 ### Ajaminen lokaalisti
 
-Sovellusta voi ajaa lokaalisti kolmella eri tavalla, ts. kolmea eri tietolähdettä vasten: 1. Staattisella testidatalla, 2. Lokaalia PostgreSql -kantaa vasten tai 3. Live-lambda -moodissa testiympäristöä vasten.
+Sovellusta voi ajaa lokaalisti kolmella eri tavalla, ts. kolmea eri tietolähdettä vasten: 1. Staattisella testidatalla, 2. Lokaalia PostgreSql -kantaa vasten tai 3. Testiympäristön tietokantaa vasten SSH-tunnelin läpi.
 Kaikissa kolmessa tapauksessa sovellusta ajetaan osoitteessa `http://localhost:3000`
 
 #### Ajaminen staattista testidataa käyttäen
@@ -106,18 +130,16 @@ Käynnistä tämän jälkeen sovellus lokaalisti komennolla `pnpm run dev:locald
 Komento `pnpm run prepare-test-env` käynnistää lokaalin kannan, suorittaa migraatiot, sekä importoi kantaan valmiiksi testidataa. Kaikki vaiheet voi ajaa tarvittaessa myös erikseen, kts `package.json`. Tämän jälkeen kanta on valmiina käytettäväksi.
 Huom! Datan importointi saattaa kestää useita kymmeniä sekunteja. Importointia ajettaessa päätteelle tulostuu toistuvasti `INSERT 0 1`.
 
-#### Ajaminen live-lambda moodissa
+#### Ajaminen testiympäristön tietokantaa vasten
 
-Live-lambda tilassa sovellusta ajetaan testiympäristöä (untuva tai hahtuva) vasten niin että Web-sovellusta (Remix) sekä Lambda-funktioita ajetaan lokaalisti.
-Huom! tässä tapauksessa ko. testiympäristöä ajetaan dev -moodissa, eikä sovellusta voi käyttää testiympäristössä normaaliin tapaan.
+Sovellusta voi ajaa lokaalisti testiympäristön (untuva tai hahtuva) tietokantaa vasten SSH-tunnelin läpi. VPN täytyy olla päällä.
 
-Ajaminen vaatii SSH -tunnelin ymäristön tietokantaan bastionin läpi. Myös VPN täytyy olla päällä.
 Lisää ensin oman koneen `/etc/hosts` -tiedostoon rivi `127.0.0.1 tarjontapulssi.db.<ympäristö>opintopolku.fi`, jossa ympäristö on `untuva` tai `hahtuva`.
 Tämän jälkeen tunnelin voi avata komennolla `ssh -N -L 5432:tarjontapulssi.db.hahtuvaopintopolku.fi:5432 <käyttäjätunnus>@bastion.<ympäristö>opintopolku.fi`, jossa käyttäjätunnus vastaa omaa käyttäjätunnusta ja ympäristö `untuva` tai `hahtuva`.
 
-Suositeltava tapa on käyttää kahta terminaali-ikkunaa käyttäen siten että toisessa ajetaan Live lambda -kehitysympäristöä ja toisessa Remix -sovellusta. Ainakin Remix -ikkunassa on suositeltavaa käynnistää ensin `aws-vault` -sessio, jolloin MFA -koodi tarvitsee syöttää ainoastaan kerran (muussa tapauksessa koodin syöttämistä vaaditaan säännöllisin väliajoin).
-Käynnistä ensin kehitysympäristö toisessa ikkunassa komennolla `pnpm exec sst dev --profile=oph-dev --stage=<ympäristö>`, jossa ympäristö `untuva` tai `hahtuva`.
-Tämän jälkeen käynnistä Remix-sovellus toisessa ikkunassa komennolla `pnpm run dev`.
+Käynnistä sovellus toisessa ikkunassa komennolla `pnpm run dev:localdb`. Kannan käyttäjätunnus ja salasana täytyy tällöin asettaa tiedostoon `app/servers/amount.localdb.server.ts`.
+
+Huom! SST:n `sst dev` -tyylistä live-lambda -tilaa ei enää ole. Lambda-funktioiden muutokset testataan deployaamalla testiympäristöön.
 
 ##### Aws-vaultin ajaminen
 

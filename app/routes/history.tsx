@@ -1,7 +1,6 @@
-import { type LoaderFunction } from "@remix-run/node";
-import { useLoaderData, useSearchParams } from "@remix-run/react";
 import { format } from "date-fns";
 import { useMemo } from "react";
+import { useLoaderData, useSearchParams, type LoaderFunction } from "react-router";
 
 import { HistorySearchSection } from "~/app/components/HistorySearchSection";
 import { getHistoryAmountData } from "~/app/servers/amount.server";

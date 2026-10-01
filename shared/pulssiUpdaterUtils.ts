@@ -1,4 +1,4 @@
-import { PoolClient } from "pg";
+import type { PoolClient } from "pg";
 
 import { ENTITY_TYPES } from "./constants";
 import { savePulssiAmounts } from "./dbUtils";

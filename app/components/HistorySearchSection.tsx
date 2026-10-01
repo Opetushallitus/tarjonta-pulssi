@@ -14,7 +14,8 @@ import {
   min,
 } from "date-fns";
 import fi from "date-fns/locale/fi";
-import { sortBy, castArray } from "lodash";
+import castArray from "lodash/castArray";
+import sortBy from "lodash/sortBy";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { match, P } from "ts-pattern";
