@@ -43,14 +43,14 @@ const LAMBDA_RUNTIME = Runtime.NODEJS_24_X;
  * joten tämä on tietosuojapäätös — älä pidennä ilman perustetta. Lambdojen omat
  * lokit säilyvät erikseen vuoden, mutta ne eivät sisällä IP-osoitteita.
  */
-const ACCESS_LOG_RETENTION = Duration.days(90);
+const ACCESS_LOG_RETENTION = Duration.days(730);
 
 /**
  * Sama säilytysaika SSR-lambdan lokiryhmälle, koska sinne kirjoitetaan nyt
  * pyyntökohtainen access-rivi IP-osoitteineen (ks. `server/lambda.ts`). Muut
  * lambdat pitävät vuoden retentionsa — ne eivät käsittele IP-osoitteita.
  */
-const SSR_LOG_RETENTION = RetentionDays.THREE_MONTHS;
+const SSR_LOG_RETENTION = RetentionDays.TWO_YEARS;
 
 /** Vite-buildin hajautetut assetit tarjoillaan tämän polun alta. */
 const CLIENT_BUILD_DIR = "build/client";
@@ -107,7 +107,7 @@ export class TarjontaPulssiStack extends Stack {
       entry: "functions/pulssiDataFetcher.ts",
       handler: "handler",
       runtime: LAMBDA_RUNTIME,
-      logRetention: RetentionDays.ONE_YEAR,
+      logRetention: RetentionDays.TWO_YEARS,
       architecture: Architecture.ARM_64,
       timeout: Duration.seconds(30),
       vpc: ophVpc,
@@ -276,7 +276,7 @@ export class TarjontaPulssiStack extends Stack {
       entry: "functions/pulssiUpdater.ts",
       handler: "main",
       runtime: LAMBDA_RUNTIME,
-      logRetention: RetentionDays.ONE_YEAR,
+      logRetention: RetentionDays.TWO_YEARS,
       architecture: Architecture.ARM_64,
       timeout: Duration.seconds(10),
       vpc: ophVpc,
@@ -326,7 +326,7 @@ export class TarjontaPulssiStack extends Stack {
         entry: "functions/pulssiDbMigrator.ts",
         handler: "main",
         runtime: LAMBDA_RUNTIME,
-        logRetention: RetentionDays.ONE_YEAR,
+        logRetention: RetentionDays.TWO_YEARS,
         architecture: Architecture.ARM_64,
         timeout: Duration.minutes(2),
         vpc: ophVpc,
