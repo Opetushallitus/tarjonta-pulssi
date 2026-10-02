@@ -33,6 +33,9 @@ overrides:
 importers:
   .:
     dependencies:
+      "@aws-sdk/client-cloudwatch-logs":
+        specifier: 3.449.0
+        version: 3.449.0(aws-crt@1.19.0)
       "@aws-sdk/client-ssm":
         specifier: ^3.427.0
         version: 3.449.0(aws-crt@1.19.0)
@@ -326,6 +329,13 @@ packages:
         integrity: sha512-1B8mZ79ySqlTEfSQ87KZ0XkmTOKQFMO3lUYUGUtwNTUncJINr6nhRWEjk128oBWwEQnpJ7NfpDPjdfg1ICe3xw==,
       }
     engines: { node: ">=16" }
+
+  "@aws-sdk/client-cloudwatch-logs@3.449.0":
+    resolution:
+      {
+        integrity: sha512-Oz9eV+e0ehaiHTt8w3xk5fDek0DOzKUn8QDBC0BzlO2OozFVKkJ27XiGsqLRUEYjgXH8mv80hOvfoNQK2Y5FDw==,
+      }
+    engines: { node: ">=14.0.0" }
 
   "@aws-sdk/client-ssm@3.449.0":
     resolution:
@@ -7254,6 +7264,7 @@ packages:
       {
         integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==,
       }
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   v8-compile-cache-lib@3.0.1:
@@ -7570,6 +7581,51 @@ snapshots:
   "@aws-lite/sqs@0.2.4": {}
 
   "@aws-lite/ssm@0.2.5": {}
+
+  "@aws-sdk/client-cloudwatch-logs@3.449.0(aws-crt@1.19.0)":
+    dependencies:
+      "@aws-crypto/sha256-browser": 3.0.0
+      "@aws-crypto/sha256-js": 3.0.0
+      "@aws-sdk/client-sts": 3.449.0(aws-crt@1.19.0)
+      "@aws-sdk/core": 3.445.0
+      "@aws-sdk/credential-provider-node": 3.449.0(aws-crt@1.19.0)
+      "@aws-sdk/middleware-host-header": 3.449.0
+      "@aws-sdk/middleware-logger": 3.449.0
+      "@aws-sdk/middleware-recursion-detection": 3.449.0
+      "@aws-sdk/middleware-signing": 3.449.0
+      "@aws-sdk/middleware-user-agent": 3.449.0
+      "@aws-sdk/region-config-resolver": 3.433.0
+      "@aws-sdk/types": 3.449.0
+      "@aws-sdk/util-endpoints": 3.449.0
+      "@aws-sdk/util-user-agent-browser": 3.449.0
+      "@aws-sdk/util-user-agent-node": 3.449.0(aws-crt@1.19.0)
+      "@smithy/config-resolver": 2.0.17
+      "@smithy/fetch-http-handler": 2.2.5
+      "@smithy/hash-node": 2.0.14
+      "@smithy/invalid-dependency": 2.0.12
+      "@smithy/middleware-content-length": 2.0.14
+      "@smithy/middleware-endpoint": 2.1.5
+      "@smithy/middleware-retry": 2.0.19
+      "@smithy/middleware-serde": 2.0.12
+      "@smithy/middleware-stack": 2.0.6
+      "@smithy/node-config-provider": 2.1.4
+      "@smithy/node-http-handler": 2.1.8
+      "@smithy/protocol-http": 3.0.8
+      "@smithy/smithy-client": 2.1.14
+      "@smithy/types": 2.4.0
+      "@smithy/url-parser": 2.0.12
+      "@smithy/util-base64": 2.0.1
+      "@smithy/util-body-length-browser": 2.0.0
+      "@smithy/util-body-length-node": 2.1.0
+      "@smithy/util-defaults-mode-browser": 2.0.18
+      "@smithy/util-defaults-mode-node": 2.0.24
+      "@smithy/util-endpoints": 1.0.3
+      "@smithy/util-retry": 2.0.5
+      "@smithy/util-utf8": 2.0.2
+      tslib: 2.6.2
+      uuid: 8.3.2
+    transitivePeerDependencies:
+      - aws-crt
 
   "@aws-sdk/client-ssm@3.449.0(aws-crt@1.19.0)":
     dependencies:

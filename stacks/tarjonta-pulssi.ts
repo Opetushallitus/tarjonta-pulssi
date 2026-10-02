@@ -39,7 +39,7 @@ import type { Construct } from "constructs";
 const LAMBDA_RUNTIME = Runtime.NODEJS_24_X;
 
 /**
- * Lokien säilytysaika. CloudFrontin access log ja SSR-lambdan pyyntöloki sisältävät
+ * Lokien säilytysaika. CloudFrontin access log ja SSR-lambdan access log sisältävät
  * asiakkaan IP-osoitteen, joten tämä on tietosuojapäätös — älä pidennä ilman
  * perustetta.
  */
@@ -104,12 +104,27 @@ export class TarjontaPulssiStack extends Stack {
      * samanniminen on jo olemassa. Siksi testiympäristöissä ryhmä poistetaan
      * stackin mukana; tuotannossa lokit ovat sen riskin arvoisia.
      */
-    const lambdaLogGroup = (constructId: string, slug: string) =>
+    const namedLogGroup = (constructId: string, logGroupName: string) =>
       new LogGroup(this, constructId, {
-        logGroupName: `/aws/lambda/${stage}-tarjonta-pulssi-${slug}`,
+        logGroupName,
         retention: LOG_RETENTION,
         removalPolicy: stage === "sade" ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
       });
+
+    const lambdaLogGroup = (constructId: string, slug: string) =>
+      namedLogGroup(constructId, `/aws/lambda/${stage}-tarjonta-pulssi-${slug}`);
+
+    /**
+     * SSR-lambdan access log omassa ryhmässään. Erillinen ryhmä siksi, että rivit
+     * ovat puhdasta JSONia ilman Lambdan omaa `timestamp requestId INFO` -etuliitettä,
+     * ja että ryhmän voi ohjata sellaisenaan keskitettyyn lokinkeruuseen ilman että
+     * mukaan tulee sovelluksen virhetulosteita. Nimi on tarkoituksella eri prefiksin
+     * alla kuin lambdojen omat ryhmät, koska Lambda ei omista tätä.
+     */
+    const ssrAccessLogGroup = namedLogGroup(
+      "SiteServerAccessLogGroup",
+      `/tarjonta-pulssi/${stage}/access`
+    );
 
     // Import existing Opintopolku VPC which is defined in cloud-base
     const ophVpc = Vpc.fromLookup(this, "myVPC", {
@@ -168,6 +183,8 @@ export class TarjontaPulssiStack extends Stack {
       environment: {
         DB_API_URL: dbApi.apiEndpoint,
         NODE_ENV: "production",
+        ACCESS_LOG_GROUP: ssrAccessLogGroup.logGroupName,
+        ENVIRONMENT: stage,
       },
       bundling: {
         ...NODE_BUNDLING,
@@ -179,6 +196,8 @@ export class TarjontaPulssiStack extends Stack {
         },
       },
     });
+
+    ssrAccessLogGroup.grantWrite(ssrFunction);
 
     // HUOM: CloudFront allekirjoittaa Function URL -originille menevät pyynnöt
     // (OAC). Lambda ei tue allekirjoittamatonta bodyä, joten PUT/POST vaatisi

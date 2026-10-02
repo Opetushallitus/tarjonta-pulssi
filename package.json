@@ -28,6 +28,7 @@
     "cdk:destroy": "cdk destroy --all"
   },
   "dependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "3.449.0",
     "@aws-sdk/client-ssm": "^3.427.0",
     "@elastic/elasticsearch": "^7.17.0",
     "@emotion/react": "^11.11.1",

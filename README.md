@@ -17,31 +17,62 @@ SSR-lambda on CloudFrontin takana Lambda Function URL:in kautta, suojattuna Orig
 
 ### Lokitus
 
-| Mitä                                                 | Missä                                                      | Säilytys |
-| ---------------------------------------------------- | ---------------------------------------------------------- | -------- |
-| SSR-lambdan pyyntöloki (`"type":"access"`)           | CloudWatch Logs, SSR-lambdan lokiryhmä                     | 2 vuotta |
-| Muiden lambdojen lokit (dbApi, updater, migraattori) | CloudWatch Logs, `/aws/lambda/<stack>-<funktio>`           | 2 vuotta |
-| CloudFront access log                                | S3, stackin `accesslogbucket`-output, prefix `cloudfront/` | 2 vuotta |
+| Mitä                                                    | Missä                                                                | Säilytys |
+| ------------------------------------------------------- | -------------------------------------------------------------------- | -------- |
+| SSR-lambdan access log                                  | CloudWatch Logs, `/tarjonta-pulssi/<ympäristö>/access`               | 2 vuotta |
+| Lambdojen omat lokit (SSR, dbApi, updater, migraattori) | CloudWatch Logs, `/aws/lambda/<ympäristö>-tarjonta-pulssi-<funktio>` | 2 vuotta |
+| CloudFront access log                                   | S3, stackin `accesslogbucket`-output, prefix `cloudfront/`           | 2 vuotta |
 
-#### SSR-lambdan pyyntöloki
+#### SSR-lambdan access log
 
-`server/lambda.ts` kirjoittaa jokaisesta pyynnöstä yhden JSON-rivin: metodi, polku,
-kyselymerkkijono, HTTP-status, kesto millisekunteina, katsojan IP, user-agent ja
-`requestId`. Rivit syntyvät vain HTML- ja data-pyynnöistä — staattiset assetit eivät kulje
-SSR-lambdan kautta. Haku Logs Insightsilla:
+Jokaisesta pyynnöstä kirjoitetaan yksi JSON-rivi omaan lokiryhmäänsä. Kenttien nimet
+noudattavat muiden OPH-palveluiden access log -muotoa, ja arvot ovat merkkijonoja myös
+numeroiden kohdalla:
+
+```json
+{
+  "timestamp": "2026-10-02T12:55:29.678+0300",
+  "responseCode": "200",
+  "request": "GET /history?start=01.01.2026 HTTP/1.1",
+  "responseTime": "28",
+  "requestMethod": "GET",
+  "service": "tarjonta-pulssi",
+  "environment": "hahtuva",
+  "customer": "OPH",
+  "user-agent": "Mozilla/5.0 ...",
+  "x-forwarded-for": "1.2.3.4, 194.136.110.100",
+  "x-real-ip": "194.136.110.100",
+  "remote-ip": "130.176.99.42",
+  "response-size": "69988",
+  "referer": "https://tarjonta-pulssi.hahtuvaopintopolku.fi/",
+  "requestId": "cfdbf397-e863-454f-bb0c-64e27f163058"
+}
+```
+
+`requestId` on lisä muiden palveluiden muotoon nähden. Sillä rivin saa yhdistettyä
+SSR-lambdan omaan lokiryhmään, jonne virheet ja pinolistaukset menevät — sama arvo on myös
+lokivirran nimessä, joka on molemmissa ryhmissä sama.
+
+Rivejä syntyy vain HTML- ja data-pyynnöistä; staattiset assetit eivät kulje SSR-lambdan
+kautta. Haku Logs Insightsilla:
 
 ```
-fields @timestamp, ip, method, path, status, durationMs, userAgent
-| filter type = "access"
+fields @timestamp, `x-real-ip`, request, responseCode, responseTime
 | sort @timestamp desc
 ```
 
-Kaksi asiaa, joiden varassa tämä on:
+Kolme asiaa, joiden varassa tämä on:
 
-- **IP luetaan `X-Forwarded-For` -ketjun viimeisestä alkiosta**, ei
-  `requestContext.http.sourceIp`:stä — jälkimmäinen on CloudFrontin reunapalvelin.
-  CloudFront lisää katsojan IP:n ketjun loppuun, joten vain viimeinen alkio on sellainen,
-  jota selain ei voi väärentää.
+- **Rivi kirjoitetaan PutLogEvents-rajapinnalla, ei `console.log`illa.** Lambda ohjaa
+  stdoutin aina funktion omaan lokiryhmään ja lisää riville `timestamp requestId INFO`
+  -etuliitteen, jolloin tulos ei ole jäsennettävää JSONia. Hinta on yksi API-kutsu
+  pyyntöä kohden, joka odotetaan loppuun ennen vastausta — Lambda jäädyttää
+  suoritusympäristön heti paluun jälkeen, joten kirjoitusta ei voi jättää taustalle.
+  Epäonnistunut lokitus ei kaada pyyntöä, vaan kirjataan `console.error`illa.
+- **`x-real-ip` luetaan `X-Forwarded-For` -ketjun viimeisestä alkiosta**, ei
+  `requestContext.http.sourceIp`:stä — jälkimmäinen on CloudFrontin reunapalvelin ja
+  löytyy kentästä `remote-ip`. CloudFront lisää katsojan IP:n ketjun loppuun, joten vain
+  viimeinen alkio on sellainen, jota selain ei voi väärentää.
 - **User-agent on oikea vain origin request policyn ansiosta.** Jos
   `ALL_VIEWER_EXCEPT_HOST_HEADER` joskus vaihdetaan, CloudFront korvaa otsakkeen arvolla
   `Amazon CloudFront` — mikä rikkoisi myös `isbot`-tunnistuksen `entry.server.tsx`:ssä.
@@ -55,14 +86,15 @@ kokonaan pois. Analysointiin käytännöllisin työkalu on Athena.
 
 #### Tietosuoja
 
-Sekä CloudFrontin access log että SSR-lambdan pyyntöloki **sisältävät asiakkaan
+Sekä CloudFrontin access log että SSR-lambdan access log **sisältävät asiakkaan
 IP-osoitteen**. Säilytysaika on kaikilla lokeilla kaksi vuotta — se on tietosuojapäätös, ei
-tekninen, ja se on tehty tietoisesti. Arvot ovat vakioissa `ACCESS_LOG_RETENTION` (S3:n
-lifecycle-sääntö) ja `SSR_LOG_RETENTION` sekä lambdakohtaisissa `logRetention`-asetuksissa
-tiedostossa `stacks/tarjonta-pulssi.ts`. Evästeitä ei lokiteta kummassakaan.
+tekninen, ja se on tehty tietoisesti. Arvo on vakiossa `LOG_RETENTION` tiedostossa
+`stacks/tarjonta-pulssi.ts`; S3:n lifecycle-sääntö johtaa oman arvonsa siitä. Evästeitä ei
+lokiteta kummassakaan.
 
-Tuotannossa (`sade`) lokiämpäri säilyy vaikka stack poistettaisiin; testiympäristöissä se
-siivotaan stackin mukana.
+Tuotannossa (`sade`) lokiämpäri ja lokiryhmät säilyvät vaikka stack poistettaisiin;
+testiympäristöissä ne siivotaan stackin mukana. Kiinteät nimet tarkoittavat nimittäin, ettei
+ryhmää voi luoda uudelleen jos samanniminen on jo olemassa.
 
 Huom. että **dbApi:lla ei ole omaa access logia**. Se ei ole julkisesti liikennöity rajapinta —
 ainoa kutsuja on SSR-lambda — mutta katvealue on hyvä tiedostaa.
