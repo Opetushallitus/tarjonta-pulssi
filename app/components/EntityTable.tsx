@@ -1,7 +1,7 @@
-import ArrowRightIcon from "@mui/icons-material/ArrowRightOutlined";
 import { Box, styled, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
+import { ArrowRightIcon } from "~/app/icons";
 import { sumUp } from "~/shared/amountDataUtils";
 import type { EntityType, EntityDataWithSubKey, WithAmounts } from "~/shared/types";
 

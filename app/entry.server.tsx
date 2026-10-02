@@ -1,26 +1,24 @@
 /**
- * By default, Remix will handle generating the HTTP Response for you.
- * You are free to delete this file if you'd like to, but if you ever want it revealed again, you can run `pnpm exec remix reveal` ✨
- * For more information, see https://remix.run/file-conventions/entry.server
+ * By default, React Router will handle generating the HTTP Response for you.
+ * You are free to delete this file if you'd like to, but if you ever want it revealed again,
+ * you can run `pnpm exec react-router reveal` ✨
+ * For more information, see https://reactrouter.com/explanation/special-files#entryservertsx
  */
 
-import { PassThrough } from "stream";
+import { PassThrough } from "node:stream";
 
 import { ThemeProvider } from "@mui/material";
-import { createReadableStreamFromReadable, type EntryContext } from "@remix-run/node";
-import { RemixServer } from "@remix-run/react";
+import { createReadableStreamFromReadable } from "@react-router/node";
 import { createInstance } from "i18next";
-// HUOM: "/cjs" on pakollinen. Paketin ESM-build kaatuu SSR-bundlaukseen
-// (top-level await CJS-outputissa). Ks. muistiinpano/commit-viesti.
-import Backend from "i18next-fs-backend/cjs";
-import isbot from "isbot";
+import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
-import { I18nextProvider, initReactI18next, ReportNamespaces } from "react-i18next";
+import { I18nextProvider, initReactI18next, type ReportNamespaces } from "react-i18next";
+import { ServerRouter, type EntryContext } from "react-router";
 
-import i18n from "./i18n";
-import i18next from "./i18next.server";
+import i18nConfig from "./i18n";
+import { getLocale } from "./i18n.server";
 import theme from "./theme";
-import { getTranslationsForLanguage } from "./translations";
+import { translationResources } from "./translations";
 
 const ABORT_DELAY = 5_000;
 
@@ -37,35 +35,27 @@ export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: EntryContext
+  routerContext: EntryContext
 ) {
   const callbackName = isbot(request.headers.get("user-agent")) ? "onAllReady" : "onShellReady";
 
+  // Renderöinnin i18next-instanssi luodaan pyyntökohtaisesti, jotta react-i18next:n
+  // instanssikohtainen tila ei vuoda pyyntöjen välillä.
   const instance = createInstance();
-  const lng = await i18next.getLocale(request);
-  const ns = i18next.getRouteNamespaces(remixContext);
+  await instance.use(initReactI18next).init({
+    ...i18nConfig,
+    lng: getLocale(request),
+    ns: [i18nConfig.defaultNS],
+    resources: translationResources,
+  });
 
-  await instance
-    .use(initReactI18next) // Tell our instance to use react-i18next
-    .use(Backend) // Setup our backend
-    .init({
-      ...i18n, // spread the configuration
-      lng, // The locale we detected above
-      ns, // The namespaces the routes about to render wants to use
-      resources: {
-        fi: getTranslationsForLanguage("fi"),
-        sv: getTranslationsForLanguage("sv"),
-        en: getTranslationsForLanguage("en"),
-      },
-      //debug: true,
-    });
-  return new Promise((resolve, reject) => {
+  return new Promise<Response>((resolve, reject) => {
     let didError = false;
 
     const { pipe, abort } = renderToPipeableStream(
       <I18nextProvider i18n={instance}>
         <ThemeProvider theme={theme}>
-          <RemixServer context={remixContext} url={request.url} abortDelay={ABORT_DELAY} />
+          <ServerRouter context={routerContext} url={request.url} />
         </ThemeProvider>
       </I18nextProvider>,
       {

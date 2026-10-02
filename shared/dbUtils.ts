@@ -1,11 +1,15 @@
 import type { AggregationsFilterAggregate } from "@elastic/elasticsearch/api/types";
-import { Pool } from "pg";
+// pg on CJS-paketti, jonka nimettyjä exportteja Noden ESM-tulkinta ei tunnista,
+// joten arvot otetaan default-exportin kautta.
+import pg from "pg";
 import type { PoolClient, PoolConfig } from "pg";
 
 import { getSSMParam } from "./awsUtils";
 import type { SearchResultsByEntity } from "./elasticUtils";
 import { bucketsAsArr, getSubBuckets } from "./elasticUtils";
 import type { Julkaisutila, ToteutusRow } from "./types";
+
+const { Pool } = pg;
 
 export const DEFAULT_DB_POOL_PARAMS = {
   max: 1,
