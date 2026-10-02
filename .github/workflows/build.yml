@@ -1,4 +1,4 @@
-name: Tarjonta-pulssi
+name: Build
 env:
   HUSKY: 0
 
