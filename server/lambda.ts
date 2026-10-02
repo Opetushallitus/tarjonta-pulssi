@@ -1,10 +1,17 @@
 import { createRequestHandler } from "@react-router/architect";
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
 
-// Käännetty palvelinbundle. Syntyy vasta `react-router build` -ajossa, joten tämä
-// tiedosto on rajattu tsconfigin `exclude`-listalla typecheckin ulkopuolelle —
-// muuten `pnpm run typecheck` kaatuisi tuoreessa klonissa. Mikään muu ei importtaa
-// tätä, joten rajaus ei jätä muuta koodia tarkistamatta.
+// Käännetty palvelinbundle. Syntyy vasta `react-router build` -ajossa, eikä sitä
+// siksi ole olemassa tuoreessa klonissa — eikä CI:ssä, joka ajaa lintin ennen
+// buildia. Tästä seuraa kaksi asiaa:
+//
+//   1. Tiedosto on rajattu tsconfigin `exclude`-listalla typecheckin ulkopuolelle.
+//      Mikään muu ei importtaa tätä, joten rajaus ei jätä muuta koodia
+//      tarkistamatta.
+//   2. `import/no-unresolved` on vaimennettu alta — polku on oikea, tiedosto vain
+//      syntyy myöhemmin.
+//
+// eslint-disable-next-line import/no-unresolved
 import * as build from "../build/server/index.js";
 
 /**
