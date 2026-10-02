@@ -82,7 +82,35 @@ Kolme asiaa, joiden varassa tämä on:
 Kattaa **kaikki** selainpyynnöt — myös staattiset assetit ja välimuistiosumat, jotka eivät
 koskaan päädy SSR-lambdalle. Muoto on gzipattu W3C-tabulaattorieroteltu tiedosto, toimitus
 tunneittain ja best-effort-periaatteella, eli yksittäinen rivi voi saapua viiveellä tai jäädä
-kokonaan pois. Analysointiin käytännöllisin työkalu on Athena.
+kokonaan pois.
+
+##### Kysely Athenalla
+
+Stack luo Glue-tietokannan ja -taulun sekä Athena-työryhmän, joten lokit ovat kyselykelpoisia
+ilman käsityötä. Nimet löytyvät stackin outputeista `athenadatabase` ja `athenaworkgroup`.
+
+Valitse Athena-konsolissa työryhmäksi `tarjonta-pulssi-<ympäristö>` — se määrää kyselytulosten
+sijainnin, eikä sitä voi ohittaa. Tulokset kirjoitetaan lokiämpärin prefiksin
+`athena-results/` alle ja siivotaan 7 vuorokaudessa.
+
+```sql
+SELECT "date", time, request_ip, uri, status, time_taken
+FROM tarjonta_pulssi_hahtuva.cloudfront_access_logs
+WHERE status >= 400
+ORDER BY "date" DESC, time DESC
+LIMIT 100;
+```
+
+Sarakenimet ovat samat kuin AWS:n dokumentaation valmiissa CloudFront-DDL:ssä, joten sieltä
+kopioidut esimerkkikyselyt toimivat sellaisenaan. Huom. että **`date` on Athenassa varattu
+sana** ja vaatii lainausmerkit tai backtickit.
+
+**Kyselyt lukevat koko lokiprefiksin.** Legacy-lokit eivät ole partitioituja — päivämäärä on
+tiedostonimessä eikä hakemistopolussa, ja Athenan partitiot ovat hakemistopohjaisia. Tämän
+palvelun liikennemäärällä se ei ole ongelma: skannattava määrä jää pitkäksi aikaa Athenan 10 MB
+minimiveloituksen alle. Jos liikenne joskus kasvaa merkittävästi, ratkaisu on siirtyä standard
+logging v2:een, joka osaa kirjoittaa Hive-yhteensopivan `year=/month=/day=` -rakenteen ja
+Parquetin — se vaatisi kolmannen stackin us-east-1:een, ks. kommentti `stacks/tarjonta-pulssi.ts`:ssä.
 
 #### Tietosuoja
 

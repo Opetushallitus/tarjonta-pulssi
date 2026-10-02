@@ -1,6 +1,7 @@
 import { CfnOutput, Duration, Fn, RemovalPolicy, Stack, Token, type StackProps } from "aws-cdk-lib";
 import { HttpApi, HttpMethod } from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import { CfnWorkGroup } from "aws-cdk-lib/aws-athena";
 import type { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 import {
   AllowedMethods,
@@ -16,6 +17,15 @@ import { FunctionUrlOrigin, S3BucketOrigin } from "aws-cdk-lib/aws-cloudfront-or
 import { Port, SecurityGroup, SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
 import { Rule, Schedule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
+import {
+  CfnTable,
+  DataFormat,
+  Database,
+  S3Table,
+  S3TableStorage,
+  Schema,
+  type Column,
+} from "aws-cdk-lib/aws-glue";
 import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import {
   Architecture,
@@ -51,6 +61,54 @@ const LOG_RETENTION = RetentionDays.TWO_YEARS;
  * arvot ovat päivälukuja.
  */
 const ACCESS_LOG_RETENTION = Duration.days(LOG_RETENTION);
+
+/** Athenan kyselytulokset kirjoitetaan lokiämpärin tämän prefiksin alle. */
+const ATHENA_RESULTS_PREFIX = "athena-results/";
+
+/** CloudFrontin access logit kirjoitetaan lokiämpärin tämän prefiksin alle. */
+const CLOUDFRONT_LOG_PREFIX = "cloudfront/";
+
+/**
+ * CloudFrontin standard logging (legacy) -kenttäjärjestys. Sarakenimet ovat samat
+ * kuin AWS:n dokumentaation valmiissa DDL:ssä, jotta sieltä kopioidut esimerkkikyselyt
+ * toimivat sellaisenaan. Huom. että `date` on Athenassa varattu sana ja vaatii
+ * kyselyssä backtickit.
+ */
+const CLOUDFRONT_LOG_COLUMNS: Array<Column> = [
+  { name: "date", type: Schema.DATE },
+  { name: "time", type: Schema.STRING },
+  { name: "location", type: Schema.STRING },
+  { name: "bytes", type: Schema.BIG_INT },
+  { name: "request_ip", type: Schema.STRING },
+  { name: "method", type: Schema.STRING },
+  { name: "host", type: Schema.STRING },
+  { name: "uri", type: Schema.STRING },
+  { name: "status", type: Schema.INTEGER },
+  { name: "referrer", type: Schema.STRING },
+  { name: "user_agent", type: Schema.STRING },
+  { name: "query_string", type: Schema.STRING },
+  { name: "cookie", type: Schema.STRING },
+  { name: "result_type", type: Schema.STRING },
+  { name: "request_id", type: Schema.STRING },
+  { name: "host_header", type: Schema.STRING },
+  { name: "request_protocol", type: Schema.STRING },
+  { name: "request_bytes", type: Schema.BIG_INT },
+  { name: "time_taken", type: Schema.FLOAT },
+  { name: "xforwarded_for", type: Schema.STRING },
+  { name: "ssl_protocol", type: Schema.STRING },
+  { name: "ssl_cipher", type: Schema.STRING },
+  { name: "response_result_type", type: Schema.STRING },
+  { name: "http_version", type: Schema.STRING },
+  { name: "fle_status", type: Schema.STRING },
+  { name: "fle_encrypted_fields", type: Schema.INTEGER },
+  { name: "c_port", type: Schema.INTEGER },
+  { name: "time_to_first_byte", type: Schema.FLOAT },
+  { name: "x_edge_detailed_result_type", type: Schema.STRING },
+  { name: "sc_content_type", type: Schema.STRING },
+  { name: "sc_content_len", type: Schema.BIG_INT },
+  { name: "sc_range_start", type: Schema.BIG_INT },
+  { name: "sc_range_end", type: Schema.BIG_INT },
+];
 
 /** Vite-buildin hajautetut assetit tarjoillaan tämän polun alta. */
 const CLIENT_BUILD_DIR = "build/client";
@@ -227,12 +285,64 @@ export class TarjontaPulssiStack extends Stack {
       objectOwnership: ObjectOwnership.OBJECT_WRITER,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
-      lifecycleRules: [{ expiration: ACCESS_LOG_RETENTION }],
+      lifecycleRules: [
+        { prefix: CLOUDFRONT_LOG_PREFIX, expiration: ACCESS_LOG_RETENTION },
+        // Athenan kyselytulokset ovat välitulosteita, eivät lokidataa.
+        { prefix: ATHENA_RESULTS_PREFIX, expiration: Duration.days(7) },
+      ],
       // Tuotannon lokit ovat ainoa kopio käyttöhistoriasta, joten niitä ei
       // poisteta stackin mukana. Testiympäristöissä siivous on tärkeämpää.
       ...(stage === "sade"
         ? { removalPolicy: RemovalPolicy.RETAIN }
         : { removalPolicy: RemovalPolicy.DESTROY, autoDeleteObjects: true }),
+    });
+
+    // CloudFrontin lokit luettaviksi Athenalla: Glue-katalogi kuvaa TSV-muodon ja
+    // työryhmä määrää mihin kyselyjen tulokset kirjoitetaan.
+    //
+    // HUOM: legacy-lokit eivät ole partitioituja — päivämäärä on tiedostonimessä
+    // eikä hakemistopolussa — joten jokainen kysely lukee koko prefiksin läpi.
+    // Tämän palvelun liikennemäärällä se ei ole ongelma. Partitiointi edellyttäisi
+    // siirtymistä standard logging v2:een, ks. README.
+    const logsDatabase = new Database(this, "LogsDatabase", {
+      databaseName: `tarjonta_pulssi_${stage}`,
+    });
+
+    const cloudFrontLogsTable = new S3Table(this, "CloudFrontAccessLogTable", {
+      database: logsDatabase,
+      tableName: "cloudfront_access_logs",
+      storage: S3TableStorage.fromBucket(accessLogBucket),
+      s3Prefix: CLOUDFRONT_LOG_PREFIX,
+      dataFormat: DataFormat.TSV,
+      compressed: true,
+      columns: CLOUDFRONT_LOG_COLUMNS,
+      // CloudFront kirjoittaa jokaisen tiedoston alkuun kaksi otsikkoriviä
+      // (#Version ja #Fields).
+      parameters: { "skip.header.line.count": "2" },
+    });
+
+    // `DataFormat.TSV` valitsee LazySimpleSerDen mutta ei aseta kenttäerotinta,
+    // jolloin käytössä on sen oletus `\001` eikä sarkain — koko rivi luettaisiin
+    // yhteen sarakkeeseen. Vastaa AWS:n DDL:n kohtaa
+    // `ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'`.
+    (cloudFrontLogsTable.node.defaultChild as CfnTable).addPropertyOverride(
+      "TableInput.StorageDescriptor.SerdeInfo.Parameters",
+      { "field.delim": "\t", "serialization.format": "\t" }
+    );
+
+    const logsWorkGroup = new CfnWorkGroup(this, "LogsWorkGroup", {
+      name: `tarjonta-pulssi-${stage}`,
+      description: `Tarjonta-pulssin lokikyselyt (${stage})`,
+      // Sallii työryhmän poiston vaikka kyselyhistoriaa olisi kertynyt.
+      recursiveDeleteOption: true,
+      workGroupConfiguration: {
+        // Estää käyttäjää ohittamasta tulossijaintia omalla asetuksellaan.
+        enforceWorkGroupConfiguration: true,
+        resultConfiguration: {
+          outputLocation: accessLogBucket.s3UrlForObject(ATHENA_RESULTS_PREFIX),
+          encryptionConfiguration: { encryptionOption: "SSE_S3" },
+        },
+      },
     });
 
     const staticBehavior: BehaviorOptions = {
@@ -248,7 +358,7 @@ export class TarjontaPulssiStack extends Stack {
       priceClass: PriceClass.PRICE_CLASS_100,
       enableLogging: true,
       logBucket: accessLogBucket,
-      logFilePrefix: "cloudfront/",
+      logFilePrefix: CLOUDFRONT_LOG_PREFIX,
       // Oletus, mutta kirjoitettu näkyviin: evästeitä ei lokiteta.
       logIncludesCookies: false,
       defaultBehavior: {
@@ -432,6 +542,8 @@ export class TarjontaPulssiStack extends Stack {
     });
     new CfnOutput(this, "ApiUrl", { value: dbApi.apiEndpoint });
     new CfnOutput(this, "accesslogbucket", { value: accessLogBucket.bucketName });
+    new CfnOutput(this, "athenadatabase", { value: logsDatabase.databaseName });
+    new CfnOutput(this, "athenaworkgroup", { value: logsWorkGroup.name });
     if (customDomain) {
       new CfnOutput(this, "customurl", { value: `https://${customDomain.domainName}` });
     }
