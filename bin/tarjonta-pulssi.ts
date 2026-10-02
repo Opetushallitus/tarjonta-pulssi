@@ -21,9 +21,15 @@ const app = new App();
 const stage: unknown = app.node.tryGetContext("stage");
 if (!isStage(stage)) {
   throw new Error(
-    `Unknown stack environment (stage) "${String(stage)}"! ` +
-      `Anna ympäristö kontekstina, esim. \`cdk deploy --all -c stage=untuva\`. ` +
-      `Sallitut arvot: ${Object.keys(STAGES).join(", ")}.`
+    [
+      `Unknown stack environment (stage) "${String(stage)}"!`,
+      `Anna ympäristö kontekstina, esim. \`pnpm run cdk:deploy -c stage=untuva\`.`,
+      `Sallitut arvot: ${Object.keys(STAGES).join(", ")}.`,
+      "",
+      "Jos annoit sen jo, tarkista ettet käyttänyt `--`-erotinta: pnpm välittää sen",
+      "eteenpäin, ja CDK:n argumenttijäsennin lopettaa valitsimien lukemisen siihen,",
+      "jolloin `-c` jää huomiotta. Oikein: `pnpm run cdk:deploy -c stage=untuva`.",
+    ].join("\n")
   );
 }
 
@@ -33,7 +39,29 @@ const skipDomain = String(app.node.tryGetContext("skipDomain")) === "true";
 
 const { hostedZone } = STAGES[stage];
 const domainName = `tarjonta-pulssi.${hostedZone}`;
+
+// CDK täyttää tämän aktiivisesta AWS-sessiosta. Ilman sitä stackin ympäristö jäisi
+// määrittelemättä, ja vika ilmenisi vasta VPC-haussa vaikeasti tulkittavana
+// virheenä — myös silloin kun syy on pelkkä kirjoitusvirhe profiilin nimessä.
 const account = process.env.CDK_DEFAULT_ACCOUNT;
+if (!account) {
+  const profile = stage === "sade" ? "oph-prod" : "oph-dev";
+  throw new Error(
+    [
+      "AWS-tiliä ei saatu ratkaistua (CDK_DEFAULT_ACCOUNT on tyhjä).",
+      "",
+      "Komento on ajettava voimassa olevilla tunnuksilla, esim:",
+      `  pnpm run cdk:deploy -c stage=${stage} --profile ${profile}`,
+      "",
+      "tai aws-vault-session sisällä (ei kysy MFA-koodia toistuvasti):",
+      `  aws-vault exec ${profile}`,
+      `  pnpm run cdk:deploy -c stage=${stage}`,
+      "",
+      "Huom. että CDK ei valita olemattomasta tai vanhentuneesta profiilista —",
+      "se jättää tilin vain tyhjäksi, joten tarkista myös profiilin nimi.",
+    ].join("\n")
+  );
+}
 
 // Stackin nimi on sama kuin SST:n luoman stackin, jotta deploy päivittää
 // olemassa olevan stackin eikä luo rinnakkaista.

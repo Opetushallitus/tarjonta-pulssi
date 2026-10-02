@@ -19,9 +19,9 @@ SSR-lambda on CloudFrontin takana Lambda Function URL:in kautta, suojattuna Orig
 
 | Mitä                                                 | Missä                                                      | Säilytys |
 | ---------------------------------------------------- | ---------------------------------------------------------- | -------- |
-| SSR-lambdan pyyntöloki (`"type":"access"`)           | CloudWatch Logs, SSR-lambdan lokiryhmä                     | 90 vrk   |
-| Muiden lambdojen lokit (dbApi, updater, migraattori) | CloudWatch Logs, `/aws/lambda/<stack>-<funktio>`           | 365 vrk  |
-| CloudFront access log                                | S3, stackin `accesslogbucket`-output, prefix `cloudfront/` | 90 vrk   |
+| SSR-lambdan pyyntöloki (`"type":"access"`)           | CloudWatch Logs, SSR-lambdan lokiryhmä                     | 2 vuotta |
+| Muiden lambdojen lokit (dbApi, updater, migraattori) | CloudWatch Logs, `/aws/lambda/<stack>-<funktio>`           | 2 vuotta |
+| CloudFront access log                                | S3, stackin `accesslogbucket`-output, prefix `cloudfront/` | 2 vuotta |
 
 #### SSR-lambdan pyyntöloki
 
@@ -56,10 +56,10 @@ kokonaan pois. Analysointiin käytännöllisin työkalu on Athena.
 #### Tietosuoja
 
 Sekä CloudFrontin access log että SSR-lambdan pyyntöloki **sisältävät asiakkaan
-IP-osoitteen**, joten molempien säilytysaika on 90 vuorokautta. Se on tietosuojapäätös, ei
-tekninen — vakiot `ACCESS_LOG_RETENTION` ja `SSR_LOG_RETENTION` tiedostossa
-`stacks/tarjonta-pulssi.ts`. Muut lambdat pitävät vuoden retentionsa, koska ne eivät käsittele
-IP-osoitteita. Evästeitä ei lokiteta kummassakaan.
+IP-osoitteen**. Säilytysaika on kaikilla lokeilla kaksi vuotta — se on tietosuojapäätös, ei
+tekninen, ja se on tehty tietoisesti. Arvot ovat vakioissa `ACCESS_LOG_RETENTION` (S3:n
+lifecycle-sääntö) ja `SSR_LOG_RETENTION` sekä lambdakohtaisissa `logRetention`-asetuksissa
+tiedostossa `stacks/tarjonta-pulssi.ts`. Evästeitä ei lokiteta kummassakaan.
 
 Tuotannossa (`sade`) lokiämpäri säilyy vaikka stack poistettaisiin; testiympäristöissä se
 siivotaan stackin mukana.
@@ -115,14 +115,28 @@ ainoa kutsuja on SSR-lambda — mutta katvealue on hyvä tiedostaa.
 #### Deployaa tarjonta-pulssi sovellus (tarjonta-pulssi -repositoryssä)
 
 ```sh
-aws-vault exec <oph-dev / oph-prod>
-pnpm run cdk:deploy -- -c stage=<ympäristö>
+pnpm run cdk:deploy -c stage=<ympäristö> --profile <oph-dev / oph-prod>
 ```
 
 Ympäristö on joko `untuva`, `hahtuva`, `pallero` tai `sade` (= tuotanto)
 Profiili on sade / tuotanto -ympäristössä `oph-prod`, muissa `oph-dev`
 
-`cdk:deploy` ajaa ensin `react-router build`:in, koska SSR-lambda bundlataan käännetystä palvelinbuildista. Deployattavat muutokset kannattaa katsoa ensin läpi komennolla `pnpm run cdk:diff -- -c stage=<ympäristö>`.
+Deploy **vaatii voimassa olevat AWS-tunnukset**: CDK päättelee niistä kohdetilin, eikä
+stackia voi syntetisoida ilman sitä. Jos ajat useita komentoja peräkkäin, aws-vault-sessio
+säästää toistuvilta MFA-kyselyiltä, jolloin `--profile` on tarpeeton:
+
+```sh
+aws-vault exec <oph-dev / oph-prod>
+pnpm run cdk:deploy -c stage=<ympäristö>
+```
+
+`cdk:deploy` ajaa ensin `react-router build`:in, koska SSR-lambda bundlataan käännetystä palvelinbuildista. Deployattavat muutokset kannattaa katsoa ensin läpi komennolla `pnpm run cdk:diff -c stage=<ympäristö>`.
+
+> **Älä käytä `--`-erotinta** näissä komennoissa. pnpm välittää sen sellaisenaan eteenpäin, jolloin komennoksi tulee `cdk deploy --all -- -c stage=…`. CDK:n argumenttijäsennin lopettaa valitsimien lukemisen `--`:ään, joten `-c` jää huomiotta ja deploy kaatuu virheeseen `Unknown stack environment (stage) "undefined"`.
+>
+> Jos tunnukset puuttuvat tai profiilin nimi on väärin, CDK **ei valita siitä** vaan jättää
+> kohdetilin tyhjäksi. Stack tarkistaa tämän ja kaatuu selkeään virheeseen; ilman tarkistusta
+> vika ilmenisi vasta VPC-haussa muodossa `Cannot retrieve value from context provider vpc-provider`.
 
 Sovellus muodostuu kahdesta stackista: `<ympäristö>-tarjonta-pulssi-app-CERT` (us-east-1, CloudFrontin vaatima sertifikaatti) ja `<ympäristö>-tarjonta-pulssi-app-TARJONTAPULSSI` (eu-west-1, kaikki muu).
 
@@ -139,8 +153,8 @@ Vanha SST-pohjainen CloudFront-distribuutio ja sen Route53-tietue käyttävät s
 Siksi ensimmäinen deploy ajetaan **ympäristöä kohden kahdessa vaiheessa**: ensin ilman omaa domainia (jolloin vanhat resurssit ehtivät poistua), sitten normaalisti.
 
 ```sh
-pnpm run cdk:deploy -- -c stage=<ympäristö> -c skipDomain=true
-pnpm run cdk:deploy -- -c stage=<ympäristö>
+pnpm run cdk:deploy -c stage=<ympäristö> -c skipDomain=true
+pnpm run cdk:deploy -c stage=<ympäristö>
 ```
 
 Vaiheiden välissä sovelluksen voi tarkistaa stackin `cloudfronturl`-outputista. Myöhemmillä deployilla `skipDomain`-lippua ei käytetä.
