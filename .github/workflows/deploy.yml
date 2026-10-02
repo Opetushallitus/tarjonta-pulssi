@@ -101,6 +101,6 @@ jobs:
       - name: Update deployment metadata
         run: |
           DEPLOY_TIMESTAMP=`TZ='Europe/Helsinki' date +'%Y-%m-%d %H:%M:%S %Z'`
-          aws dynamodb put-item --table-name builds --item "{\"Service\": {\"S\": \"tarjonta-pulssi\"}, \"Build\": {\"S\": \"ga-${GITHUB_RUN_NUMBER}\"}, \"Branch\": {\"S\": \"${BRANCH}\"}, \"Commit\": {\"S\": \"${GITHUB_SHA}\"}, \"Time\": {\"S\": \"${BUILD_TIMESTAMP}\"}}" --condition-expression "attribute_not_exists(Id)" --region eu-west-1
+          aws dynamodb put-item --table-name builds --item "{\"Service\": {\"S\": \"tarjonta-pulssi\"}, \"Build\": {\"S\": \"ga-${GITHUB_RUN_NUMBER}\"}, \"Branch\": {\"S\": \"${GITHUB_REF_NAME}\"}, \"Commit\": {\"S\": \"${GITHUB_SHA}\"}, \"Time\": {\"S\": \"${BUILD_TIMESTAMP}\"}}" --condition-expression "attribute_not_exists(Id)" --region eu-west-1
           aws dynamodb put-item --table-name deployments --item "{\"EnvService\": {\"S\": \"${{ inputs.stage }}-tarjonta-pulssi\"}, \"Build\": {\"S\": \"ga-$GITHUB_RUN_NUMBER\"}, \"User\": {\"S\": \"$GITHUB_TRIGGERING_ACTOR\"}, \"Time\": {\"S\": \"$DEPLOY_TIMESTAMP\"}}" --region eu-west-1
           aws dynamodb put-item --table-name services --item "{\"EnvService\": {\"S\": \"${{ inputs.stage }}-tarjonta-pulssi\"}, \"LatestDeployedBuild\": {\"S\": \"ga-$GITHUB_RUN_NUMBER\"}}" --region eu-west-1
