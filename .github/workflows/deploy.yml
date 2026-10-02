@@ -1,0 +1,63 @@
+name: Deploy
+
+# HUOM: Tämä on toistaiseksi stub, joka ei deployaa mitään.
+#
+# Workflow on mainissa siksi, että GitHub näyttää "Run workflow" -painikkeen vain
+# jos workflow_dispatch-workflow löytyy oletushaarasta. Kun painike on olemassa,
+# varsinaista deploy-logiikkaa voi kehittää ja ajaa feature-haarasta käsin.
+
+run-name: Deploy ${{ inputs.stage }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "Ympäristö johon deploy tehdään"
+        required: true
+        type: choice
+        # Oletuksena vaarattomin ympäristö, jotta vahinkolaukaisu ei osu tuotantoon.
+        default: untuva
+        options:
+          - untuva
+          - hahtuva
+          - pallero
+          - sade
+
+concurrency:
+  # Yksi deploy kerrallaan ympäristöä kohden. Eri ympäristöt saavat edetä rinnakkain,
+  # eikä käynnissä olevaa deployta keskeytetä kesken CloudFormation-päivityksen.
+  group: deploy-${{ inputs.stage }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.stage }}
+    runs-on: ubuntu-latest
+    env:
+      # Syöte välitetään ympäristömuuttujana eikä interpoloida suoraan skriptiin.
+      # Tässä se on tarpeetonta, koska GitHub validoi choice-syötteen arvot, mutta
+      # tapa kannattaa vakiinnuttaa nyt — ennen kuin skripti alkaa ajaa komentoja.
+      STAGE: ${{ inputs.stage }}
+    steps:
+      - name: Näytä valittu ympäristö
+        run: |
+          {
+            echo "## Deploy-stub"
+            echo
+            echo "Valittu ympäristö: \`$STAGE\`"
+            echo
+            echo "Tämä workflow ei vielä deployaa mitään."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "Valittu ympäristö: $STAGE"
+
+      # TODO: varsinainen deploy. Tulossa suunnilleen tässä järjestyksessä:
+      #   1. actions/checkout + pnpm/action-setup + actions/setup-node (pinnattuina
+      #      SHA:han, ks. build.yml ja renovate.json)
+      #   2. pnpm install
+      #   3. AWS-tunnukset OIDC:llä (aws-actions/configure-aws-credentials),
+      #      rooli valitaan ympäristön mukaan — untuva/hahtuva/pallero eri tilillä
+      #      kuin sade. Vaatii `permissions: id-token: write`.
+      #   4. pnpm run cdk:deploy -c stage=$STAGE
+      #
+      # Harkittavaksi myös GitHub Environments (`environment: ${{ inputs.stage }}`),
+      # jolloin sadelle voi vaatia erillisen hyväksynnän ennen ajoa.
