@@ -1,12 +1,6 @@
 name: Deploy
 
-# HUOM: Tämä on toistaiseksi stub, joka ei deployaa mitään.
-#
-# Workflow on mainissa siksi, että GitHub näyttää "Run workflow" -painikkeen vain
-# jos workflow_dispatch-workflow löytyy oletushaarasta. Kun painike on olemassa,
-# varsinaista deploy-logiikkaa voi kehittää ja ajaa feature-haarasta käsin.
-
-run-name: Deploy ${{ inputs.stage }}
+run-name: Deploy ${{ inputs.stage }}${{ inputs.skipDomain && ' (ilman domainia)' || '' }}
 
 on:
   workflow_dispatch:
@@ -29,35 +23,83 @@ concurrency:
   group: deploy-${{ inputs.stage }}
   cancel-in-progress: false
 
+permissions:
+  # Pakollinen OIDC-tunnistautumiselle: ilman tätä AWS-roolia ei voi ottaa käyttöön.
+  id-token: write
+  contents: read
+
 jobs:
   deploy:
     name: Deploy ${{ inputs.stage }}
     runs-on: ubuntu-latest
     env:
-      # Syöte välitetään ympäristömuuttujana eikä interpoloida suoraan skriptiin.
-      # Tässä se on tarpeetonta, koska GitHub validoi choice-syötteen arvot, mutta
-      # tapa kannattaa vakiinnuttaa nyt — ennen kuin skripti alkaa ajaa komentoja.
+      # Syötteet välitetään ympäristömuuttujina eikä interpoloida suoraan skriptiin.
       STAGE: ${{ inputs.stage }}
+      SKIP_DOMAIN: ${{ inputs.skipDomain }}
     steps:
-      - name: Näytä valittu ympäristö
-        run: |
-          {
-            echo "## Deploy-stub"
-            echo
-            echo "Valittu ympäristö: \`$STAGE\`"
-            echo
-            echo "Tämä workflow ei vielä deployaa mitään."
-          } >> "$GITHUB_STEP_SUMMARY"
-          echo "Valittu ympäristö: $STAGE"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      # TODO: varsinainen deploy. Tulossa suunnilleen tässä järjestyksessä:
-      #   1. actions/checkout + pnpm/action-setup + actions/setup-node (pinnattuina
-      #      SHA:han, ks. build.yml ja renovate.json)
-      #   2. pnpm install
-      #   3. AWS-tunnukset OIDC:llä (aws-actions/configure-aws-credentials),
-      #      rooli valitaan ympäristön mukaan — untuva/hahtuva/pallero eri tilillä
-      #      kuin sade. Vaatii `permissions: id-token: write`.
-      #   4. pnpm run cdk:deploy -c stage=$STAGE
-      #
-      # Harkittavaksi myös GitHub Environments (`environment: ${{ inputs.stage }}`),
-      # jolloin sadelle voi vaatia erillisen hyväksynnän ennen ajoa.
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
+        name: Install pnpm
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # Rooli valitaan ympäristön mukaan: untuva, hahtuva ja pallero ovat samalla
+      # kehitystilillä, sade omallaan. Ehdot on kirjoitettu erikseen tarkoituksella —
+      # jos salaisuus puuttuu, askel kaatuu sen sijaan että käyttäisi väärän tilin roolia.
+      - name: Configure AWS credentials (dev)
+        if: ${{ inputs.stage == 'untuva' || inputs.stage == 'hahtuva' || inputs.stage == 'pallero' }}
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OPINTOPOLKU_DEV_ROLE_ARN }}
+          role-session-name: ${{ inputs.stage }}-tarjonta-pulssi-deploy
+          aws-region: eu-west-1
+
+      - name: Configure AWS credentials (prod)
+        if: ${{ inputs.stage == 'sade' }}
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OPINTOPOLKU_PROD_ROLE_ARN }}
+          role-session-name: ${{ inputs.stage }}-tarjonta-pulssi-deploy
+          aws-region: eu-west-1
+
+      # Varmistaa että jompikumpi yllä olevista askelista todella ajoi. Jos valikkoon
+      # lisätään ympäristö eikä ehtoja päivitetä, deploy kaatuisi muuten vasta CDK:n
+      # hämärään "CDK_DEFAULT_ACCOUNT on tyhjä" -virheeseen.
+      - name: Varmista AWS-tunnistautuminen
+        run: |
+          aws sts get-caller-identity > identity.json
+          cat identity.json
+          {
+            echo "## Deploy: \`$STAGE\`"
+            echo
+            echo "- AWS-tili: \`$(jq -r .Account identity.json)\`"
+            echo "- Rooli: \`$(jq -r .Arn identity.json)\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          rm identity.json
+
+      - name: Deploy
+        run: |
+          # `--require-approval never`, koska stack muuttaa IAM-oikeuksia ja security
+          # group -sääntöjä. Ilman tätä CDK jäisi odottamaan vahvistusta, jota
+          # ei-interaktiivisessa ajossa ei voi antaa.
+          pnpm run cdk:deploy -c "stage=$STAGE" --require-approval never
+
+      - name: Login to utility
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+        with:
+          role-to-assume: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
+          role-session-name: ${{ inputs.application }}-update-metadata
+          aws-region: eu-west-1
+
+      - name: Update deployment metadata
+        run: |
+          DEPLOY_TIMESTAMP=`TZ='Europe/Helsinki' date +'%Y-%m-%d %H:%M:%S %Z'`
+          aws dynamodb put-item --table-name deployments --item "{\"EnvService\": {\"S\": \"${{ inputs.stage }}-tarjonta-pulssi\"}, \"Build\": {\"S\": \"ga-$GITHUB_RUN_NUMBER\"}, \"User\": {\"S\": \"$GITHUB_TRIGGERING_ACTOR\"}, \"Time\": {\"S\": \"$DEPLOY_TIMESTAMP\"}}" --region eu-west-1
+          aws dynamodb put-item --table-name services --item "{\"EnvService\": {\"S\": \"${{ inputs.stage }}-tarjonta-pulssi\"}, \"LatestDeployedBuild\": {\"S\": \"ga-$GITHUB_RUN_NUMBER\"}}" --region eu-west-1
