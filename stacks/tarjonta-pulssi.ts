@@ -25,7 +25,7 @@ import {
   Runtime,
 } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction, OutputFormat, type BundlingOptions } from "aws-cdk-lib/aws-lambda-nodejs";
-import { RetentionDays } from "aws-cdk-lib/aws-logs";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { AaaaRecord, ARecord, HostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
 import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
 import { BlockPublicAccess, Bucket, ObjectOwnership } from "aws-cdk-lib/aws-s3";
@@ -39,18 +39,18 @@ import type { Construct } from "constructs";
 const LAMBDA_RUNTIME = Runtime.NODEJS_24_X;
 
 /**
- * CloudFrontin access login säilytysaika. Loki sisältää asiakkaan IP-osoitteen,
- * joten tämä on tietosuojapäätös — älä pidennä ilman perustetta. Lambdojen omat
- * lokit säilyvät erikseen vuoden, mutta ne eivät sisällä IP-osoitteita.
+ * Lokien säilytysaika. CloudFrontin access log ja SSR-lambdan pyyntöloki sisältävät
+ * asiakkaan IP-osoitteen, joten tämä on tietosuojapäätös — älä pidennä ilman
+ * perustetta.
  */
-const ACCESS_LOG_RETENTION = Duration.days(730);
+const LOG_RETENTION = RetentionDays.TWO_YEARS;
 
 /**
- * Sama säilytysaika SSR-lambdan lokiryhmälle, koska sinne kirjoitetaan nyt
- * pyyntökohtainen access-rivi IP-osoitteineen (ks. `server/lambda.ts`). Muut
- * lambdat pitävät vuoden retentionsa — ne eivät käsittele IP-osoitteita.
+ * Sama arvo S3:n lifecycle-säännölle, joka ottaa `Duration`in CloudWatchin enumin
+ * sijaan. Johdettu, jotta arvot eivät pääse erkaantumaan: `RetentionDays`-enumin
+ * arvot ovat päivälukuja.
  */
-const SSR_LOG_RETENTION = RetentionDays.TWO_YEARS;
+const ACCESS_LOG_RETENTION = Duration.days(LOG_RETENTION);
 
 /** Vite-buildin hajautetut assetit tarjoillaan tämän polun alta. */
 const CLIENT_BUILD_DIR = "build/client";
@@ -94,6 +94,23 @@ export class TarjontaPulssiStack extends Stack {
 
     const { stage, publicHostedZone, customDomain } = props;
 
+    /**
+     * Lambdan lokiryhmä kiinteällä nimellä. Oletuksena Lambda luo ryhmän nimellä
+     * `/aws/lambda/<funktion nimi>`, ja CDK:n generoima funktionimi sisältää
+     * satunnaisen loppuosan — lokit siis vaihtaisivat paikkaa jos funktio joskus
+     * korvataan, ja nimistä on hankala päätellä mikä lambda on kyseessä.
+     *
+     * Kiinteä nimi tarkoittaa myös, ettei ryhmää voi luoda uudelleen jos
+     * samanniminen on jo olemassa. Siksi testiympäristöissä ryhmä poistetaan
+     * stackin mukana; tuotannossa lokit ovat sen riskin arvoisia.
+     */
+    const lambdaLogGroup = (constructId: string, slug: string) =>
+      new LogGroup(this, constructId, {
+        logGroupName: `/aws/lambda/${stage}-tarjonta-pulssi-${slug}`,
+        retention: LOG_RETENTION,
+        removalPolicy: stage === "sade" ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+      });
+
     // Import existing Opintopolku VPC which is defined in cloud-base
     const ophVpc = Vpc.fromLookup(this, "myVPC", {
       vpcName: `opintopolku-vpc-${stage}`,
@@ -107,7 +124,7 @@ export class TarjontaPulssiStack extends Stack {
       entry: "functions/pulssiDataFetcher.ts",
       handler: "handler",
       runtime: LAMBDA_RUNTIME,
-      logRetention: RetentionDays.TWO_YEARS,
+      logGroup: lambdaLogGroup("PulssiDataFetcherLogGroup", "db-api"),
       architecture: Architecture.ARM_64,
       timeout: Duration.seconds(30),
       vpc: ophVpc,
@@ -144,7 +161,7 @@ export class TarjontaPulssiStack extends Stack {
       entry: "server/lambda.ts",
       handler: "handler",
       runtime: LAMBDA_RUNTIME,
-      logRetention: SSR_LOG_RETENTION,
+      logGroup: lambdaLogGroup("SiteServerLogGroup", "ssr"),
       architecture: Architecture.ARM_64,
       memorySize: 1024,
       timeout: Duration.seconds(20),
@@ -276,7 +293,7 @@ export class TarjontaPulssiStack extends Stack {
       entry: "functions/pulssiUpdater.ts",
       handler: "main",
       runtime: LAMBDA_RUNTIME,
-      logRetention: RetentionDays.TWO_YEARS,
+      logGroup: lambdaLogGroup("TarjontaPulssiUpdaterLogGroup", "updater"),
       architecture: Architecture.ARM_64,
       timeout: Duration.seconds(10),
       vpc: ophVpc,
@@ -326,7 +343,7 @@ export class TarjontaPulssiStack extends Stack {
         entry: "functions/pulssiDbMigrator.ts",
         handler: "main",
         runtime: LAMBDA_RUNTIME,
-        logRetention: RetentionDays.TWO_YEARS,
+        logGroup: lambdaLogGroup("TarjontaPulssiDbMigratorLogGroup", "db-migrator"),
         architecture: Architecture.ARM_64,
         timeout: Duration.minutes(2),
         vpc: ophVpc,
