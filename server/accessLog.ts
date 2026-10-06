@@ -5,7 +5,7 @@ import {
   CreateLogStreamCommand,
   PutLogEventsCommand,
 } from "@aws-sdk/client-cloudwatch-logs";
-import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import type { APIGatewayProxyEventV2 } from "aws-lambda";
 import { formatInTimeZone } from "date-fns-tz";
 
 import { DEFAULT_TIMEZONE } from "~/shared/constants";
@@ -44,7 +44,10 @@ const ensureLogStream = () => {
 
 export interface AccessLogContext {
   event: APIGatewayProxyEventV2;
-  response?: APIGatewayProxyStructuredResultV2;
+  /** Puuttuu, jos käsittelijä kaatui ennen vastausta. */
+  statusCode?: number;
+  /** Vastauksen bodyn koko tavuina. */
+  responseSize: number;
   durationMs: number;
 }
 
@@ -60,24 +63,24 @@ export interface AccessLogContext {
 const getViewerIp = (event: APIGatewayProxyEventV2) =>
   event.headers["x-forwarded-for"]?.split(",").pop()?.trim() ?? event.requestContext.http.sourceIp;
 
-const getResponseSize = (response?: APIGatewayProxyStructuredResultV2) =>
-  response?.body
-    ? Buffer.byteLength(response.body, response.isBase64Encoded ? "base64" : "utf8")
-    : 0;
-
 /**
  * Kenttien nimet ja se, että arvot ovat merkkijonoja myös numeroiden kohdalla,
  * noudattavat muiden OPH-palveluiden access log -muotoa. `requestId` on lisä: sillä
  * rivin saa yhdistettyä SSR-lambdan omaan lokiin, jonne virheet ja pinolistaukset
  * menevät.
  */
-export const buildAccessLogEntry = ({ event, response, durationMs }: AccessLogContext) => {
+export const buildAccessLogEntry = ({
+  event,
+  statusCode,
+  responseSize,
+  durationMs,
+}: AccessLogContext) => {
   const { http, requestId } = event.requestContext;
   const query = event.rawQueryString ? `?${event.rawQueryString}` : "";
 
   return {
     timestamp: formatInTimeZone(new Date(), DEFAULT_TIMEZONE, TIMESTAMP_FORMAT),
-    responseCode: String(response?.statusCode ?? 500),
+    responseCode: String(statusCode ?? 500),
     request: `${http.method} ${event.rawPath}${query} ${http.protocol}`,
     responseTime: String(durationMs),
     requestMethod: http.method,
@@ -88,7 +91,7 @@ export const buildAccessLogEntry = ({ event, response, durationMs }: AccessLogCo
     "x-forwarded-for": event.headers["x-forwarded-for"] ?? "",
     "x-real-ip": getViewerIp(event),
     "remote-ip": http.sourceIp,
-    "response-size": String(getResponseSize(response)),
+    "response-size": String(responseSize),
     referer: event.headers.referer ?? "",
     requestId,
   };

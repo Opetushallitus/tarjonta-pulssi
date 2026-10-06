@@ -1,11 +1,8 @@
-import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import { Readable, type Writable } from "node:stream";
+import { finished, pipeline } from "node:stream/promises";
+import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 
-/**
- * Tekstimuotoiset vastaukset palautetaan sellaisenaan, kaikki muu base64-koodattuna.
- * React Routerin omat vastaukset (HTML ja `.data`-pyyntöjen `text/x-script`) ovat
- * tekstiä.
- */
-const TEXT_CONTENT_TYPE = /^(text\/|application\/(json|javascript|xml)\b|[^;]*\+(json|xml)\b)/i;
+import type { APIGatewayProxyEventV2 } from "aws-lambda";
 
 /**
  * Muuntaa Function URL -tapahtuman (payload-formaatti 2.0) Fetch API:n `Request`iksi.
@@ -37,29 +34,50 @@ export const toRequest = (event: APIGatewayProxyEventV2): Request => {
   });
 };
 
-/** Muuntaa Fetch API:n `Response`n Function URL:n odottamaan muotoon. */
-export const toResult = async (response: Response): Promise<APIGatewayProxyStructuredResultV2> => {
-  const isBase64Encoded =
-    response.body !== null && !TEXT_CONTENT_TYPE.test(response.headers.get("content-type") ?? "");
+/**
+ * Striimatun vastauksen alkuosa, jonka `awslambda.HttpResponseStream.from` ottaa.
+ * `Record`-perintä antaa interfacelle indeksisignatuuren, jota sen parametrityyppi
+ * vaatii.
+ */
+export interface ResponseMetadata extends Record<string, unknown> {
+  statusCode: number;
+  headers: Record<string, string>;
+  cookies: Array<string>;
+}
 
-  return {
-    statusCode: response.status,
-    // `Set-Cookie`-otsakkeita ei voi yhdistää pilkulla, joten ne palautetaan
-    // payload 2.0:n `cookies`-kentässä.
-    headers: Object.fromEntries([...response.headers].filter(([name]) => name !== "set-cookie")),
-    cookies: response.headers.getSetCookie(),
-    body: isBase64Encoded
-      ? Buffer.from(await response.arrayBuffer()).toString("base64")
-      : await response.text(),
-    isBase64Encoded,
-  };
-};
+export const toMetadata = (response: Response): ResponseMetadata => ({
+  statusCode: response.status,
+  // `Set-Cookie`-otsakkeita ei voi yhdistää pilkulla, joten ne välitetään omassa
+  // `cookies`-kentässään.
+  headers: Object.fromEntries([...response.headers].filter(([name]) => name !== "set-cookie")),
+  cookies: response.headers.getSetCookie(),
+});
 
 /**
- * Kääri Fetch API -pohjaisen käsittelijän (esim. React Routerin
- * `createRequestHandler`) Function URL -tapahtumia käsitteleväksi funktioksi.
+ * Striimaa vastauksen bodyn sellaisenaan (ilman base64-koodausta) ja sulkee
+ * streamin. Palauttaa bodyn koon tavuina access logia varten.
  */
-export const toFunctionUrlHandler =
-  (handleRequest: (request: Request) => Promise<Response>) =>
-  async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyStructuredResultV2> =>
-    toResult(await handleRequest(toRequest(event)));
+export const pipeResponse = async (response: Response, stream: Writable): Promise<number> => {
+  if (!response.body) {
+    // Function URL lähettää statuksen ja otsakkeet vasta ensimmäisen kirjoituksen
+    // yhteydessä, joten bodyttömälle vastaukselle (uudelleenohjaus, HEAD) tehdään
+    // tyhjä kirjoitus. Ks. https://github.com/fastify/aws-lambda-fastify/issues/154#issuecomment-2614521719
+    stream.end("");
+    await finished(stream);
+    return 0;
+  }
+
+  let size = 0;
+  await pipeline(
+    Readable.fromWeb(response.body as NodeReadableStream<Uint8Array>),
+    async function* (source: AsyncIterable<Uint8Array>) {
+      for await (const chunk of source) {
+        size += chunk.byteLength;
+        yield chunk;
+      }
+    },
+    stream
+  );
+
+  return size;
+};

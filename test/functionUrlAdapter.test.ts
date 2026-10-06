@@ -1,6 +1,8 @@
+import { PassThrough, Writable } from "node:stream";
+
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
 
-import { toFunctionUrlHandler, toRequest, toResult } from "../server/functionUrlAdapter";
+import { pipeResponse, toMetadata, toRequest } from "../server/functionUrlAdapter";
 
 const FUNCTION_URL_HOST = "abc123.lambda-url.eu-west-1.on.aws";
 
@@ -48,62 +50,61 @@ describe("toRequest", () => {
   });
 });
 
-describe("toResult", () => {
-  it("palauttaa tekstivastauksen sellaisenaan ja evästeet erikseen", async () => {
+describe("toMetadata", () => {
+  it("palauttaa statuksen ja otsakkeet sekä evästeet erikseen", () => {
     const headers = new Headers({ "content-type": "text/html; charset=utf-8" });
     headers.append("set-cookie", "a=1; Path=/");
     headers.append("set-cookie", "b=2; Path=/");
 
-    const result = await toResult(new Response("<html></html>", { status: 200, headers }));
-
-    expect(result).toEqual({
-      statusCode: 200,
+    expect(toMetadata(new Response("<html></html>", { status: 201, headers }))).toEqual({
+      statusCode: 201,
       headers: { "content-type": "text/html; charset=utf-8" },
       cookies: ["a=1; Path=/", "b=2; Path=/"],
-      body: "<html></html>",
-      isBase64Encoded: false,
-    });
-  });
-
-  it("käsittelee React Routerin data-vastaukset tekstinä", async () => {
-    const result = await toResult(
-      new Response("[]", { headers: { "content-type": "text/x-script" } })
-    );
-    expect(result.isBase64Encoded).toBe(false);
-  });
-
-  it("base64-koodaa binäärivastaukset", async () => {
-    const bytes = new Uint8Array([0, 255, 1]);
-    const result = await toResult(
-      new Response(bytes, { headers: { "content-type": "image/png" } })
-    );
-    expect(result.isBase64Encoded).toBe(true);
-    expect(Buffer.from(result.body!, "base64")).toEqual(Buffer.from(bytes));
-  });
-
-  it("palauttaa tyhjän bodyn uudelleenohjaukselle", async () => {
-    const result = await toResult(
-      new Response(null, { status: 302, headers: { location: "/fi" } })
-    );
-    expect(result).toMatchObject({
-      statusCode: 302,
-      headers: { location: "/fi" },
-      body: "",
-      isBase64Encoded: false,
     });
   });
 });
 
-describe("toFunctionUrlHandler", () => {
-  it("välittää muunnetun pyynnön käsittelijälle ja muuntaa vastauksen", async () => {
-    const handleRequest = jest.fn(
-      async (request: Request) =>
-        new Response(new URL(request.url).pathname, { headers: { "content-type": "text/plain" } })
-    );
+describe("pipeResponse", () => {
+  const collect = async (response: Response) => {
+    const stream = new PassThrough();
+    const chunks: Array<Buffer> = [];
+    stream.on("data", (chunk: Buffer) => chunks.push(chunk));
+    const size = await pipeResponse(response, stream);
+    return { size, body: Buffer.concat(chunks), ended: stream.writableEnded };
+  };
 
-    const result = await toFunctionUrlHandler(handleRequest)(createEvent());
+  it("striimaa bodyn tavuina, palauttaa koon ja sulkee streamin", async () => {
+    const bytes = new Uint8Array([0, 255, 1]);
+    expect(await collect(new Response(bytes))).toEqual({
+      size: 3,
+      body: Buffer.from(bytes),
+      ended: true,
+    });
+  });
 
-    expect(handleRequest).toHaveBeenCalledTimes(1);
-    expect(result).toMatchObject({ statusCode: 200, body: "/history", isBase64Encoded: false });
+  it("laskee koon tavuina eikä merkkeinä", async () => {
+    expect((await collect(new Response("ä"))).size).toBe(2);
+  });
+
+  it("kirjoittaa streamiin myös ilman bodyä, jotta Function URL lähettää otsakkeet", async () => {
+    let writes = 0;
+    const stream = new Writable({
+      write(_chunk, _encoding, callback) {
+        writes++;
+        callback();
+      },
+    });
+
+    await pipeResponse(new Response(null, { status: 302 }), stream);
+
+    expect(writes).toBe(1);
+  });
+
+  it("sulkee streamin myös ilman bodyä", async () => {
+    expect(await collect(new Response(null, { status: 302 }))).toEqual({
+      size: 0,
+      body: Buffer.alloc(0),
+      ended: true,
+    });
   });
 });

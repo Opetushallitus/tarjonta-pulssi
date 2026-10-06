@@ -20,7 +20,12 @@ import { getLocale } from "./i18n.server";
 import theme from "./theme";
 import { translationResources } from "./translations";
 
-const ABORT_DELAY = 5_000;
+/**
+ * React Router hylkää tämän jälkeen loaderien vielä ratkeamattomat promiset, jolloin
+ * niiden virherajat ehtivät striimautua selaimelle ennen renderöinnin keskeytystä.
+ * Pidä selvästi SSR-lambdan aikakatkaisun alla, ks. `stacks/tarjonta-pulssi.ts`.
+ */
+export const streamTimeout = 5_000;
 
 // For an obscure reason i18n type augmentation present in react-i18next/ts4.1/index.d.ts
 // (and/or react-i18next/index.d.ts) aren't considered when using I18nextProvider
@@ -84,6 +89,8 @@ export default async function handleRequest(
       }
     );
 
-    setTimeout(abort, ABORT_DELAY);
+    // Keskeytys vasta `streamTimeout`in jälkeen, jotta hylätyt rajat ehtivät
+    // striimautua.
+    setTimeout(abort, streamTimeout + 1000);
   });
 }

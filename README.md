@@ -68,9 +68,11 @@ Kolme asiaa, joiden varassa tämä on:
 - **Rivi kirjoitetaan PutLogEvents-rajapinnalla, ei `console.log`illa.** Lambda ohjaa
   stdoutin aina funktion omaan lokiryhmään ja lisää riville `timestamp requestId INFO`
   -etuliitteen, jolloin tulos ei ole jäsennettävää JSONia. Hinta on yksi API-kutsu
-  pyyntöä kohden, joka odotetaan loppuun ennen vastausta — Lambda jäädyttää
-  suoritusympäristön heti paluun jälkeen, joten kirjoitusta ei voi jättää taustalle.
-  Epäonnistunut lokitus ei kaada pyyntöä, vaan kirjataan `console.error`illa.
+  pyyntöä kohden. Se ei kuitenkaan näy katsojalle: Function URL striimaa vastaukset
+  (`InvokeMode.RESPONSE_STREAM`), ja rivi kirjoitetaan vasta kun vastausstream on
+  suljettu. Lambda jäädyttää suoritusympäristön vasta käsittelijän palattua, joten
+  kirjoitus ehtii valmiiksi. Epäonnistunut lokitus ei kaada pyyntöä, vaan kirjataan
+  `console.error`illa.
 - **`x-real-ip` luetaan `X-Forwarded-For` -ketjun viimeisestä alkiosta**, ei
   `requestContext.http.sourceIp`:stä — jälkimmäinen on CloudFrontin reunapalvelin ja
   löytyy kentästä `remote-ip`. CloudFront lisää katsojan IP:n ketjun loppuun, joten vain

@@ -110,8 +110,8 @@ importers:
         specifier: ^8.4.0
         version: 8.4.0(react-router@8.4.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(typescript@5.2.2)
       "@types/aws-lambda":
-        specifier: ^8.10.126
-        version: 8.10.126
+        specifier: ^8.10.164
+        version: 8.10.164
       "@types/jest":
         specifier: ^29.5.8
         version: 29.5.8
@@ -2376,10 +2376,10 @@ packages:
         integrity: sha512-ebDJ9b0e702Yr7pWgB0jzm+CX4Srzz8RcXtLJDJB+BSccqMa36uyH/zUsSYao5+BD1ytv3k3rPYCq4mAE1hsXA==,
       }
 
-  "@types/aws-lambda@8.10.126":
+  "@types/aws-lambda@8.10.164":
     resolution:
       {
-        integrity: sha512-5eh4ffLdGYgGYI1Xr6W5L4IVse4RR7L2ns5OVUXA52nW5GFapIcGMcCzHAIMMOdpcQs3aGVxbvFlJNZH6IpgEQ==,
+        integrity: sha512-XOnrazWcOd6yWPnR7DxqCBPPYciDjHq+NN8LPwwqBCJNXLyPJgKo47fZpJ113+oyAn9Zti0Cf6H4k6yPcE3WFg==,
       }
 
   "@types/babel__core@7.20.4":
@@ -9054,7 +9054,7 @@ snapshots:
 
   "@types/argparse@1.0.38": {}
 
-  "@types/aws-lambda@8.10.126": {}
+  "@types/aws-lambda@8.10.164": {}
 
   "@types/babel__core@7.20.4":
     dependencies:

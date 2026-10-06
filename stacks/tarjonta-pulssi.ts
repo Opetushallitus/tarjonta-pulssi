@@ -31,6 +31,7 @@ import {
   Architecture,
   Code,
   FunctionUrlAuthType,
+  InvokeMode,
   LayerVersion,
   Runtime,
 } from "aws-cdk-lib/aws-lambda";
@@ -244,7 +245,7 @@ export class TarjontaPulssiStack extends Stack {
         ACCESS_LOG_GROUP: ssrAccessLogGroup.logGroupName,
         ENVIRONMENT: stage,
         // Ympäristön Opintopolun etusivu (esim. `https://untuvaopintopolku.fi`), johon
-        // sivuston otsakkeen logo linkittää. 
+        // sivuston otsakkeen logo linkittää.
         OPINTOPOLKU_URL: `https://${publicHostedZone}`,
       },
       bundling: {
@@ -261,8 +262,12 @@ export class TarjontaPulssiStack extends Stack {
     // reitti kelpaa siis vain GET/HEAD-liikenteelle. Sovelluksessa ei ole yhtään
     // `action`-exporttia eikä lomaketta; jos sellainen lisätään, SSR-lambda on
     // siirrettävä API Gatewayn taakse.
+    //
+    // Vastaukset striimataan, jotta access log voidaan kirjoittaa vasta vastauksen
+    // jälkeen, ks. server/lambda.ts.
     const ssrFunctionUrl = ssrFunction.addFunctionUrl({
       authType: FunctionUrlAuthType.AWS_IAM,
+      invokeMode: InvokeMode.RESPONSE_STREAM,
     });
 
     const assetsBucket = new Bucket(this, "SiteAssetsBucket", {
