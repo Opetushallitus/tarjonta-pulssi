@@ -1,4 +1,7 @@
-import { AccessTimeIcon, FlagIcon, ListAltIcon, SchoolIcon } from "~/app/icons";
+import AccessTimeIcon from "@mui/icons-material/esm/AccessTimeOutlined";
+import FlagIcon from "@mui/icons-material/esm/FlagOutlined";
+import ListAltIcon from "@mui/icons-material/esm/ListAltOutlined";
+import SchoolIcon from "@mui/icons-material/esm/SchoolOutlined";
 
 export const LANGUAGES_BY_CODE = {
   fi: "Suomeksi",
