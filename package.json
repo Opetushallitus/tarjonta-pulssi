@@ -38,7 +38,6 @@
     "@mui/system": "^5.18.0",
     "@mui/utils": "^5.17.1",
     "@mui/x-date-pickers": "^7.29.4",
-    "@react-router/architect": "^8.4.0",
     "@react-router/node": "^8.4.0",
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.0",

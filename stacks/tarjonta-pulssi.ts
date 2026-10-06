@@ -250,11 +250,6 @@ export class TarjontaPulssiStack extends Stack {
       bundling: {
         ...NODE_BUNDLING,
         define: { "process.env.NODE_ENV": '"production"' },
-        // Polku on suhteessa esbuildin työhakemistoon eli projektin juureen.
-        // Ks. server/architect-functions-stub.ts.
-        esbuildArgs: {
-          "--alias:@architect/functions": "./server/architect-functions-stub.ts",
-        },
       },
     });
 

@@ -1,5 +1,5 @@
-import { createRequestHandler } from "@react-router/architect";
 import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import { createRequestHandler, type ServerBuild } from "react-router";
 
 // Käännetty palvelinbundle. Syntyy vasta `react-router build` -ajossa, eikä sitä
 // siksi ole olemassa tuoreessa klonissa — eikä CI:ssä, joka ajaa lintin ennen
@@ -7,7 +7,8 @@ import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from "
 //
 //   1. Tiedosto on rajattu tsconfigin `exclude`-listalla typecheckin ulkopuolelle.
 //      Mikään muu ei importtaa tätä, joten rajaus ei jätä muuta koodia
-//      tarkistamatta.
+//      tarkistamatta. Pyyntöjen muunnos on siksi erillisessä, tarkistetussa
+//      moduulissa `functionUrlAdapter.ts`.
 //   2. `import/no-unresolved` on vaimennettu alta — polku on oikea, tiedosto vain
 //      syntyy myöhemmin.
 //
@@ -15,23 +16,22 @@ import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from "
 import * as build from "../build/server/index.js";
 
 import { writeAccessLog } from "./accessLog";
+import { toFunctionUrlHandler } from "./functionUrlAdapter";
 
 /**
  * SSR-pyyntöjen käsittelijä. CloudFront kutsuu tätä Lambda Function URL:in kautta,
- * joka käyttää samaa payload-formaattia 2.0 kuin API Gatewayn HTTP API — siksi
- * architect-adapteri toimii sellaisenaan.
+ * ks. `functionUrlAdapter.ts`.
  */
-const requestHandler = createRequestHandler({
-  build,
-  mode: process.env.NODE_ENV,
-});
+const handleRequest = toFunctionUrlHandler(
+  createRequestHandler(build as unknown as ServerBuild, process.env.NODE_ENV)
+);
 
 export const handler = async (event: APIGatewayProxyEventV2) => {
   const startedAt = Date.now();
   let response: APIGatewayProxyStructuredResultV2 | undefined;
 
   try {
-    response = await requestHandler(event);
+    response = await handleRequest(event);
     return response;
   } finally {
     // `finally` kattaa myös poikkeustapauksen, jolloin `response` jää määrittelemättä
