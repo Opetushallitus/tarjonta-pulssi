@@ -15,6 +15,8 @@ Tietojen esittämistä varten on toteutettu yhden sivun sovellus React Router -f
 
 SSR-lambda on CloudFrontin takana Lambda Function URL:in kautta, suojattuna Origin Access Controlilla (OAC). CloudFront allekirjoittaa pyynnöt (SigV4), eikä Lambda tue allekirjoittamatonta bodyä: PUT/POST vaatisi selaimelta `x-amz-content-sha256` -otsakkeen, mihin se ei pysty. **Tämä reitti kelpaa siis vain GET/HEAD-liikenteelle.** Sovelluksessa ei ole yhtään `action`-exporttia eikä lomaketta, joten rajoitus ei pure. Jos sellainen lisätään, SSR-lambda on siirrettävä API Gatewayn taakse.
 
+Function URL reitittää pyynnön Host-otsakkeen perusteella, joten CloudFront ei välitä katsojan Host-otsaketta, ja sovellus näkee osoitteenaan Function URL:n (`xxxx.lambda-url.<region>.on.aws`, ks. `server/functionUrlAdapter.ts`). Siksi sovellus ei käytä pyynnön hostia: Opintopolun osoite, johon otsakkeen linkki osoittaa, annetaan SSR-lambdalle `OPINTOPOLKU_URL`-ympäristömuuttujassa.
+
 ### Lokitus
 
 | Mitä                                                    | Missä                                                                | Säilytys |

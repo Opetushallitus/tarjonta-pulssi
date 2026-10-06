@@ -243,6 +243,9 @@ export class TarjontaPulssiStack extends Stack {
         NODE_ENV: "production",
         ACCESS_LOG_GROUP: ssrAccessLogGroup.logGroupName,
         ENVIRONMENT: stage,
+        // Ympäristön Opintopolun etusivu (esim. `https://untuvaopintopolku.fi`), johon
+        // sivuston otsakkeen logo linkittää. 
+        OPINTOPOLKU_URL: `https://${publicHostedZone}`,
       },
       bundling: {
         ...NODE_BUNDLING,

@@ -41,14 +41,16 @@ export const links: LinksFunction = () => {
   ];
 };
 
+// Pyynnön host on Lambdassa Function URL:n oma osoite, joten Opintopolun osoite
+// tulee ympäristömuuttujasta, ks. `stacks/tarjonta-pulssi.ts`.
+const opintopolkuURL = process.env.OPINTOPOLKU_URL ?? "https://opintopolku.fi";
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const locale = getLocale(request);
   const t = await getFixedT(locale);
 
-  const url = new URL(request.url);
-  const baseURL = `${url.protocol}//${url.host.split(".").slice(-2).join(".")}`;
   const title = t(`sivu_otsikko`);
-  return { title, locale, baseURL };
+  return { title, locale, opintopolkuURL };
 };
 
 function GlobalLoading() {
@@ -73,7 +75,7 @@ function GlobalLoading() {
 }
 
 export default function App() {
-  const { locale, baseURL } = useLoaderData<typeof loader>();
+  const { locale, opintopolkuURL } = useLoaderData<typeof loader>();
   const { i18n } = useTranslation();
 
   const location = useLocation();
@@ -100,7 +102,7 @@ export default function App() {
                 search: location.search,
               })
             }
-            baseURL={baseURL}
+            opintopolkuURL={opintopolkuURL}
           />
           <Outlet />
         </div>
