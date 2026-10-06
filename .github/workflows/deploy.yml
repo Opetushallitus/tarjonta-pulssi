@@ -1,6 +1,6 @@
 name: Deploy
 
-run-name: Deploy ${{ inputs.stage }}${{ inputs.skipDomain && ' (ilman domainia)' || '' }}
+run-name: Deploy ${{ inputs.stage }}
 
 on:
   workflow_dispatch:
@@ -35,7 +35,6 @@ jobs:
     env:
       # Syötteet välitetään ympäristömuuttujina eikä interpoloida suoraan skriptiin.
       STAGE: ${{ inputs.stage }}
-      SKIP_DOMAIN: ${{ inputs.skipDomain }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -54,19 +53,19 @@ jobs:
       # kehitystilillä, sade omallaan. Ehdot on kirjoitettu erikseen tarkoituksella —
       # jos salaisuus puuttuu, askel kaatuu sen sijaan että käyttäisi väärän tilin roolia.
       - name: Configure AWS credentials (dev)
-        if: ${{ inputs.stage == 'untuva' || inputs.stage == 'hahtuva' || inputs.stage == 'pallero' }}
+        if: ${{ env.STAGE == 'untuva' || env.STAGE == 'hahtuva' || env.STAGE == 'pallero' }}
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4
         with:
           role-to-assume: ${{ secrets.AWS_OPINTOPOLKU_DEV_ROLE_ARN }}
-          role-session-name: ${{ inputs.stage }}-tarjonta-pulssi-deploy
+          role-session-name: ${{ env.STAGE }}-tarjonta-pulssi-deploy
           aws-region: eu-west-1
 
       - name: Configure AWS credentials (prod)
-        if: ${{ inputs.stage == 'sade' }}
+        if: ${{ env.STAGE == 'sade' }}
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4
         with:
           role-to-assume: ${{ secrets.AWS_OPINTOPOLKU_PROD_ROLE_ARN }}
-          role-session-name: ${{ inputs.stage }}-tarjonta-pulssi-deploy
+          role-session-name: ${{ env.STAGE }}-tarjonta-pulssi-deploy
           aws-region: eu-west-1
 
       # Varmistaa että jompikumpi yllä olevista askelista todella ajoi. Jos valikkoon
@@ -95,13 +94,14 @@ jobs:
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
           role-to-assume: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
-          role-session-name: ${{ inputs.application }}-update-metadata
+          role-session-name: ${{ env.STAGE }}-tarjonta-pulssi-update-metadata
           aws-region: eu-west-1
 
       - name: Update deployment metadata
         run: |
           DEPLOY_TIMESTAMP=`TZ='Europe/Helsinki' date +'%Y-%m-%d %H:%M:%S %Z'`
+          # Build tehdään samassa ajossa deployn kanssa, joten aikaleima on sama.
           BUILD_NAME=deploy-$GITHUB_RUN_NUMBER
-          aws dynamodb put-item --table-name builds --item "{\"Service\": {\"S\": \"tarjonta-pulssi\"}, \"Build\": {\"S\": \"${BUILD_NAME}\"}, \"Branch\": {\"S\": \"${GITHUB_REF_NAME}\"}, \"Commit\": {\"S\": \"${GITHUB_SHA}\"}, \"Time\": {\"S\": \"${BUILD_TIMESTAMP}\"}}" --condition-expression "attribute_not_exists(Id)" --region eu-west-1
-          aws dynamodb put-item --table-name deployments --item "{\"EnvService\": {\"S\": \"${{ inputs.stage }}-tarjonta-pulssi\"}, \"Build\": {\"S\": \"$BUILD_NAME\"}, \"User\": {\"S\": \"$GITHUB_TRIGGERING_ACTOR\"}, \"Time\": {\"S\": \"$DEPLOY_TIMESTAMP\"}}" --region eu-west-1
-          aws dynamodb put-item --table-name services --item "{\"EnvService\": {\"S\": \"${{ inputs.stage }}-tarjonta-pulssi\"}, \"LatestDeployedBuild\": {\"S\": \"$BUILD_NAME\"}}" --region eu-west-1
+          aws dynamodb put-item --table-name builds --item "{\"Service\": {\"S\": \"tarjonta-pulssi\"}, \"Build\": {\"S\": \"${BUILD_NAME}\"}, \"Branch\": {\"S\": \"${GITHUB_REF_NAME}\"}, \"Commit\": {\"S\": \"${GITHUB_SHA}\"}, \"Time\": {\"S\": \"${DEPLOY_TIMESTAMP}\"}}" --condition-expression "attribute_not_exists(Id)" --region eu-west-1
+          aws dynamodb put-item --table-name deployments --item "{\"EnvService\": {\"S\": \"${STAGE}-tarjonta-pulssi\"}, \"Build\": {\"S\": \"$BUILD_NAME\"}, \"User\": {\"S\": \"$GITHUB_TRIGGERING_ACTOR\"}, \"Time\": {\"S\": \"$DEPLOY_TIMESTAMP\"}}" --region eu-west-1
+          aws dynamodb put-item --table-name services --item "{\"EnvService\": {\"S\": \"${STAGE}-tarjonta-pulssi\"}, \"LatestDeployedBuild\": {\"S\": \"$BUILD_NAME\"}}" --region eu-west-1
