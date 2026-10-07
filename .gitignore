@@ -3,14 +3,13 @@
 **/.DS_Store
 node_modules
 
-/.sst
 /.cache
 /build
 /.cache
-/public/build
 .env
 cdk.context.json
 cdk.out
+/.react-router
 
 .idea/
 *.iml

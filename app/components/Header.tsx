@@ -1,5 +1,5 @@
-import CloseIcon from "@mui/icons-material/Close";
-import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/esm/Close";
+import MenuIcon from "@mui/icons-material/esm/Menu";
 import {
   AppBar,
   IconButton,
@@ -68,7 +68,7 @@ export interface URLData {
 export interface HeaderProps {
   historyOpen: boolean;
   toggleHistory: () => void;
-  baseURL: string;
+  opintopolkuURL: string;
 }
 
 const VisuallyHidden: React.FC<{ children: string }> = ({ children }: React.PropsWithChildren) => (
@@ -92,7 +92,7 @@ export const Header = (props: HeaderProps) => {
         alignItems={isSmallDisplay ? "flex-start" : "center"}
         width="100%"
       >
-        <Link href={props.baseURL} sx={{ paddingRight: 3 }}>
+        <Link href={props.opintopolkuURL} sx={{ paddingRight: 3 }}>
           <img
             src={getOpintopolkuHeaderLogoSrc(i18n.language)}
             aria-hidden={true}

@@ -1,4 +1,4 @@
-import ArrowRightIcon from "@mui/icons-material/ArrowRightOutlined";
+import ArrowRightIcon from "@mui/icons-material/esm/ArrowRightOutlined";
 import { Box, styled, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 

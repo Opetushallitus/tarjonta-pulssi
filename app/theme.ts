@@ -1,5 +1,5 @@
 import { createTheme } from "@mui/material";
-import { fiFI } from "@mui/x-date-pickers";
+import { fiFI } from "@mui/x-date-pickers/locales";
 
 const theme = createTheme(
   {

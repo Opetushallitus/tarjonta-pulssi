@@ -1,9 +1,7 @@
 import { CircularProgress } from "@mui/material";
-import { json, LinksFunction, type LoaderFunctionArgs } from "@remix-run/node";
-import type { MetaFunction } from "@remix-run/react";
+import { useTranslation } from "react-i18next";
 import {
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
@@ -11,20 +9,22 @@ import {
   useLocation,
   useNavigate,
   useNavigation,
-} from "@remix-run/react";
-import { useTranslation } from "react-i18next";
+  type LinksFunction,
+  type LoaderFunctionArgs,
+  type MetaFunction,
+} from "react-router";
 
-import i18next from "~/app/i18next.server";
-import mainStylesUrl from "~/app/styles/index.css";
-import tableStylesUrl from "~/app/styles/table.css";
+import mainStylesUrl from "~/app/styles/index.css?url";
+import tableStylesUrl from "~/app/styles/table.css?url";
 
 import { Header } from "./components/Header";
 import { useChangeLanguage } from "./hooks/useChangeLanguage";
+import { getFixedT, getLocale } from "./i18n.server";
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = ({ loaderData }) => {
   return [
     {
-      title: data?.title,
+      title: loaderData?.title,
     },
     { charSet: "utf-8" },
     {
@@ -41,20 +41,16 @@ export const links: LinksFunction = () => {
   ];
 };
 
+// Pyynnön host on Lambdassa Function URL:n oma osoite, joten Opintopolun osoite
+// tulee ympäristömuuttujasta, ks. `stacks/tarjonta-pulssi.ts`.
+const opintopolkuURL = process.env.OPINTOPOLKU_URL ?? "https://opintopolku.fi";
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const t = await i18next.getFixedT(request);
-  const locale = await i18next.getLocale(request);
+  const locale = getLocale(request);
+  const t = await getFixedT(locale);
 
-  const url = new URL(request.url);
-  const baseURL = `${url.protocol}//${url.host.split(".").slice(-2).join(".")}`;
   const title = t(`sivu_otsikko`);
-  return json({ title, locale, baseURL });
-};
-
-export const handle = {
-  // In the handle export, we could add a i18n key with namespaces our route
-  // will need to load. This key can be a single string or an array of strings.
-  i18n: "common",
+  return { title, locale, opintopolkuURL };
 };
 
 function GlobalLoading() {
@@ -79,7 +75,7 @@ function GlobalLoading() {
 }
 
 export default function App() {
-  const { locale, baseURL } = useLoaderData<typeof loader>();
+  const { locale, opintopolkuURL } = useLoaderData<typeof loader>();
   const { i18n } = useTranslation();
 
   const location = useLocation();
@@ -106,12 +102,11 @@ export default function App() {
                 search: location.search,
               })
             }
-            baseURL={baseURL}
+            opintopolkuURL={opintopolkuURL}
           />
           <Outlet />
         </div>
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );

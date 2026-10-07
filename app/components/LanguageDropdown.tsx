@@ -1,9 +1,9 @@
-import LanguageIcon from "@mui/icons-material/Language";
+import LanguageIcon from "@mui/icons-material/esm/Language";
 import { Select, MenuItem, InputBase, Box, SelectChangeEvent } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useSearchParams } from "@remix-run/react";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router";
 
 import { LANGUAGES_BY_CODE } from "~/app/constants";
 import { SUPPORTED_LANGUAGES } from "~/shared/constants";

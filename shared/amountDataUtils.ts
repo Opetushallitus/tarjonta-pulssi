@@ -1,6 +1,6 @@
 import { parse, isAfter } from "date-fns";
 import { utcToZonedTime } from "date-fns-tz";
-import { findLastIndex } from "lodash";
+import findLastIndex from "lodash/findLastIndex";
 import { P, match } from "ts-pattern";
 
 import { DATETIME_FORMAT_TZ, DEFAULT_TIMEZONE } from "./constants";
