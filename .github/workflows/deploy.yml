@@ -54,7 +54,7 @@ jobs:
       # jos salaisuus puuttuu, askel kaatuu sen sijaan että käyttäisi väärän tilin roolia.
       - name: Configure AWS credentials (dev)
         if: ${{ env.STAGE == 'untuva' || env.STAGE == 'hahtuva' || env.STAGE == 'pallero' }}
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
         with:
           role-to-assume: ${{ secrets.AWS_OPINTOPOLKU_DEV_ROLE_ARN }}
           role-session-name: ${{ env.STAGE }}-tarjonta-pulssi-deploy
@@ -62,7 +62,7 @@ jobs:
 
       - name: Configure AWS credentials (prod)
         if: ${{ env.STAGE == 'sade' }}
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
         with:
           role-to-assume: ${{ secrets.AWS_OPINTOPOLKU_PROD_ROLE_ARN }}
           role-session-name: ${{ env.STAGE }}-tarjonta-pulssi-deploy
@@ -91,7 +91,7 @@ jobs:
           pnpm run cdk:deploy -c "stage=$STAGE" --require-approval never
 
       - name: Login to utility
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
           role-session-name: ${{ env.STAGE }}-tarjonta-pulssi-update-metadata
